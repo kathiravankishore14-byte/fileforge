@@ -12,9 +12,24 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "@imgly/background-removal": "^1.7.0",
+    "@pdfsmaller/pdf-decrypt": "^1.0.1",
+    "@pdfsmaller/pdf-encrypt-lite": "^1.2.0",
     "browser-image-compression": "^2.0.2",
     "cropperjs": "^1.6.2",
+    "docx": "^9.7.1",
+    "heic2any": "^0.0.4",
+    "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8"
+    "jspdf-autotable": "^5.0.8",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.12.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.2.108",
+    "pptxgenjs": "^4.0.1",
+    "qrcode": "^1.5.4",
+    "tesseract.js": "^7.0.0",
+    "xlsx": "^0.18.5"
   }
 }
