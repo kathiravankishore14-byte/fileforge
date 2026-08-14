@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Word Document Tools Online | FileForge</title>
+    <meta name="description" content="Convert Word documents to Excel, PDF, or plain text free, entirely in your browser. No upload, no account." />
+    <link rel="canonical" href="https://yoursite.com/word.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!--HEADER-->
+
+    <div class="breadcrumbs"><a href="/">Home</a> / Word Tools</div>
+
+    <section class="hero">
+      <h1>Free Word document tools</h1>
+      <p class="category-intro">Convert your DOCX files to Excel, PDF, or plain text — every tool processes your document locally in your browser, so it never leaves your device.</p>
+    </section>
+
+    <div class="tool-grid" id="toolGrid"></div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <!--FOOTER-->
+
+    <script type="module">
+      import { initToolPage } from '/src/main.js';
+      initToolPage('word');
+    </script>
+  </body>
+</html>

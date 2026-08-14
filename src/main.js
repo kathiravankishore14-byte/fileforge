@@ -1,0 +1,2979 @@
+import imageCompression from 'browser-image-compression';
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import Tesseract from 'tesseract.js';
+import { removeBackground } from '@imgly/background-removal';
+import { PDFDocument, degrees, PDFName, PDFRawStream } from 'pdf-lib';
+import './style.css';
+
+// ================= TOOL DATA (shared across every page) =================
+const CATEGORY_ICONS = {
+  image: '/icons/icon-image.svg', word: '/icons/icon-word.svg', excel: '/icons/icon-excel.svg',
+  pdf: '/icons/icon-pdf.svg', text: '/icons/icon-text.svg', ppt: '/icons/icon-ppt.svg', utilities: '/icons/icon-utilities.svg',
+};
+
+const toolMeta = {
+  resize: { label: 'Resize Image', desc: 'Set exact pixel dimensions for any photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  compress: { label: 'Compress Image', desc: 'Shrink file size with a quality slider.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  crop: { label: 'Crop Image', desc: 'Trim an image down to the area you need.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  pdf: { label: 'Convert to PDF', desc: 'Turn one or more images into a PDF.', needsConfig: true, multiFile: true, accept: 'image/*', category: 'image', iconTo: 'pdf' },
+  imagetoexcel: { label: 'Image to Excel', desc: 'Extract tabular data from a photo.', needsConfig: false, accept: 'image/*', category: 'image', iconTo: 'excel' },
+  imagetoppt: { label: 'Image to PPT', desc: 'Place one or more images onto slides.', needsConfig: true, multiFile: true, accept: 'image/*', category: 'image', iconTo: 'ppt' },
+  convertformat: { label: 'Convert Image Format', desc: 'Switch between JPG, PNG, and WebP.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  rotateflip: { label: 'Rotate / Flip Image', desc: 'Fix orientation or mirror a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  watermarkimage: { label: 'Watermark Image', desc: 'Stamp text across a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  bgremove: { label: 'Remove Background', desc: 'AI cutout, no green screen needed.', needsConfig: true, accept: 'image/jpeg,image/png,image/webp', category: 'image', iconTo: 'image' },
+  colorpalette: { label: 'Color Palette Extractor', desc: 'Pull the dominant colors from a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  socialresize: { label: 'Social Media Resize', desc: 'Preset sizes for Instagram, YouTube, and more.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  grayscale: { label: 'Grayscale Converter', desc: 'Convert a photo to black and white.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  sepia: { label: 'Sepia / Vintage Filter', desc: 'Give a photo a warm, aged tone.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  blurimage: { label: 'Blur Image', desc: 'Soften part or all of a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  heictojpg: { label: 'HEIC to JPG', desc: 'Convert iPhone photos to a universal format.', needsConfig: false, accept: '.heic,.heif', category: 'image', iconTo: 'image' },
+  memecreator: { label: 'Meme Creator', desc: 'Add top and bottom caption text.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  collagemaker: { label: 'Collage Maker', desc: 'Combine several photos into a grid.', needsConfig: true, multiFile: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+
+  wordtoexcel: { label: 'Word to Excel', desc: 'Pull tables from a Word doc into a spreadsheet.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'excel' },
+  wordtopdf: { label: 'Word to PDF', desc: 'Turn a DOCX file into a PDF.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'pdf' },
+  wordtotext: { label: 'Word to Text', desc: 'Extract plain text from a Word doc.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'text' },
+
+  exceltopdf: { label: 'Excel to PDF', desc: 'Convert a spreadsheet into a PDF table.', needsConfig: true, accept: '.xlsx,.xls,.csv', category: 'excel', iconTo: 'pdf' },
+  exceltocsv: { label: 'Excel to CSV', desc: 'Export a sheet as plain CSV.', needsConfig: true, accept: '.xlsx,.xls', category: 'excel', iconTo: 'excel' },
+
+  pdfmerge: { label: 'Merge PDFs', desc: 'Combine PDFs in the order you choose.', needsConfig: true, multiFile: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfrotate: { label: 'Rotate PDF Pages', desc: 'Rotate every page in a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfpagenumbers: { label: 'Add Page Numbers', desc: 'Stamp page numbers onto a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfextract: { label: 'Extract Pages', desc: 'Pull specific pages into a new PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfdelete: { label: 'Delete Pages', desc: 'Remove specific pages from a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfwatermark: { label: 'Watermark PDF', desc: 'Stamp text across every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfsplit: { label: 'Split PDF', desc: 'Break a PDF into separate files by page range.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by flattening pages to compressed images.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdftoword: { label: 'PDF to Word', desc: 'Extract text into an editable Word document.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'word' },
+  pdftoexcel: { label: 'PDF to Excel', desc: 'Pull tabular data into a spreadsheet.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'excel' },
+  pdftojpg: { label: 'PDF to JPG', desc: 'Export every page as an image.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'image' },
+  pdftoppt: { label: 'PDF to PowerPoint', desc: 'Turn each page into a slide.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'ppt' },
+  pdfprotect: { label: 'Protect PDF', desc: 'Add a password to a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfcrop: { label: 'Crop PDF', desc: 'Trim the margins of every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfunlock: { label: 'Unlock PDF', desc: 'Remove a password you already know.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdftomarkdown: { label: 'PDF to Markdown', desc: 'Convert pages into basic Markdown text.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'text' },
+  pdfsign: { label: 'Sign PDF', desc: 'Draw a signature and place it on a page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  scantopdf: { label: 'Scan to PDF', desc: 'Capture pages with your camera.', noFile: true, category: 'pdf', iconTo: 'pdf' },
+  pdfcompare: { label: 'Compare PDF', desc: 'See text differences between two PDFs.', needsConfig: true, compareFiles: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+
+  ppttotext: { label: 'PPT to Text', desc: 'Extract all text from a slide deck.', needsConfig: false, accept: '.pptx', category: 'ppt', iconTo: 'text' },
+
+  texttoppt: { label: 'Text to PPT', desc: 'Turn pasted text into slides.', noFile: true, category: 'text', iconTo: 'ppt' },
+  textopdf: { label: 'Text to PDF', desc: 'Turn pasted text into a PDF.', noFile: true, category: 'text', iconTo: 'pdf' },
+  wordcounter: { label: 'Word Counter', desc: 'Count words and characters instantly.', noFile: true, category: 'text', iconTo: 'text' },
+  caseconverter: { label: 'Case Converter', desc: 'Switch between upper, lower, and title case.', noFile: true, category: 'text', iconTo: 'text' },
+
+  qrcode: { label: 'QR Code Generator', desc: 'Turn a link or text into a QR code.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  passwordgen: { label: 'Password Generator', desc: 'Create a strong random password.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  jsonformatter: { label: 'JSON Formatter', desc: 'Pretty-print and validate JSON.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  base64: { label: 'Base64 Encode/Decode', desc: 'Convert text to and from Base64.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  loremipsum: { label: 'Lorem Ipsum Generator', desc: 'Generate placeholder paragraphs.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  unitconverter: { label: 'Unit Converter', desc: 'Convert length, weight, and temperature.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  gpacalculator: { label: 'GPA / CGPA Calculator', desc: 'Calculate your grade point average.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  citationgen: { label: 'Citation Generator', desc: 'Format a source in APA, MLA, or Chicago.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  randomgen: { label: 'Random Generator', desc: 'Generate a random number or string.', noFile: true, category: 'utilities', iconTo: 'utilities' },
+  zipfiles: { label: 'Zip Files', desc: 'Bundle multiple files into one archive.', needsConfig: true, multiFile: true, accept: '*/*', category: 'utilities', iconTo: 'utilities' },
+  unzipfiles: { label: 'Unzip Archive', desc: 'Extract files from a zip archive.', needsConfig: false, accept: '.zip', category: 'utilities', iconTo: 'utilities' },
+  invoicegen: { label: 'Invoice Generator', desc: 'Build and download a simple invoice.', noFile: true, category: 'utilities', iconTo: 'pdf' },
+  resumebuilder: { label: 'Resume Builder', desc: 'Build and download a simple resume.', noFile: true, category: 'utilities', iconTo: 'pdf' },
+  htmltopdf: { label: 'HTML to PDF', desc: 'Paste HTML code and export it as a PDF.', noFile: true, category: 'utilities', iconTo: 'pdf' },
+  htmltoexcel: { label: 'HTML to Excel', desc: 'Extract tables from HTML into a spreadsheet.', noFile: true, category: 'utilities', iconTo: 'excel' },
+  aisummarizer: { label: 'AI Summarizer', desc: 'Summarize text privately, right in your browser.', noFile: true, category: 'utilities', iconTo: 'text' },
+};
+
+const categoryTools = {
+  image: ['resize', 'compress', 'crop', 'pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'rotateflip', 'watermarkimage', 'bgremove', 'colorpalette', 'socialresize', 'grayscale', 'sepia', 'blurimage', 'heictojpg', 'memecreator', 'collagemaker'],
+  word: ['wordtoexcel', 'wordtopdf', 'wordtotext'],
+  excel: ['exceltopdf', 'exceltocsv'],
+  pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdfsign', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
+  ppt: ['ppttotext'],
+  text: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'],
+  utilities: ['qrcode', 'passwordgen', 'jsonformatter', 'base64', 'loremipsum', 'unitconverter', 'gpacalculator', 'citationgen', 'randomgen', 'zipfiles', 'unzipfiles', 'invoicegen', 'resumebuilder', 'htmltopdf', 'htmltoexcel', 'aisummarizer'],
+};
+
+// ================= ICON BADGE RENDERING =================
+function renderIconBadge(fromCategory, toCategory) {
+  const fromIcon = CATEGORY_ICONS[fromCategory];
+  const toIcon = CATEGORY_ICONS[toCategory];
+  if (!toCategory || fromCategory === toCategory) {
+    return `<img src="${fromIcon}" alt="" />`;
+  }
+  return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />`;
+}
+
+// ================= TOOL GRID RENDERING =================
+function renderToolGrid(containerEl, toolKeys) {
+  containerEl.innerHTML = toolKeys.map((key) => {
+    const meta = toolMeta[key];
+    if (!meta) return '';
+    const iconHtml = renderIconBadge(meta.category, meta.iconTo);
+    if (meta.comingSoon) {
+      return `
+        <div class="tool-card coming-soon">
+          <span class="coming-soon-badge">Coming Soon</span>
+          <div class="tool-icon-badge">${iconHtml}</div>
+          <h3>${meta.label}</h3>
+          <p>${meta.desc}</p>
+        </div>
+      `;
+    }
+    return `
+      <div class="tool-card" data-tool="${key}">
+        ${meta.multiFile ? '<span class="multi-file-badge">Multiple files</span>' : ''}
+        <div class="tool-icon-badge">${iconHtml}</div>
+        <h3>${meta.label}</h3>
+        <p>${meta.desc}</p>
+      </div>
+    `;
+  }).join('');
+
+  containerEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
+    card.addEventListener('click', () => handleToolCardClick(card.dataset.tool, card));
+  });
+}
+
+function handleToolCardClick(toolKey, card) {
+  const meta = toolMeta[toolKey];
+  if (!meta) return;
+
+  // noFile tools and Compare PDF (needs two distinct named slots) still open their own modal directly
+  if (meta.noFile || toolKey === 'pdfcompare') {
+    openToolModal(toolKey, card);
+    return;
+  }
+
+  // If a file is already sitting ready (carried from a previous drop), just proceed
+  if (!meta.multiFile && pendingHeroFile && validateFileType(pendingHeroFile, meta.accept)) {
+    openToolModal(toolKey, card);
+    return;
+  }
+
+  // Otherwise: point them at the big drop zone — used for both single files and starting a multi-file batch
+  awaitingToolKey = toolKey;
+  awaitingExistingFiles = meta.multiFile ? [] : null;
+  updateHeroDropZoneLabel();
+  const dropWrap = document.querySelector('#heroDropZone');
+  if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function updateHeroDropZoneLabel() {
+  const textEl = document.querySelector('.hero-drop-text');
+  const hintEl = document.querySelector('#awaitingToolHint');
+  if (!textEl) return;
+  if (awaitingToolKey && toolMeta[awaitingToolKey]) {
+    const count = awaitingExistingFiles ? awaitingExistingFiles.length : 0;
+    textEl.textContent = count > 0
+      ? `Drop another file for ${toolMeta[awaitingToolKey].label} (${count} added so far)`
+      : `Drop your file here for ${toolMeta[awaitingToolKey].label}`;
+    if (hintEl) hintEl.style.display = 'block';
+  } else {
+    textEl.textContent = "Drop any file here to get started — we'll find the right tool";
+    if (hintEl) hintEl.style.display = 'none';
+  }
+}
+
+// ================= MODAL CORE =================
+let currentFile = null;
+let cropperInstance = null;
+let currentImg = null;
+let currentToolKey = null;
+let lastFocusedElement = null;
+let pendingHeroFile = null;
+let renderGeneration = 0;
+let awaitingToolKey = null;
+let awaitingExistingFiles = null;
+
+const backdrop = document.querySelector('#modalBackdrop');
+const modalTitle = document.querySelector('#modalTitle');
+const modalBody = document.querySelector('#modalBody');
+const modalClose = document.querySelector('#modalClose');
+const modalBox = document.querySelector('.modal-box');
+
+function openToolModal(toolKey, triggerEl, initialMultiFiles) {
+  const meta = toolMeta[toolKey];
+  if (!meta) return;
+
+  // Decide BEFORE opening anything: if this tool needs a file and none is ready, redirect to the
+  // big blue drop zone instead of opening a modal with its own separate upload box.
+  const hasReadySingleFile = !meta.multiFile && pendingHeroFile && validateFileType(pendingHeroFile, meta.accept);
+  const hasReadyMultiFiles = meta.multiFile && initialMultiFiles && initialMultiFiles.length > 0;
+  const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
+
+  if (needsFile && !hasReadySingleFile && !hasReadyMultiFiles) {
+    awaitingToolKey = toolKey;
+    awaitingExistingFiles = meta.multiFile ? [] : null;
+    updateHeroDropZoneLabel();
+    const dropWrap = document.querySelector('#heroDropZone');
+    if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  currentToolKey = toolKey;
+  currentFile = null;
+  lastFocusedElement = triggerEl || document.activeElement;
+
+  modalTitle.textContent = meta.label;
+  backdrop.classList.remove('hidden');
+  requestAnimationFrame(() => backdrop.classList.add('visible'));
+  document.body.classList.add('modal-open');
+  history.pushState({ tool: toolKey }, '', `?tool=${toolKey}`);
+
+  if (meta.noFile) {
+    renderNoFileTool(toolKey);
+  } else if (toolKey === 'pdfcompare') {
+    renderCompareTool();
+  } else if (meta.multiFile) {
+    renderMultiFileTool(initialMultiFiles);
+  } else {
+    const carriedFile = pendingHeroFile;
+    pendingHeroFile = null;
+    renderModalShell();
+    handleFiles([carriedFile]);
+  }
+  modalClose.focus();
+}
+
+function closeToolModal(skipHistory) {
+  backdrop.classList.remove('visible');
+  document.body.classList.remove('modal-open');
+  setTimeout(() => backdrop.classList.add('hidden'), 150);
+  if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+  if (!skipHistory) {
+    const url = new URL(window.location);
+    url.searchParams.delete('tool');
+    history.pushState({}, '', url.pathname);
+  }
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+
+modalClose.addEventListener('click', () => closeToolModal());
+backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeToolModal(); });
+document.addEventListener('keydown', (e) => {
+  if (!backdrop.classList.contains('hidden')) {
+    if (e.key === 'Escape') { closeToolModal(); return; }
+    if (e.key === 'Tab') {
+      const focusables = modalBox.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
+  }
+});
+window.addEventListener('popstate', () => {
+  const params = new URLSearchParams(window.location.search);
+  const tool = params.get('tool');
+  if (tool && toolMeta[tool]) {
+    currentToolKey = tool;
+    currentFile = null;
+    modalTitle.textContent = toolMeta[tool].label;
+    backdrop.classList.remove('hidden');
+    requestAnimationFrame(() => backdrop.classList.add('visible'));
+    document.body.classList.add('modal-open');
+    if (toolMeta[tool].noFile) {
+      renderNoFileTool(tool);
+    } else {
+      closeToolModal(true);
+      handleToolCardClick(tool, null);
+    }
+  } else {
+    closeToolModal(true);
+  }
+});
+
+// ---------- Upload state (with idle bird) ----------
+function renderModalShell() {
+  modalBody.innerHTML = `
+    <div class="upload-row">
+      <video class="bird-video" src="/bird/bird-idle.mp4" autoplay loop muted playsinline></video>
+    </div>
+    <div id="configArea"></div>
+  `;
+}
+
+function validateFileType(file, acceptString) {
+  if (!acceptString) return true;
+  const acceptList = acceptString.split(',').map((s) => s.trim().toLowerCase());
+  const fileName = file.name.toLowerCase();
+  const fileType = file.type.toLowerCase();
+
+  return acceptList.some((pattern) => {
+    if (pattern.startsWith('.')) return fileName.endsWith(pattern);
+    if (pattern.endsWith('/*')) return fileType.startsWith(pattern.replace('/*', '/'));
+    return fileType === pattern;
+  });
+}
+
+function showTypeRejection(toolLabel, acceptString) {
+  const readable = acceptString.replace(/\./g, '').replace(/,/g, ', ').toUpperCase();
+  const area = document.querySelector('#configArea');
+  if (!area) return;
+  area.insertAdjacentHTML('beforeend', `
+    <p style="color: var(--red-dark); margin-top: 12px; font-size: 0.88rem;">
+      That file doesn't look like a supported type for ${toolLabel}. Expected: ${readable}. Try a different file.
+    </p>
+  `);
+}
+
+function handleFiles(fileList) {
+  const meta = toolMeta[currentToolKey];
+  if (meta.multiFile) {
+    const files = Array.from(fileList).filter((f) => {
+      if (!validateFileType(f, meta.accept)) {
+        showTypeRejection(meta.label, meta.accept);
+        return false;
+      }
+      return true;
+    });
+    if (files.length) renderMultiFileTool(files);
+    return;
+  }
+
+  const file = fileList[0];
+  if (!validateFileType(file, meta.accept)) {
+    showTypeRejection(meta.label, meta.accept);
+    return;
+  }
+
+  const uploadRow = modalBody.querySelector('.upload-row');
+  if (uploadRow) uploadRow.style.display = 'none';
+
+  currentFile = file;
+  if (meta.needsConfig) {
+    renderSingleFileConfig();
+  } else {
+    runSimpleTool();
+  }
+}
+
+function showPreviewImage(file) {
+  const area = document.querySelector('#configArea');
+  const existingImg = area.querySelector('.preview-img');
+  if (existingImg) existingImg.remove();
+  const url = URL.createObjectURL(file);
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'preview-img';
+  area.prepend(img);
+  currentImg = img;
+}
+
+// ---------- Processing state (with loading bird) ----------
+function showProcessingState(captionText) {
+  modalBody.innerHTML = `
+    <div class="processing-row">
+      <video class="bird-video" src="/bird/bird-loading.mp4" autoplay loop muted playsinline></video>
+      <p class="processing-status" id="processingCaption" aria-live="polite">${captionText || 'Working...'}</p>
+    </div>
+  `;
+}
+
+function updateProcessingCaption(text) {
+  const el = document.querySelector('#processingCaption');
+  if (el) el.textContent = text;
+}
+
+// ---------- Result state ----------
+function showResultState(blob, filename, extraNote) {
+  const url = URL.createObjectURL(blob);
+  modalBody.innerHTML = `
+    <div class="result-box">
+      ${extraNote ? `<p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">${extraNote}</p>` : ''}
+      <a href="${url}" download="${filename}" class="download-btn">Download ${filename}</a>
+      <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+    </div>
+  `;
+  document.querySelector('#resetToolBtn').addEventListener('click', () => {
+    currentFile = null;
+    closeToolModal(false);
+    handleToolCardClick(currentToolKey, lastFocusedElement);
+  });
+}
+
+function showErrorState(message) {
+  modalBody.innerHTML = `
+    <div class="result-box">
+      <video class="bird-video" src="/bird/bird-idle.mp4" autoplay loop muted playsinline style="margin: 0 auto 12px;"></video>
+      <p style="color: var(--red-dark);">${message}</p>
+      <button class="reset-btn" id="errorBackBtn">Try again</button>
+    </div>
+  `;
+  document.querySelector('#errorBackBtn').addEventListener('click', () => {
+    closeToolModal(false);
+    handleToolCardClick(currentToolKey, lastFocusedElement);
+  });
+}
+
+// ================= SIMPLE (no-config) TOOLS =================
+async function runSimpleTool() {
+  showProcessingState('Working...');
+  try {
+    let blob, filename, extraNote = '';
+    if (currentToolKey === 'imagetoexcel') {
+      blob = await imageToExcelBlob(currentFile);
+      filename = `${currentFile.name.split('.')[0]}.xlsx`;
+    } else if (currentToolKey === 'heictojpg') {
+      const heic2any = (await import('heic2any')).default;
+      blob = await heic2any({ blob: currentFile, toType: 'image/jpeg', quality: 0.9 });
+      filename = `${currentFile.name.split('.')[0]}.jpg`;
+    } else if (currentToolKey === 'ppttotext') {
+      blob = await pptToTextBlob(currentFile);
+      filename = `${currentFile.name.split('.')[0]}.txt`;
+    } else if (currentToolKey === 'unzipfiles') {
+      await runUnzipFlow(currentFile);
+      return;
+    } else if (currentToolKey === 'pdftoword') {
+      await runPdfToWord(currentFile);
+      return;
+    } else if (currentToolKey === 'pdftoexcel') {
+      await runPdfToExcel(currentFile);
+      return;
+    } else if (currentToolKey === 'pdftojpg') {
+      await runPdfToJpg(currentFile);
+      return;
+    } else if (currentToolKey === 'pdftoppt') {
+      await runPdfToPpt(currentFile);
+      return;
+    } else if (currentToolKey === 'pdftomarkdown') {
+      await runPdfToMarkdown(currentFile);
+      return;
+    }
+    await minWait(1200);
+    showResultState(blob, filename, extraNote);
+  } catch (err) {
+    showErrorState(err.message);
+  }
+}
+
+function minWait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Reliable image-to-PDF page sizing: jsPDF's 'px' unit combined with a format array
+// produces inconsistent scaling depending on orientation/addPage vs constructor.
+// Converting to points (jsPDF's real native unit) avoids that unit-handling bug entirely.
+const PX_TO_PT = 0.75; // standard 96dpi-css-px to pt conversion
+
+function newImagePdf(pxWidth, pxHeight) {
+  const ptW = pxWidth * PX_TO_PT;
+  const ptH = pxHeight * PX_TO_PT;
+  const isLandscape = pxWidth > pxHeight;
+  // jsPDF's own docs: for landscape orientation, format array must be given as [height, width] (swapped)
+  const format = isLandscape ? [ptH, ptW] : [ptW, ptH];
+  return new jsPDF({ unit: 'pt', orientation: isLandscape ? 'landscape' : 'portrait', format });
+}
+
+function addImagePdfPage(pdf, pxWidth, pxHeight) {
+  const ptW = pxWidth * PX_TO_PT;
+  const ptH = pxHeight * PX_TO_PT;
+  const isLandscape = pxWidth > pxHeight;
+  const format = isLandscape ? [ptH, ptW] : [ptW, ptH];
+  pdf.addPage(format, isLandscape ? 'landscape' : 'portrait');
+}
+
+function drawImageOnPdfPage(pdf, imgSource, pxWidth, pxHeight) {
+  pdf.addImage(imgSource, 'JPEG', 0, 0, pxWidth * PX_TO_PT, pxHeight * PX_TO_PT);
+}
+
+// ---------- Table grid detection: find row/column boundaries by analyzing ink density ----------
+function loadImageForGrid(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function findGapBands(inkProfile, minGapSize, noiseFloor) {
+  // Returns [start, end] pixel ranges of CONTENT (non-gap) bands, given a per-pixel ink-density array
+  const floor = noiseFloor || 0;
+  const bands = [];
+  let inContent = false;
+  let contentStart = 0;
+  let gapRun = 0;
+  for (let i = 0; i < inkProfile.length; i++) {
+    const hasInk = inkProfile[i] > floor;
+    if (hasInk) {
+      if (!inContent) { inContent = true; contentStart = i; }
+      gapRun = 0;
+    } else {
+      gapRun++;
+      if (inContent && gapRun >= minGapSize) {
+        bands.push([contentStart, i - gapRun + 1]);
+        inContent = false;
+      }
+    }
+  }
+  if (inContent) bands.push([contentStart, inkProfile.length]);
+  return bands;
+}
+
+function getInkProfile(ctx, width, height, axis) {
+  // axis: 'row' = ink count per horizontal row, 'col' = ink count per vertical column
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const d = imgData.data;
+  const size = axis === 'row' ? height : width;
+  const profile = new Array(size).fill(0);
+
+  // Determine each row's dominant (background) color by sampling, so we can detect
+  // "ink" as deviation from local background — handles both dark-on-light and light-on-dark text.
+  // Coarser bucketing (>> 5, i.e. 32 buckets/channel) so JPEG compression noise falls into the same bucket.
+  const rowBg = new Array(height);
+  for (let y = 0; y < height; y++) {
+    const counts = {};
+    for (let x = 0; x < width; x += 4) {
+      const idx = (y * width + x) * 4;
+      const key = `${d[idx] >> 5},${d[idx + 1] >> 5},${d[idx + 2] >> 5}`;
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    let bestKey = null, bestCount = -1;
+    for (const k in counts) { if (counts[k] > bestCount) { bestCount = counts[k]; bestKey = k; } }
+    rowBg[y] = bestKey ? bestKey.split(',').map((v) => parseInt(v) * 32) : [255, 255, 255];
+  }
+
+  const threshold = 100; // higher tolerance — JPEG compression noise can shift flat areas by 20-40 easily, real text is a much bigger jump
+  for (let y = 0; y < height; y++) {
+    const [bgR, bgG, bgB] = rowBg[y];
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      const dist = Math.abs(d[idx] - bgR) + Math.abs(d[idx + 1] - bgG) + Math.abs(d[idx + 2] - bgB);
+      if (dist > threshold) {
+        if (axis === 'row') profile[y]++; else profile[x]++;
+      }
+    }
+  }
+  return profile;
+}
+
+function looksNumeric(text) {
+  const cleaned = text.replace(/\s/g, '');
+  if (!cleaned) return false;
+  const digitCount = (cleaned.match(/[0-9]/g) || []).length;
+  return digitCount / cleaned.length > 0.5;
+}
+
+async function ocrCell(canvas, x, y, w, h) {
+  const makeBlob = async (scale, smooth, extraPad) => {
+    const pad = extraPad || 0;
+    const px = Math.max(0, x - pad);
+    const py = Math.max(0, y - pad);
+    const pw = Math.min(canvas.width - px, w + pad * 2);
+    const ph = Math.min(canvas.height - py, h + pad * 2);
+    const cellCanvas = document.createElement('canvas');
+    cellCanvas.width = pw * scale;
+    cellCanvas.height = ph * scale;
+    const ctx = cellCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = !!smooth;
+    if (smooth) ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(canvas, px, py, pw, ph, 0, 0, pw * scale, ph * scale);
+
+    // Normalize: convert to grayscale, and invert if the cell has a dark background
+    // (e.g. white text on a colored header) — Tesseract is far more reliable on black-on-white.
+    const imgData = ctx.getImageData(0, 0, cellCanvas.width, cellCanvas.height);
+    const d = imgData.data;
+    let totalLum = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      totalLum += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    }
+    const avgLum = totalLum / (d.length / 4);
+    const invert = avgLum < 128;
+    for (let i = 0; i < d.length; i += 4) {
+      let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      if (invert) gray = 255 - gray;
+      d[i] = d[i + 1] = d[i + 2] = gray;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    return new Promise((res) => cellCanvas.toBlob(res, 'image/png'));
+  };
+
+  const runOcr = async (scale, smooth, extraOptions, extraPad) => {
+    const blob = await makeBlob(scale, smooth, extraPad);
+    const { data } = await Tesseract.recognize(blob, 'eng', { tessedit_pageseg_mode: '7', ...extraOptions });
+    return { text: data.text.trim().replace(/\n+/g, ' '), confidence: data.confidence || 0 };
+  };
+
+  try {
+    // Pass 1: smooth-upscaled, standard single-line mode
+    const first = await runOcr(3, true);
+    if (!first.text) return '';
+
+    const candidates = [first];
+
+    if (looksNumeric(first.text)) {
+      // Digit-only pass — removes letter/digit ambiguity entirely (6 can't be misread as G, 0 as O).
+      // Higher upscale + a couple pixels of padding — a decimal point is a tiny mark, easy for OCR to
+      // drop if it's clipped right at the crop edge or too small to register as a real character.
+      candidates.push(await runOcr(8, true, { tessedit_char_whitelist: '0123456789.,$%' }, 2));
+    } else if (first.confidence < 75) {
+      // Low-confidence text cell — try single-word mode at higher resolution as an alternate reading
+      candidates.push(await runOcr(5, true, { tessedit_pageseg_mode: '8' }));
+    }
+
+    // Pick whichever candidate Tesseract itself was most confident in
+    candidates.sort((a, b) => b.confidence - a.confidence);
+    return candidates[0].text;
+  } catch {
+    return '';
+  }
+}
+
+async function imageToExcelBlob(file) {
+  const XLSX = await import('xlsx');
+  const img = await loadImageForGrid(file);
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+
+  const rowProfile = getInkProfile(ctx, canvas.width, canvas.height, 'row');
+  const minRowGap = Math.max(3, Math.round(canvas.height * 0.005));
+  const rowNoiseFloor = Math.max(2, Math.round(canvas.width * 0.01)); // ignore rows with only a handful of stray noisy pixels
+  const rowBands = findGapBands(rowProfile, minRowGap, rowNoiseFloor);
+
+  // Safety fallback: if grid detection finds an unreasonable structure, fall back to whole-image OCR
+  if (rowBands.length < 1 || rowBands.length > 60) {
+    const { data: { text } } = await Tesseract.recognize(file, 'eng', { tessedit_pageseg_mode: '4' });
+    const rows = text.split('\n').filter((l) => l.trim()).map((line) => line.trim().split(/\s{2,}|\t/));
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    return new Blob([XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })], { type: 'application/octet-stream' });
+  }
+
+  const grid = [];
+  let cellCount = 0;
+  const totalEstimate = rowBands.length * 6; // rough estimate for progress messaging
+  for (let r = 0; r < rowBands.length; r++) {
+    const [ry0, ry1] = rowBands[r];
+    const rowHeight = ry1 - ry0;
+    const colCtx = document.createElement('canvas').getContext('2d');
+    colCtx.canvas.width = canvas.width;
+    colCtx.canvas.height = rowHeight;
+    colCtx.drawImage(canvas, 0, ry0, canvas.width, rowHeight, 0, 0, canvas.width, rowHeight);
+    const colProfile = getInkProfile(colCtx, canvas.width, rowHeight, 'col');
+    const minColGap = Math.max(4, Math.round(canvas.width * 0.008));
+    const colNoiseFloor = Math.max(2, Math.round(rowHeight * 0.1));
+    const colBands = findGapBands(colProfile, minColGap, colNoiseFloor);
+
+    const rowCells = [];
+    for (let c = 0; c < colBands.length; c++) {
+      const [cx0, cx1] = colBands[c];
+      cellCount++;
+      updateProcessingCaption(`Reading cell ${cellCount} (row ${r + 1} of ${rowBands.length})...`);
+      const padding = 2;
+      const text = await ocrCell(
+        canvas,
+        Math.max(0, cx0 - padding), Math.max(0, ry0 - padding),
+        Math.min(canvas.width, cx1 - cx0 + padding * 2), Math.min(canvas.height, ry1 - ry0 + padding * 2)
+      );
+      rowCells.push(text);
+    }
+    grid.push(rowCells);
+  }
+
+  const worksheet = XLSX.utils.aoa_to_sheet(grid);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+  const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  return new Blob([wbout], { type: 'application/octet-stream' });
+}
+
+async function wordToExcelBlob(file) {
+  const mammoth = (await import('mammoth')).default;
+  const XLSX = await import('xlsx');
+  const arrayBuffer = await file.arrayBuffer();
+  const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  const tables = doc.querySelectorAll('table');
+  const workbook = XLSX.utils.book_new();
+  if (tables.length > 0) {
+    tables.forEach((table, i) => {
+      const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
+        Array.from(tr.querySelectorAll('td, th')).map((cell) => cell.textContent.trim())
+      );
+      XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), `Table${i + 1}`);
+    });
+  } else {
+    const paragraphs = Array.from(doc.querySelectorAll('p')).map((p) => [p.textContent.trim()]).filter((r) => r[0]);
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(paragraphs), 'Sheet1');
+  }
+  const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  return new Blob([wbout], { type: 'application/octet-stream' });
+}
+
+async function wordToPdfBlob(file) {
+  const mammoth = (await import('mammoth')).default;
+  const arrayBuffer = await file.arrayBuffer();
+  const { value: text } = await mammoth.extractRawText({ arrayBuffer });
+  const pdf = new jsPDF();
+  const lines = pdf.splitTextToSize(text, 180);
+  let y = 15;
+  lines.forEach((line) => { if (y > 280) { pdf.addPage(); y = 15; } pdf.text(line, 15, y); y += 7; });
+  return pdf.output('blob');
+}
+
+async function wordToTextBlob(file) {
+  const mammoth = (await import('mammoth')).default;
+  const arrayBuffer = await file.arrayBuffer();
+  const { value: text } = await mammoth.extractRawText({ arrayBuffer });
+  return new Blob([text], { type: 'text/plain' });
+}
+
+async function excelToPdfBlob(file) {
+  const XLSX = await import('xlsx');
+  const arrayBuffer = await file.arrayBuffer();
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+  const pdf = new jsPDF({ orientation: rows[0] && rows[0].length > 8 ? 'landscape' : 'portrait' });
+  autoTable(pdf, { head: [rows[0]], body: rows.slice(1), styles: { fontSize: 8 }, headStyles: { fillColor: [37, 99, 235] } });
+  return pdf.output('blob');
+}
+
+async function excelToCsvBlob(file) {
+  const XLSX = await import('xlsx');
+  const arrayBuffer = await file.arrayBuffer();
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  const sheetName = workbook.SheetNames[0];
+  const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+  return new Blob([csv], { type: 'text/csv' });
+}
+
+async function pptToTextBlob(file) {
+  const JSZip = (await import('jszip')).default;
+  const zip = await JSZip.loadAsync(file);
+  const slideFiles = Object.keys(zip.files)
+    .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+    .sort((a, b) => parseInt(a.match(/slide(\d+)\.xml/)[1]) - parseInt(b.match(/slide(\d+)\.xml/)[1]));
+  let fullText = '';
+  for (let i = 0; i < slideFiles.length; i++) {
+    const xml = await zip.files[slideFiles[i]].async('text');
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const textNodes = doc.getElementsByTagName('a:t');
+    const slideText = Array.from(textNodes).map((n) => n.textContent).join(' ');
+    fullText += `--- Slide ${i + 1} ---\n${slideText}\n\n`;
+  }
+  return new Blob([fullText], { type: 'text/plain' });
+}
+
+async function runUnzipFlow(file) {
+  const JSZip = (await import('jszip')).default;
+  const zip = await JSZip.loadAsync(file);
+  const entries = Object.values(zip.files).filter((f) => !f.dir);
+  const extracted = [];
+  for (let i = 0; i < entries.length; i++) {
+    updateProcessingCaption(`Extracting file ${i + 1} of ${entries.length}...`);
+    const blob = await entries[i].async('blob');
+    extracted.push({ name: entries[i].name, blob });
+  }
+  await minWait(600);
+  modalBody.innerHTML = `
+    <div class="result-box">
+      <p class="doc-label" style="margin-bottom:12px; color: var(--text);">Extracted ${extracted.length} file(s):</p>
+      <div class="file-list" style="text-align:left;">
+        ${extracted.map((f) => {
+          const url = URL.createObjectURL(f.blob);
+          return `<div class="file-row"><span class="file-name">${f.name}</span><a href="${url}" download="${f.name}" class="download-btn" style="padding:5px 12px; font-size:0.82rem;">Download</a></div>`;
+        }).join('')}
+      </div>
+      <button class="reset-btn" id="resetToolBtn" style="margin-top:14px;">Convert another file</button>
+    </div>
+  `;
+  document.querySelector('#resetToolBtn').addEventListener('click', () => {
+    closeToolModal(false);
+    handleToolCardClick(currentToolKey, lastFocusedElement);
+  });
+}
+
+// ================= SINGLE-FILE CONFIG TOOLS =================
+function renderSingleFileConfig() {
+  renderGeneration++;
+  const myGeneration = renderGeneration;
+  const area = document.querySelector('#configArea');
+  area.innerHTML = '';
+  if (currentFile.type.startsWith('image/')) {
+    showPreviewImage(currentFile);
+  } else if (currentFile.type === 'application/pdf' && currentToolKey !== 'pdfcompress' && currentToolKey !== 'pdfrotate') {
+    area.insertAdjacentHTML('beforeend', `<div id="genericPdfPreviewWrap" style="text-align:center; margin-top:10px;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>`);
+    (async () => {
+      try {
+        const pdfjsLib = await getPdfjsLib();
+        const bytes = await currentFile.arrayBuffer();
+        const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const page = await pdfDoc.getPage(1);
+        const canvas = await renderPdfPageToCanvas(page, 1.0);
+        if (myGeneration !== renderGeneration) return; // a newer render started while we were loading — discard
+        const wrap = document.querySelector('#genericPdfPreviewWrap');
+        if (!wrap) return;
+        const img = document.createElement('img');
+        img.className = 'preview-img';
+        img.src = canvas.toDataURL('image/jpeg', 0.85);
+        wrap.innerHTML = '';
+        wrap.appendChild(img);
+        if (pdfDoc.numPages > 1) {
+          wrap.insertAdjacentHTML('beforeend', `<p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Page 1 of ${pdfDoc.numPages} shown</p>`);
+        }
+      } catch {
+        const wrap = document.querySelector('#genericPdfPreviewWrap');
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+      }
+    })();
+  } else {
+    area.insertAdjacentHTML('beforeend', `<p style="font-size:0.92rem; color: var(--text-muted); margin-top:10px;">📄 ${currentFile.name}</p>`);
+  }
+
+  if (currentToolKey === 'compress') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Quality
+          <select id="cfgQuality">
+            <option value="0.3">Low (smallest file)</option>
+            <option value="0.6" selected>Medium</option>
+            <option value="0.9">Extraordinary (largest file)</option>
+          </select>
+        </label>
+        <button class="config-action-btn" id="cfgApply">Compress</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const quality = parseFloat(document.querySelector('#cfgQuality').value); // captured before the DOM gets wiped
+      const originalKB = currentFile.size / 1024;
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth;
+      canvas.height = currentImg.naturalHeight;
+      canvas.getContext('2d').drawImage(currentImg, 0, 0);
+      canvas.toBlob(async (blob) => {
+        const newKB = blob.size / 1024;
+        const pct = Math.round(100 - (newKB / originalKB) * 100);
+        const note = `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'})`;
+        showProcessingState('Compressing...');
+        await minWait(700);
+        showResultState(blob, `compressed-${currentFile.name.split('.')[0]}.jpg`, note);
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  if (currentToolKey === 'resize') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Width (px) <input type="number" id="cfgWidth" placeholder="800" /></label>
+        <label>Height (px) <input type="number" id="cfgHeight" placeholder="600" /></label>
+        <button class="config-action-btn" id="cfgApply">Resize</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const w = parseInt(document.querySelector('#cfgWidth').value);
+      const h = parseInt(document.querySelector('#cfgHeight').value);
+      if (!w || !h) return;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(currentImg, 0, 0, w, h);
+      canvas.toBlob((blob) => processAndShow(blob, `resized-${currentFile.name}`), currentFile.type);
+    });
+  }
+
+  else if (currentToolKey === 'crop') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Apply Crop</button></div>
+    `);
+    setTimeout(() => {
+      if (myGeneration !== renderGeneration) return; // a newer render has since started — skip this stale init
+      if (cropperInstance) cropperInstance.destroy();
+      cropperInstance = new Cropper(currentImg, { viewMode: 1, autoCropArea: 0.8 });
+    }, 50);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      if (!cropperInstance) return;
+      cropperInstance.getCroppedCanvas().toBlob((blob) => {
+        cropperInstance.destroy(); cropperInstance = null;
+        processAndShow(blob, `cropped-${currentFile.name}`);
+      }, currentFile.type);
+    });
+  }
+
+  else if (currentToolKey === 'convertformat') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Format
+          <select id="cfgFormat"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WebP</option></select>
+        </label>
+        <label>Quality (for JPG/WebP)
+          <select id="cfgFormatQuality">
+            <option value="0.3">Low (smallest file)</option>
+            <option value="0.6" selected>Medium</option>
+            <option value="0.9">Extraordinary (largest file)</option>
+          </select>
+        </label>
+        <button class="config-action-btn" id="cfgApply">Convert</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const mime = document.querySelector('#cfgFormat').value;
+      const quality = parseFloat(document.querySelector('#cfgFormatQuality').value); // captured before the DOM gets wiped
+      const ext = mime.split('/')[1];
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      canvas.getContext('2d').drawImage(currentImg, 0, 0);
+      canvas.toBlob((blob) => processAndShow(blob, `${currentFile.name.split('.')[0]}.${ext}`), mime, quality);
+    });
+  }
+
+  else if (currentToolKey === 'rotateflip') {
+    let rotation = 0, flipH = false, flipV = false;
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <button type="button" id="rotL">⟲ Left</button>
+        <button type="button" id="rotR">⟳ Right</button>
+        <button type="button" id="flH">↔ Flip H</button>
+        <button type="button" id="flV">↕ Flip V</button>
+        <button class="config-action-btn" id="cfgApply">Save</button>
+      </div>
+    `);
+    const preview = () => { currentImg.style.transform = `rotate(${rotation}deg) scaleX(${flipH ? -1 : 1}) scaleY(${flipV ? -1 : 1})`; };
+    document.querySelector('#rotL').addEventListener('click', () => { rotation = (rotation - 90 + 360) % 360; preview(); });
+    document.querySelector('#rotR').addEventListener('click', () => { rotation = (rotation + 90) % 360; preview(); });
+    document.querySelector('#flH').addEventListener('click', () => { flipH = !flipH; preview(); });
+    document.querySelector('#flV').addEventListener('click', () => { flipV = !flipV; preview(); });
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const swap = rotation === 90 || rotation === 270;
+      const w = swap ? currentImg.naturalHeight : currentImg.naturalWidth;
+      const h = swap ? currentImg.naturalWidth : currentImg.naturalHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(w / 2, h / 2);
+      ctx.rotate((rotation * Math.PI) / 180);
+      ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+      ctx.drawImage(currentImg, -currentImg.naturalWidth / 2, -currentImg.naturalHeight / 2);
+      canvas.toBlob((blob) => processAndShow(blob, `rotated-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'watermarkimage') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Text <input type="text" id="cfgWmText" placeholder="e.g. DRAFT" /></label>
+        <button class="config-action-btn" id="cfgApply">Apply</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const text = document.querySelector('#cfgWmText').value.trim() || 'FileForge';
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = `${Math.round(canvas.width / 15)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(-Math.PI / 8);
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+      canvas.toBlob((blob) => processAndShow(blob, `watermarked-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'grayscale') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Intensity <input type="range" id="cfgIntensity" min="0" max="100" value="100" /> <span id="cfgIntensityVal">100%</span></label>
+        <button class="config-action-btn" id="cfgApply">Apply</button>
+      </div>
+    `);
+    const slider = document.querySelector('#cfgIntensity');
+    const valLabel = document.querySelector('#cfgIntensityVal');
+    slider.addEventListener('input', () => { valLabel.textContent = `${slider.value}%`; });
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const intensity = parseInt(slider.value) / 100; // captured before the DOM gets wiped
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0);
+      const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const px = d.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const avg = 0.299 * px[i] + 0.587 * px[i + 1] + 0.114 * px[i + 2];
+        px[i] = px[i] * (1 - intensity) + avg * intensity;
+        px[i + 1] = px[i + 1] * (1 - intensity) + avg * intensity;
+        px[i + 2] = px[i + 2] * (1 - intensity) + avg * intensity;
+      }
+      ctx.putImageData(d, 0, 0);
+      canvas.toBlob((blob) => processAndShow(blob, `grayscale-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'sepia') {
+    area.insertAdjacentHTML('beforeend', `<div class="config-panel"><button class="config-action-btn" id="cfgApply">Apply</button></div>`);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0);
+      const d = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const px = d.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i], g = px[i + 1], b = px[i + 2];
+        px[i] = Math.min(255, r * 0.393 + g * 0.769 + b * 0.189);
+        px[i + 1] = Math.min(255, r * 0.349 + g * 0.686 + b * 0.168);
+        px[i + 2] = Math.min(255, r * 0.272 + g * 0.534 + b * 0.131);
+      }
+      ctx.putImageData(d, 0, 0);
+      canvas.toBlob((blob) => processAndShow(blob, `sepia-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'blurimage') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Intensity <input type="range" id="cfgBlur" min="1" max="20" value="6" /></label>
+        <button class="config-action-btn" id="cfgApply">Apply</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const amt = document.querySelector('#cfgBlur').value;
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = `blur(${amt}px)`;
+      ctx.drawImage(currentImg, 0, 0);
+      canvas.toBlob((blob) => processAndShow(blob, `blurred-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'bgremove') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a small AI model (~15-30MB, one time).</p>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      showProcessingState('Downloading AI model...');
+      try {
+        const blob = await removeBackground(currentFile, {
+          progress: (key, current, total) => {
+            const pct = total ? Math.round((current / total) * 100) : 0;
+            updateProcessingCaption(key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`);
+          },
+        });
+        showResultState(blob, `no-bg-${currentFile.name.split('.')[0]}.png`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'colorpalette') {
+    area.insertAdjacentHTML('beforeend', `<div class="config-panel"><button class="config-action-btn" id="cfgApply">Extract Palette</button></div>`);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const sample = document.createElement('canvas');
+      sample.width = 60; sample.height = 60;
+      sample.getContext('2d').drawImage(currentImg, 0, 0, 60, 60);
+      const data = sample.getContext('2d').getImageData(0, 0, 60, 60).data;
+      const buckets = {};
+      for (let i = 0; i < data.length; i += 4) {
+        const key = `${Math.round(data[i] / 32) * 32},${Math.round(data[i + 1] / 32) * 32},${Math.round(data[i + 2] / 32) * 32}`;
+        buckets[key] = (buckets[key] || 0) + 1;
+      }
+      const top = Object.entries(buckets).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k]) => k.split(',').map(Number));
+      const out = document.createElement('canvas');
+      out.width = 480; out.height = 100;
+      const ctx = out.getContext('2d');
+      const sw = 480 / top.length;
+      top.forEach(([r, g, b], i) => {
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(i * sw, 0, sw, 70);
+      });
+      out.toBlob((blob) => processAndShow(blob, `palette-${currentFile.name.split('.')[0]}.png`));
+    });
+  }
+
+  else if (currentToolKey === 'socialresize') {
+    const presets = { 'ig-post': [1080, 1080], 'ig-story': [1080, 1920], 'yt-thumb': [1280, 720], 'fb-cover': [820, 312] };
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Preset
+          <select id="cfgPreset">
+            <option value="ig-post">Instagram Post</option>
+            <option value="ig-story">Instagram Story</option>
+            <option value="yt-thumb">YouTube Thumbnail</option>
+            <option value="fb-cover">Facebook Cover</option>
+          </select>
+        </label>
+        <button class="config-action-btn" id="cfgApply">Resize</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const [w, h] = presets[document.querySelector('#cfgPreset').value];
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(w / currentImg.naturalWidth, h / currentImg.naturalHeight);
+      const sw = currentImg.naturalWidth * scale, sh = currentImg.naturalHeight * scale;
+      ctx.drawImage(currentImg, (w - sw) / 2, (h - sh) / 2, sw, sh);
+      canvas.toBlob((blob) => processAndShow(blob, `social-${currentFile.name}`), currentFile.type || 'image/jpeg');
+    });
+  }
+
+  else if (currentToolKey === 'memecreator') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Top text <input type="text" id="cfgTop" /></label>
+        <label>Bottom text <input type="text" id="cfgBottom" /></label>
+        <button class="config-action-btn" id="cfgApply">Generate</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const top = document.querySelector('#cfgTop').value.trim().toUpperCase();
+      const bottom = document.querySelector('#cfgBottom').value.trim().toUpperCase();
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(currentImg, 0, 0);
+      const fontSize = Math.round(canvas.width / 12);
+      ctx.font = `bold ${fontSize}px Impact, sans-serif`;
+      ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = fontSize / 12;
+      if (top) { ctx.strokeText(top, canvas.width / 2, fontSize * 1.1); ctx.fillText(top, canvas.width / 2, fontSize * 1.1); }
+      if (bottom) { ctx.strokeText(bottom, canvas.width / 2, canvas.height - fontSize * 0.5); ctx.fillText(bottom, canvas.width / 2, canvas.height - fontSize * 0.5); }
+      canvas.toBlob((blob) => processAndShow(blob, `meme-${currentFile.name.split('.')[0]}.png`));
+    });
+  }
+
+  else if (currentToolKey === 'imagetoppt') {
+    area.insertAdjacentHTML('beforeend', `<div class="config-panel"><button class="config-action-btn" id="cfgApply">Generate PPTX</button></div>`);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      showProcessingState('Building your slide...');
+      const pptxgen = (await import('pptxgenjs')).default;
+      const pptx = new pptxgen();
+      const slide = pptx.addSlide();
+      slide.addImage({ path: URL.createObjectURL(currentFile), x: 0, y: 0, w: 10, h: 5.63 });
+      const blob = await pptx.write('blob');
+      await minWait(800);
+      showResultState(blob, 'image-slide.pptx');
+    });
+  }
+
+  else if (currentToolKey === 'pdf') {
+    // single-image path when only one file was dropped on this multiFile-capable tool
+    area.insertAdjacentHTML('beforeend', `<div class="config-panel"><button class="config-action-btn" id="cfgApply">Convert to PDF</button></div>`);
+    document.querySelector('#cfgApply').addEventListener('click', () => {
+      const w = currentImg.naturalWidth, h = currentImg.naturalHeight;
+      const pdf = newImagePdf(w, h);
+      drawImageOnPdfPage(pdf, currentImg, w, h);
+      processAndShow(pdf.output('blob'), `${currentFile.name.split('.')[0]}.pdf`);
+    });
+  }
+
+  else if (currentToolKey === 'pdfrotate') {
+    area.insertAdjacentHTML('beforeend', `
+      <div id="pdfPreviewWrap" style="text-align:center; margin-top:10px;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>
+      <div class="config-panel">
+        <button type="button" id="rotLeftBtn">⟲ Rotate Left</button>
+        <button type="button" id="rotRightBtn">⟳ Rotate Right</button>
+      </div>
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Apply Rotation</button></div>
+    `);
+
+    let cumulativeAngle = 0; // normalized to 0/90/180/270, positive = clockwise
+    const previewImg = document.createElement('img');
+    previewImg.className = 'preview-img';
+    previewImg.style.transition = 'transform 0.15s ease';
+
+    (async () => {
+      try {
+        const pdfjsLib = await getPdfjsLib();
+        const bytes = await currentFile.arrayBuffer();
+        const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+        const page = await pdfDoc.getPage(1);
+        const canvas = await renderPdfPageToCanvas(page, 1.0);
+        previewImg.src = canvas.toDataURL('image/jpeg', 0.85);
+        const wrap = document.querySelector('#pdfPreviewWrap');
+        wrap.innerHTML = '';
+        wrap.appendChild(previewImg);
+      } catch {
+        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+      }
+    })();
+
+    function updatePreviewRotation() {
+      previewImg.style.transform = `rotate(${cumulativeAngle}deg)`;
+    }
+    document.querySelector('#rotLeftBtn').addEventListener('click', () => {
+      cumulativeAngle = (cumulativeAngle - 90 + 360) % 360;
+      updatePreviewRotation();
+    });
+    document.querySelector('#rotRightBtn').addEventListener('click', () => {
+      cumulativeAngle = (cumulativeAngle + 90) % 360;
+      updatePreviewRotation();
+    });
+
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const angleToApply = cumulativeAngle; // captured BEFORE showProcessingState wipes the DOM
+      if (angleToApply === 0) { showErrorState('Rotate the preview left or right first, then apply.'); return; }
+      showProcessingState('Rotating your PDF...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        doc.getPages().forEach((p) => p.setRotation(degrees((p.getRotation().angle + angleToApply) % 360)));
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `rotated-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfpagenumbers') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Position
+          <select id="cfgPos"><option value="bottom-center">Bottom Center</option><option value="bottom-right">Bottom Right</option></select>
+        </label>
+        <button class="config-action-btn" id="cfgApply">Add Numbers</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const pos = document.querySelector('#cfgPos').value; // captured BEFORE showProcessingState wipes the DOM
+      showProcessingState('Adding page numbers...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        const pages = doc.getPages();
+        pages.forEach((p, i) => {
+          const { width } = p.getSize();
+          const text = `${i + 1} / ${pages.length}`;
+          const x = pos === 'bottom-right' ? width - 60 : width / 2 - 15;
+          p.drawText(text, { x, y: 20, size: 10 });
+        });
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `numbered-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfextract' || currentToolKey === 'pdfdelete') {
+    const isExtract = currentToolKey === 'pdfextract';
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Pages (e.g. 1,3,5-7) <input type="text" id="cfgRange" placeholder="1,3,5-7" /></label>
+        <button class="config-action-btn" id="cfgApply">${isExtract ? 'Extract' : 'Delete'}</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const rangeStr = document.querySelector('#cfgRange').value.trim();
+      if (!rangeStr) return;
+      showProcessingState(isExtract ? 'Extracting pages...' : 'Removing pages...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const src = await PDFDocument.load(bytes);
+        const total = src.getPageCount();
+        const rangeIndices = parsePageRange(rangeStr, total);
+        const keepIndices = isExtract
+          ? rangeIndices
+          : Array.from({ length: total }, (_, i) => i).filter((i) => !rangeIndices.includes(i));
+        const outDoc = await PDFDocument.create();
+        const pages = await outDoc.copyPages(src, keepIndices);
+        pages.forEach((p) => outDoc.addPage(p));
+        const outBytes = await outDoc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `${isExtract ? 'extracted' : 'deleted-pages'}-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfwatermark') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Text <input type="text" id="cfgWmText" placeholder="e.g. CONFIDENTIAL" /></label>
+        <button class="config-action-btn" id="cfgApply">Apply</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const text = document.querySelector('#cfgWmText').value.trim() || 'FileForge';
+      showProcessingState('Applying watermark...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        doc.getPages().forEach((p) => {
+          const { width, height } = p.getSize();
+          p.drawText(text, { x: width / 2 - text.length * 6, y: height / 2, size: 40, opacity: 0.25, rotate: degrees(45) });
+        });
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `watermarked-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfprotect') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Password <input type="password" id="cfgPassword" placeholder="Choose a password" /></label>
+        <button class="config-action-btn" id="cfgApply">Protect</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const password = document.querySelector('#cfgPassword').value;
+      if (!password) return;
+      showProcessingState('Encrypting your PDF...');
+      try {
+        const { encryptPDF } = await import('@pdfsmaller/pdf-encrypt-lite');
+        const bytes = new Uint8Array(await currentFile.arrayBuffer());
+        const encrypted = await encryptPDF(bytes, password);
+        await minWait(500);
+        showResultState(new Blob([encrypted], { type: 'application/pdf' }), `protected-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfcrop') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Top (pt) <input type="number" id="cfgTop" value="20" /></label>
+        <label>Bottom (pt) <input type="number" id="cfgBottom" value="20" /></label>
+        <label>Left (pt) <input type="number" id="cfgLeft" value="20" /></label>
+        <label>Right (pt) <input type="number" id="cfgRight" value="20" /></label>
+        <button class="config-action-btn" id="cfgApply">Crop</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const top = parseFloat(document.querySelector('#cfgTop').value) || 0;
+      const bottom = parseFloat(document.querySelector('#cfgBottom').value) || 0;
+      const left = parseFloat(document.querySelector('#cfgLeft').value) || 0;
+      const right = parseFloat(document.querySelector('#cfgRight').value) || 0;
+      showProcessingState('Cropping your PDF...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        doc.getPages().forEach((p) => {
+          const { width, height } = p.getSize();
+          p.setCropBox(left, bottom, width - left - right, height - top - bottom);
+        });
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `cropped-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfunlock') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Password <input type="password" id="cfgPassword" placeholder="Enter the current password" /></label>
+        <button class="config-action-btn" id="cfgApply">Unlock</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const password = document.querySelector('#cfgPassword').value;
+      if (!password) return;
+      showProcessingState('Removing password...');
+      try {
+        const { decryptPDF } = await import('@pdfsmaller/pdf-decrypt');
+        const bytes = new Uint8Array(await currentFile.arrayBuffer());
+        const decrypted = await decryptPDF(bytes, password);
+        await minWait(500);
+        showResultState(new Blob([decrypted], { type: 'application/pdf' }), `unlocked-${currentFile.name}`);
+      } catch (err) { showErrorState('Incorrect password, or this file uses an unsupported encryption type.'); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfsign') {
+    area.insertAdjacentHTML('beforeend', `
+      <p style="font-size:0.9rem; color:var(--text-muted); margin-top:10px;">Draw your signature below:</p>
+      <canvas id="sigCanvas" width="400" height="150" style="border:1px solid var(--border); border-radius:8px; touch-action:none; width:100%; max-width:400px;"></canvas>
+      <div class="config-panel">
+        <button type="button" id="clearSig">Clear</button>
+        <button class="config-action-btn" id="cfgApply">Sign PDF</button>
+      </div>
+    `);
+    const canvas = document.querySelector('#sigCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1B2430';
+    let drawing = false;
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+      return { x: cx * scaleX, y: cy * scaleX };
+    }
+    function start(e) { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+    function move(e) { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+    function end() { drawing = false; }
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); move(e); });
+    canvas.addEventListener('touchend', end);
+    document.querySelector('#clearSig').addEventListener('click', () => ctx.clearRect(0, 0, canvas.width, canvas.height));
+
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      showProcessingState('Placing your signature...');
+      try {
+        const sigDataUrl = canvas.toDataURL('image/png');
+        const sigBytes = await (await fetch(sigDataUrl)).arrayBuffer();
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        const pngImage = await doc.embedPng(sigBytes);
+        const pages = doc.getPages();
+        const lastPage = pages[pages.length - 1];
+        const { width } = lastPage.getSize();
+        const sigWidth = 150;
+        const sigHeight = (pngImage.height / pngImage.width) * sigWidth;
+        lastPage.drawImage(pngImage, { x: width - sigWidth - 40, y: 40, width: sigWidth, height: sigHeight });
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `signed-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'wordtoexcel' || currentToolKey === 'wordtopdf' || currentToolKey === 'wordtotext') {
+    area.insertAdjacentHTML('beforeend', `
+      <div id="docPreviewWrap" style="margin-top:10px;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Convert</button></div>
+    `);
+    (async () => {
+      try {
+        const mammoth = (await import('mammoth')).default;
+        const arrayBuffer = await currentFile.arrayBuffer();
+        const { value: text } = await mammoth.extractRawText({ arrayBuffer });
+        const wrap = document.querySelector('#docPreviewWrap');
+        if (wrap) {
+          const snippet = text.trim().slice(0, 400);
+          wrap.innerHTML = `<p class="doc-label">Preview (first ${snippet.length} characters):</p><p style="font-size:0.9rem; color:var(--text); white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px;">${snippet}${text.length > 400 ? '…' : ''}</p>`;
+        }
+      } catch {
+        const wrap = document.querySelector('#docPreviewWrap');
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+      }
+    })();
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      showProcessingState('Converting...');
+      try {
+        let blob, filename;
+        if (currentToolKey === 'wordtoexcel') { blob = await wordToExcelBlob(currentFile); filename = `${currentFile.name.split('.')[0]}.xlsx`; }
+        else if (currentToolKey === 'wordtopdf') { blob = await wordToPdfBlob(currentFile); filename = `${currentFile.name.split('.')[0]}.pdf`; }
+        else { blob = await wordToTextBlob(currentFile); filename = `${currentFile.name.split('.')[0]}.txt`; }
+        await minWait(500);
+        showResultState(blob, filename);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'exceltopdf' || currentToolKey === 'exceltocsv') {
+    area.insertAdjacentHTML('beforeend', `
+      <div id="sheetPreviewWrap" style="margin-top:10px;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Convert</button></div>
+    `);
+    (async () => {
+      try {
+        const XLSX = await import('xlsx');
+        const arrayBuffer = await currentFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
+        const previewRows = rows.slice(0, 5);
+        const wrap = document.querySelector('#sheetPreviewWrap');
+        if (wrap) {
+          const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${cell ?? ''}</td>`).join('')}</tr>`).join('');
+          wrap.innerHTML = `<p class="doc-label">Sheet "${sheetName}" — ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
+        }
+      } catch {
+        const wrap = document.querySelector('#sheetPreviewWrap');
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+      }
+    })();
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      showProcessingState('Converting...');
+      try {
+        let blob, filename;
+        if (currentToolKey === 'exceltopdf') { blob = await excelToPdfBlob(currentFile); filename = `${currentFile.name.split('.')[0]}.pdf`; }
+        else { blob = await excelToCsvBlob(currentFile); filename = `${currentFile.name.split('.')[0]}.csv`; }
+        await minWait(500);
+        showResultState(blob, filename);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfsplit') {
+    area.insertAdjacentHTML('beforeend', `
+      <div class="config-panel">
+        <label>Groups (e.g. 1-3,4-6,7) <input type="text" id="cfgGroups" placeholder="1-3,4-6,7" /></label>
+        <button class="config-action-btn" id="cfgApply">Split</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const groupsStr = document.querySelector('#cfgGroups').value.trim();
+      if (!groupsStr) return;
+      showProcessingState('Splitting your PDF...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const src = await PDFDocument.load(bytes);
+        const total = src.getPageCount();
+        const groups = groupsStr.split(',').map((g) => g.trim()).filter(Boolean);
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        for (let i = 0; i < groups.length; i++) {
+          updateProcessingCaption(`Creating file ${i + 1} of ${groups.length}...`);
+          const indices = parsePageRange(groups[i], total);
+          const outDoc = await PDFDocument.create();
+          const pages = await outDoc.copyPages(src, indices);
+          pages.forEach((p) => outDoc.addPage(p));
+          const outBytes = await outDoc.save();
+          zip.file(`split-${i + 1}.pdf`, outBytes);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        await minWait(300);
+        showResultState(zipBlob, `${currentFile.name.split('.')[0]}-split.zip`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  else if (currentToolKey === 'pdfcompress') {
+    area.insertAdjacentHTML('beforeend', `
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images inside the PDF — all text and vector content stays exactly as-is, fully selectable and sharp. Images stored in other formats are left untouched.</p>
+      <div class="config-panel">
+        <label>Image quality
+          <select id="cfgQuality">
+            <option value="0.3">Low (smallest file)</option>
+            <option value="0.6" selected>Medium</option>
+            <option value="0.9">Extraordinary (largest file)</option>
+          </select>
+        </label>
+        <button class="config-action-btn" id="cfgApply">Compress</button>
+      </div>
+    `);
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const quality = parseFloat(document.querySelector('#cfgQuality').value);
+      const originalKB = currentFile.size / 1024;
+      showProcessingState('Scanning embedded images...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+
+        function decodeAscii85(input) {
+          // Strip optional <~ ~> delimiters and whitespace
+          let str = new TextDecoder('latin1').decode(input).replace(/^<~/, '').replace(/~>$/, '').replace(/\s/g, '');
+          const out = [];
+          let tuple = [];
+          for (let i = 0; i < str.length; i++) {
+            const c = str[i];
+            if (c === 'z' && tuple.length === 0) {
+              out.push(0, 0, 0, 0);
+              continue;
+            }
+            tuple.push(str.charCodeAt(i) - 33);
+            if (tuple.length === 5) {
+              let n = 0;
+              for (const t of tuple) n = n * 85 + t;
+              out.push((n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff);
+              tuple = [];
+            }
+          }
+          if (tuple.length > 0) {
+            const count = tuple.length;
+            while (tuple.length < 5) tuple.push(84);
+            let n = 0;
+            for (const t of tuple) n = n * 85 + t;
+            const bytes4 = [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+            out.push(...bytes4.slice(0, count - 1));
+          }
+          return new Uint8Array(out);
+        }
+
+        const recompressJpeg = (jpegBytes) => new Promise((resolve, reject) => {
+          const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+          const url = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            canvas.toBlob((newBlob) => {
+              URL.revokeObjectURL(url);
+              if (!newBlob) { reject(new Error('Could not re-encode image')); return; }
+              newBlob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode embedded image')); };
+          img.src = url;
+        });
+
+        let recompressedCount = 0;
+        let imagesFound = 0;
+        const entries = Array.from(doc.context.enumerateIndirectObjects());
+        console.log(`[Compress PDF] Scanning ${entries.length} objects...`);
+        for (let i = 0; i < entries.length; i++) {
+          const [ref, obj] = entries[i];
+          if (!obj || typeof obj.dict === 'undefined') continue;
+          const subtype = obj.dict.get(PDFName.of('Subtype'));
+          if (!subtype || subtype.toString() !== '/Image') continue;
+          imagesFound++;
+          let filterObj = obj.dict.get(PDFName.of('Filter'));
+          const filterChain = filterObj && filterObj.array ? filterObj.array.map((f) => f.toString()) : filterObj ? [filterObj.toString()] : [];
+          console.log(`[Compress PDF] Image #${imagesFound} filter chain:`, filterChain);
+          if (!filterChain.length || filterChain[filterChain.length - 1] !== '/DCTDecode') {
+            console.log(`[Compress PDF] Skipping — last filter isn't DCTDecode`);
+            continue;
+          }
+          const hasAscii85 = filterChain.includes('/ASCII85Decode');
+
+          updateProcessingCaption(`Recompressing image ${recompressedCount + 1}...`);
+          try {
+            const originalBytes = obj.contents;
+            console.log(`[Compress PDF] originalBytes length: ${originalBytes.length}, hasAscii85: ${hasAscii85}, first bytes:`, Array.from(originalBytes.slice(0, 10)));
+            const actualJpegBytes = hasAscii85 ? decodeAscii85(originalBytes) : originalBytes;
+            console.log(`[Compress PDF] decoded JPEG bytes length: ${actualJpegBytes.length}, starts with FFD8:`, actualJpegBytes[0] === 0xFF && actualJpegBytes[1] === 0xD8);
+            const newBytes = await recompressJpeg(actualJpegBytes);
+            console.log(`[Compress PDF] recompressed bytes length: ${newBytes.length} (vs original ${originalBytes.length})`);
+            if (newBytes.length < originalBytes.length) {
+              const newDict = obj.dict.clone(doc.context);
+              newDict.set(PDFName.of('Length'), doc.context.obj(newBytes.length));
+              // New bytes are plain JPEG — filter chain must drop ASCII85Decode now that we're not re-encoding to it
+              newDict.set(PDFName.of('Filter'), PDFName.of('DCTDecode'));
+              const newStream = PDFRawStream.of(newDict, newBytes);
+              doc.context.assign(ref, newStream);
+              recompressedCount++;
+            } else {
+              console.log(`[Compress PDF] Skipped — new bytes (${newBytes.length}) not smaller than original (${originalBytes.length})`);
+            }
+          } catch (imgErr) {
+            console.log(`[Compress PDF] Image #${imagesFound} failed:`, imgErr.message);
+          }
+        }
+
+        console.log(`[Compress PDF] Done. Found ${imagesFound} image(s), recompressed ${recompressedCount}.`);
+        updateProcessingCaption('Saving your PDF...');
+        const outBytes = await doc.save();
+        const blob = new Blob([outBytes], { type: 'application/pdf' });
+        const newKB = blob.size / 1024;
+        const pct = Math.round(100 - (newKB / originalKB) * 100);
+        const note = recompressedCount === 0
+          ? 'No JPEG images found to recompress — this PDF may be mostly text/vector already, or uses image formats this tool doesn\'t touch.'
+          : `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'}) — ${recompressedCount} image(s) recompressed, text untouched.`;
+        await minWait(300);
+        showResultState(blob, `compressed-${currentFile.name}`, note);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+}
+
+function parsePageRange(rangeStr, maxPages) {
+  const indices = new Set();
+  rangeStr.split(',').forEach((part) => {
+    part = part.trim();
+    if (part.includes('-')) {
+      const [a, b] = part.split('-').map((n) => parseInt(n.trim()));
+      for (let i = a; i <= b; i++) if (i >= 1 && i <= maxPages) indices.add(i - 1);
+    } else if (part) {
+      const n = parseInt(part);
+      if (n >= 1 && n <= maxPages) indices.add(n - 1);
+    }
+  });
+  return Array.from(indices).sort((a, b) => a - b);
+}
+
+async function processAndShow(blob, filename) {
+  showProcessingState('Working...');
+  await minWait(900);
+  showResultState(blob, filename);
+}
+
+// ================= NO-FILE (TEXT / UTILITY) TOOLS =================
+function renderNoFileTool(toolKey) {
+  if (toolKey === 'texttoppt') renderTextToPptTool();
+  if (toolKey === 'textopdf') renderTextToPdfTool();
+  if (toolKey === 'wordcounter') renderWordCounterTool();
+  if (toolKey === 'caseconverter') renderCaseConverterTool();
+  if (toolKey === 'qrcode') renderQrCodeTool();
+  if (toolKey === 'passwordgen') renderPasswordGenTool();
+  if (toolKey === 'jsonformatter') renderJsonFormatterTool();
+  if (toolKey === 'base64') renderBase64Tool();
+  if (toolKey === 'loremipsum') renderLoremIpsumTool();
+  if (toolKey === 'unitconverter') renderUnitConverterTool();
+  if (toolKey === 'gpacalculator') renderGpaCalculatorTool();
+  if (toolKey === 'citationgen') renderCitationGenTool();
+  if (toolKey === 'randomgen') renderRandomGenTool();
+  if (toolKey === 'invoicegen') renderInvoiceGenTool();
+  if (toolKey === 'resumebuilder') renderResumeBuilderTool();
+  if (toolKey === 'scantopdf') renderScanToPdfTool();
+  if (toolKey === 'htmltopdf') renderHtmlToPdfTool();
+  if (toolKey === 'htmltoexcel') renderHtmlToExcelTool();
+  if (toolKey === 'aisummarizer') renderAiSummarizerTool();
+}
+
+function copyBtn(targetSelector) {
+  return `<button type="button" class="config-action-btn copy-btn" data-copy-target="${targetSelector}" style="margin-top:8px;">Copy</button>`;
+}
+
+function wireCopyButtons() {
+  modalBody.querySelectorAll('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = document.querySelector(btn.dataset.copyTarget);
+      if (!target) return;
+      navigator.clipboard.writeText(target.value || target.textContent).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      });
+    });
+  });
+}
+
+function renderTextToPptTool() {
+  modalBody.innerHTML = `
+    <p style="font-size:0.92rem; color:var(--text-muted); margin-bottom:8px;">Separate slides with a blank line first line of each block becomes the slide title.</p>
+    <textarea id="t2pptText" rows="8" placeholder="Slide 1 title
+Bullet point one
+
+Slide 2 title
+Another bullet" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate PPTX</button></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const text = document.querySelector('#t2pptText').value.trim();
+    if (!text) return;
+    showProcessingState('Building your slides...');
+    const pptxgen = (await import('pptxgenjs')).default;
+    const blocks = text.split(/\n\s*\n/);
+    const pptx = new pptxgen();
+    blocks.forEach((block) => {
+      const lines = block.split('\n').filter((l) => l.trim());
+      const slide = pptx.addSlide();
+      slide.addText(lines[0] || 'Untitled', { x: 0.5, y: 0.4, w: 9, h: 1, fontSize: 28, bold: true });
+      if (lines.length > 1) {
+        slide.addText(lines.slice(1).map((l) => ({ text: l, options: { bullet: true, breakLine: true } })), { x: 0.5, y: 1.5, w: 9, h: 4.5, fontSize: 18 });
+      }
+    });
+    const blob = await pptx.write('blob');
+    await minWait(600);
+    showResultState(blob, 'presentation.pptx');
+  });
+}
+
+function renderTextToPdfTool() {
+  modalBody.innerHTML = `
+    <textarea id="t2pdfText" rows="10" placeholder="Paste or type your text here..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate PDF</button></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const text = document.querySelector('#t2pdfText').value.trim();
+    if (!text) return;
+    showProcessingState('Building your PDF...');
+    const pdf = new jsPDF();
+    const lines = pdf.splitTextToSize(text, 180);
+    let y = 15;
+    lines.forEach((line) => { if (y > 280) { pdf.addPage(); y = 15; } pdf.text(line, 15, y); y += 7; });
+    await minWait(500);
+    showResultState(pdf.output('blob'), 'document.pdf');
+  });
+}
+
+function renderWordCounterTool() {
+  modalBody.innerHTML = `
+    <textarea id="wcText" rows="10" placeholder="Start typing or paste text..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <p id="wcResult" style="margin-top:12px; font-size:1.05rem; color:var(--text);">Words: 0 Characters: 0</p>
+  `;
+  const textarea = document.querySelector('#wcText');
+  textarea.addEventListener('input', () => {
+    const text = textarea.value;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    document.querySelector('#wcResult').textContent = `Words: ${words} Characters: ${text.length}`;
+  });
+}
+
+function renderCaseConverterTool() {
+  modalBody.innerHTML = `
+    <textarea id="caseInput" rows="6" placeholder="Enter text..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel">
+      <button type="button" id="cUpper">UPPERCASE</button>
+      <button type="button" id="cLower">lowercase</button>
+      <button type="button" id="cTitle">Title Case</button>
+      <button type="button" id="cSentence">Sentence case</button>
+    </div>
+    <div id="caseOutWrap"></div>
+  `;
+  function show(val) {
+    const wrap = document.querySelector('#caseOutWrap');
+    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#caseOutput')}`;
+    wireCopyButtons();
+  }
+  document.querySelector('#cUpper').addEventListener('click', () => show(document.querySelector('#caseInput').value.toUpperCase()));
+  document.querySelector('#cLower').addEventListener('click', () => show(document.querySelector('#caseInput').value.toLowerCase()));
+  document.querySelector('#cTitle').addEventListener('click', () => show(document.querySelector('#caseInput').value.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase())));
+  document.querySelector('#cSentence').addEventListener('click', () => {
+    const text = document.querySelector('#caseInput').value.toLowerCase();
+    show(text.replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase()));
+  });
+}
+
+function renderQrCodeTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel">
+      <input type="text" id="qrInput" placeholder="https://example.com" style="flex:1; min-width:200px;" />
+      <button class="config-action-btn" id="cfgGen">Generate</button>
+    </div>
+    <div id="qrOutput" style="text-align:center; margin-top:14px;"></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const val = document.querySelector('#qrInput').value.trim();
+    if (!val) return;
+    const QRCode = (await import('qrcode')).default;
+    const canvas = document.createElement('canvas');
+    await QRCode.toCanvas(canvas, val, { width: 220 });
+    const output = document.querySelector('#qrOutput');
+    output.innerHTML = '';
+    output.appendChild(canvas);
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = 'qrcode.png'; link.textContent = 'Download QR Code'; link.className = 'download-btn';
+      output.appendChild(document.createElement('br'));
+      output.appendChild(link);
+    });
+  });
+}
+
+function renderPasswordGenTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel">
+      <label>Length <input type="number" id="pwLength" value="16" min="4" max="64" /></label>
+      <label><input type="checkbox" id="pwUpper" checked /> Uppercase</label>
+      <label><input type="checkbox" id="pwNumbers" checked /> Numbers</label>
+      <label><input type="checkbox" id="pwSymbols" checked /> Symbols</label>
+      <button class="config-action-btn" id="cfgGen">Generate</button>
+    </div>
+    <div id="pwOutWrap"></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const len = parseInt(document.querySelector('#pwLength').value) || 16;
+    let chars = 'abcdefghijklmnopqrstuvwxyz';
+    if (document.querySelector('#pwUpper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (document.querySelector('#pwNumbers').checked) chars += '0123456789';
+    if (document.querySelector('#pwSymbols').checked) chars += '!@#$%^&*()_+-=';
+    const arr = new Uint32Array(len);
+    crypto.getRandomValues(arr);
+    let pw = '';
+    for (let i = 0; i < len; i++) pw += chars[arr[i] % chars.length];
+    document.querySelector('#pwOutWrap').innerHTML = `<p id="pwResult" style="font-size:1.2rem; font-family:monospace; margin-top:12px; word-break:break-all;">${pw}</p>${copyBtn('#pwResult')}`;
+    wireCopyButtons();
+  });
+}
+
+function renderJsonFormatterTool() {
+  modalBody.innerHTML = `
+    <textarea id="jsonInput" rows="8" placeholder='{"example": true}' style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Format</button></div>
+    <div id="jsonOutWrap"></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const wrap = document.querySelector('#jsonOutWrap');
+    try {
+      const pretty = JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value), null, 2);
+      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${pretty}</textarea>${copyBtn('#jsonOutput')}`;
+      wireCopyButtons();
+    } catch (err) {
+      wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${err.message}</p>`;
+    }
+  });
+}
+
+function renderBase64Tool() {
+  modalBody.innerHTML = `
+    <textarea id="b64Input" rows="6" placeholder="Enter text..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel">
+      <button type="button" id="b64Enc">Encode</button>
+      <button type="button" id="b64Dec">Decode</button>
+    </div>
+    <div id="b64OutWrap"></div>
+  `;
+  function show(val) {
+    const wrap = document.querySelector('#b64OutWrap');
+    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#b64Output')}`;
+    wireCopyButtons();
+  }
+  document.querySelector('#b64Enc').addEventListener('click', () => { try { show(btoa(document.querySelector('#b64Input').value)); } catch { show('Error: cannot encode these characters.'); } });
+  document.querySelector('#b64Dec').addEventListener('click', () => { try { show(atob(document.querySelector('#b64Input').value)); } catch { show('Error: invalid Base64 input.'); } });
+}
+
+function renderLoremIpsumTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel">
+      <label>Paragraphs <input type="number" id="loremCount" value="3" min="1" max="20" /></label>
+      <button class="config-action-btn" id="cfgGen">Generate</button>
+    </div>
+    <div id="loremOutWrap"></div>
+  `;
+  const sentences = [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse.',
+    'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
+    'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit.',
+  ];
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const count = parseInt(document.querySelector('#loremCount').value) || 3;
+    const paragraphs = [];
+    for (let i = 0; i < count; i++) {
+      const shuffled = [...sentences].sort(() => Math.random() - 0.5);
+      paragraphs.push(shuffled.slice(0, 4).join(' '));
+    }
+    const wrap = document.querySelector('#loremOutWrap');
+    wrap.innerHTML = `<textarea id="loremOutput" rows="12" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; margin-top:10px;">${paragraphs.join('\n\n')}</textarea>${copyBtn('#loremOutput')}`;
+    wireCopyButtons();
+  });
+}
+
+function renderUnitConverterTool() {
+  const unitGroups = {
+    length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mile: 1609.34, yard: 0.9144, foot: 0.3048, inch: 0.0254 },
+    weight: { kg: 1, g: 0.001, mg: 0.000001, lb: 0.453592, oz: 0.0283495, ton: 1000 },
+  };
+  modalBody.innerHTML = `
+    <div class="config-panel">
+      <label>Category
+        <select id="unitCat"><option value="length">Length</option><option value="weight">Weight</option><option value="temperature">Temperature</option></select>
+      </label>
+    </div>
+    <div class="config-panel">
+      <label>Value <input type="number" id="unitVal" value="1" /></label>
+      <label>From <select id="unitFrom"></select></label>
+      <label>To <select id="unitTo"></select></label>
+      <button class="config-action-btn" id="cfgGen">Convert</button>
+    </div>
+    <p id="unitOutput" style="margin-top:10px; font-size:1.05rem;"></p>
+  `;
+  const catSelect = document.querySelector('#unitCat');
+  const fromSelect = document.querySelector('#unitFrom');
+  const toSelect = document.querySelector('#unitTo');
+  function populate() {
+    const cat = catSelect.value;
+    if (cat === 'temperature') {
+      fromSelect.innerHTML = toSelect.innerHTML = ['Celsius', 'Fahrenheit', 'Kelvin'].map((u) => `<option value="${u}">${u}</option>`).join('');
+    } else {
+      fromSelect.innerHTML = toSelect.innerHTML = Object.keys(unitGroups[cat]).map((u) => `<option value="${u}">${u}</option>`).join('');
+    }
+  }
+  catSelect.addEventListener('change', populate);
+  populate();
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const cat = catSelect.value, val = parseFloat(document.querySelector('#unitVal').value) || 0, from = fromSelect.value, to = toSelect.value;
+    let result;
+    if (cat === 'temperature') {
+      const celsius = from === 'Celsius' ? val : from === 'Fahrenheit' ? (val - 32) * 5 / 9 : val - 273.15;
+      result = to === 'Celsius' ? celsius : to === 'Fahrenheit' ? celsius * 9 / 5 + 32 : celsius + 273.15;
+    } else {
+      result = (val * unitGroups[cat][from]) / unitGroups[cat][to];
+    }
+    document.querySelector('#unitOutput').textContent = `${val} ${from} = ${result.toFixed(4)} ${to}`;
+  });
+}
+
+function renderGpaCalculatorTool() {
+  modalBody.innerHTML = `
+    <div id="gpaRows"></div>
+    <div class="config-panel">
+      <button type="button" id="addRow">+ Add Course</button>
+      <button class="config-action-btn" id="cfgGen">Calculate</button>
+    </div>
+    <p id="gpaOutput" style="margin-top:10px; font-size:1.1rem;"></p>
+  `;
+  const rowsEl = document.querySelector('#gpaRows');
+  function addRow() {
+    const row = document.createElement('div');
+    row.className = 'config-panel';
+    row.innerHTML = `
+      <label>Credits <input type="number" class="gpaCredits" value="3" min="0" /></label>
+      <label>Grade (0-4) <input type="number" class="gpaGrade" value="4" min="0" max="4" step="0.1" /></label>
+      <button type="button" class="rmRow">✕</button>
+    `;
+    row.querySelector('.rmRow').addEventListener('click', () => row.remove());
+    rowsEl.appendChild(row);
+  }
+  addRow(); addRow();
+  document.querySelector('#addRow').addEventListener('click', addRow);
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const credits = Array.from(document.querySelectorAll('.gpaCredits')).map((el) => parseFloat(el.value) || 0);
+    const grades = Array.from(document.querySelectorAll('.gpaGrade')).map((el) => parseFloat(el.value) || 0);
+    let totalPoints = 0, totalCredits = 0;
+    credits.forEach((c, i) => { totalPoints += c * grades[i]; totalCredits += c; });
+    document.querySelector('#gpaOutput').textContent = `Your GPA: ${totalCredits ? (totalPoints / totalCredits).toFixed(3) : '0.000'}`;
+  });
+}
+
+function renderCitationGenTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel" style="flex-direction:column; align-items:stretch;">
+      <label>Style <select id="citeStyle"><option value="apa">APA</option><option value="mla">MLA</option><option value="chicago">Chicago</option></select></label>
+      <label>Author (Last, First) <input type="text" id="citeAuthor" /></label>
+      <label>Title <input type="text" id="citeTitle" /></label>
+      <label>Year <input type="text" id="citeYear" /></label>
+      <label>Publisher / Website <input type="text" id="citePub" /></label>
+      <button class="config-action-btn" id="cfgGen" style="margin-top:6px;">Generate Citation</button>
+    </div>
+    <div id="citeOutWrap"></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const style = document.querySelector('#citeStyle').value;
+    const author = document.querySelector('#citeAuthor').value.trim();
+    const title = document.querySelector('#citeTitle').value.trim();
+    const year = document.querySelector('#citeYear').value.trim();
+    const pub = document.querySelector('#citePub').value.trim();
+    let result = style === 'apa' ? `${author} (${year}). ${title}. ${pub}.`
+      : style === 'mla' ? `${author}. "${title}." ${pub}, ${year}.`
+      : `${author}. ${title}. ${pub}, ${year}.`;
+    document.querySelector('#citeOutWrap').innerHTML = `<p id="citeResult" style="margin-top:10px;">${result}</p>${copyBtn('#citeResult')}`;
+    wireCopyButtons();
+  });
+}
+
+function renderRandomGenTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel">
+      <label>Type <select id="randType"><option value="number">Random Number</option><option value="string">Random String</option></select></label>
+      <label>Min <input type="number" id="randMin" value="1" /></label>
+      <label>Max <input type="number" id="randMax" value="100" /></label>
+      <button class="config-action-btn" id="cfgGen">Generate</button>
+    </div>
+    <p id="randOutput" style="margin-top:10px; font-size:1.1rem;"></p>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', () => {
+    const type = document.querySelector('#randType').value;
+    if (type === 'number') {
+      const min = parseInt(document.querySelector('#randMin').value) || 0;
+      const max = parseInt(document.querySelector('#randMax').value) || 100;
+      document.querySelector('#randOutput').textContent = `Random number: ${Math.floor(Math.random() * (max - min + 1)) + min}`;
+    } else {
+      const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let str = '';
+      for (let i = 0; i < 12; i++) str += chars[Math.floor(Math.random() * chars.length)];
+      document.querySelector('#randOutput').textContent = `Random string: ${str}`;
+    }
+  });
+}
+
+function renderInvoiceGenTool() {
+  modalBody.innerHTML = `
+    <div class="config-panel" style="flex-direction:column; align-items:stretch;">
+      <label>Your business name <input type="text" id="invFrom" placeholder="Your Company" /></label>
+      <label>Bill to <input type="text" id="invTo" placeholder="Client Name" /></label>
+      <label>Invoice number <input type="text" id="invNum" placeholder="INV-001" /></label>
+      <label>Items (description, qty, price one per line)</label>
+      <textarea id="invItems" rows="5" placeholder="Web design, 1, 500
+Hosting, 12, 10" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+      <button class="config-action-btn" id="cfgGen" style="margin-top:6px;">Generate PDF</button>
+    </div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const from = document.querySelector('#invFrom').value.trim() || 'Your Business';
+    const to = document.querySelector('#invTo').value.trim() || 'Client';
+    const number = document.querySelector('#invNum').value.trim() || 'INV-001';
+    const itemLines = document.querySelector('#invItems').value.trim().split('\n').filter((l) => l.trim());
+    if (!itemLines.length) return;
+    showProcessingState('Building your invoice...');
+    const items = itemLines.map((line) => {
+      const [desc, qty, price] = line.split(',').map((s) => s.trim());
+      return { desc, qty: parseFloat(qty) || 0, price: parseFloat(price) || 0 };
+    });
+    const total = items.reduce((sum, it) => sum + it.qty * it.price, 0);
+    const pdf = new jsPDF();
+    pdf.setFontSize(20); pdf.text('INVOICE', 15, 20);
+    pdf.setFontSize(11);
+    pdf.text(`From: ${from}`, 15, 35);
+    pdf.text(`Bill To: ${to}`, 15, 42);
+    pdf.text(`Invoice #: ${number}`, 15, 49);
+    autoTable(pdf, {
+      startY: 58,
+      head: [['Description', 'Qty', 'Price', 'Subtotal']],
+      body: items.map((it) => [it.desc, it.qty, `$${it.price.toFixed(2)}`, `$${(it.qty * it.price).toFixed(2)}`]),
+      foot: [['', '', 'Total', `$${total.toFixed(2)}`]],
+      headStyles: { fillColor: [37, 99, 235] },
+    });
+    await minWait(600);
+    showResultState(pdf.output('blob'), `${number}.pdf`);
+  });
+}
+
+function renderResumeBuilderTool() {
+  modalBody.innerHTML = `
+    <div class="two-col-form">
+      <label class="full-width">Full name <input type="text" id="resName" placeholder="Jane Doe" /></label>
+      <label class="full-width">Contact <input type="text" id="resContact" placeholder="jane@email.com 555-1234" /></label>
+      <label class="full-width">Summary <textarea id="resSummary" rows="2"></textarea></label>
+      <label>Experience <textarea id="resExp" rows="4" placeholder="Job Title Company (2022-2026)"></textarea></label>
+      <label>Education <textarea id="resEdu" rows="4" placeholder="Degree University (Year)"></textarea></label>
+      <label class="full-width">Skills (comma separated) <input type="text" id="resSkills" placeholder="JavaScript, Design, Communication" /></label>
+    </div>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate PDF</button></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const name = document.querySelector('#resName').value.trim() || 'Your Name';
+    const contact = document.querySelector('#resContact').value.trim();
+    const summary = document.querySelector('#resSummary').value.trim();
+    const experience = document.querySelector('#resExp').value.trim();
+    const education = document.querySelector('#resEdu').value.trim();
+    const skills = document.querySelector('#resSkills').value.trim();
+    showProcessingState('Building your resume...');
+    const pdf = new jsPDF();
+    let y = 20;
+    pdf.setFontSize(22); pdf.text(name, 15, y); y += 8;
+    pdf.setFontSize(10); pdf.text(contact, 15, y); y += 12;
+    function section(title, content) {
+      if (!content) return;
+      pdf.setFontSize(13); pdf.text(title, 15, y); y += 7;
+      pdf.setFontSize(10);
+      content.split('\n').forEach((line) => {
+        pdf.splitTextToSize(line, 180).forEach((wl) => {
+          if (y > 280) { pdf.addPage(); y = 20; }
+          pdf.text(wl, 15, y); y += 6;
+        });
+      });
+      y += 6;
+    }
+    section('Summary', summary); section('Experience', experience); section('Education', education); section('Skills', skills);
+    await minWait(600);
+    showResultState(pdf.output('blob'), `${name.replace(/\s+/g, '-')}-resume.pdf`);
+  });
+}
+
+// ================= PDF.JS SHARED HELPER =================
+let pdfjsLibCache = null;
+async function getPdfjsLib() {
+  if (pdfjsLibCache) return pdfjsLibCache;
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  pdfjsLibCache = pdfjsLib;
+  return pdfjsLib;
+}
+
+async function renderPdfPageToCanvas(page, scale) {
+  const viewport = page.getViewport({ scale: scale || 1.5 });
+  const canvas = document.createElement('canvas');
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  return canvas;
+}
+
+async function extractPdfTextPages(file) {
+  const pdfjsLib = await getPdfjsLib();
+  const bytes = await file.arrayBuffer();
+  const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    updateProcessingCaption(`Reading page ${i} of ${pdfDoc.numPages}...`);
+    const page = await pdfDoc.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(content.items.map((item) => item.str).join(' '));
+  }
+  return pages;
+}
+
+async function extractPdfTableGrid(file) {
+  const pdfjsLib = await getPdfjsLib();
+  const bytes = await file.arrayBuffer();
+  const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+  const grid = [];
+
+  for (let p = 1; p <= pdfDoc.numPages; p++) {
+    updateProcessingCaption(`Reading page ${p} of ${pdfDoc.numPages}...`);
+    const page = await pdfDoc.getPage(p);
+    const content = await page.getTextContent();
+    const items = content.items
+      .filter((it) => it.str.trim())
+      .map((it) => ({ text: it.str, x: it.transform[4], y: it.transform[5] }));
+    if (!items.length) continue;
+
+    // Group into rows: items with near-identical Y are on the same line
+    items.sort((a, b) => b.y - a.y); // top to bottom (PDF y-axis increases upward)
+    const rowYTolerance = 3;
+    const rows = [];
+    let currentRow = [items[0]];
+    for (let i = 1; i < items.length; i++) {
+      if (Math.abs(items[i].y - currentRow[0].y) <= rowYTolerance) {
+        currentRow.push(items[i]);
+      } else {
+        rows.push(currentRow);
+        currentRow = [items[i]];
+      }
+    }
+    rows.push(currentRow);
+
+    // Within each row, sort left to right and merge into columns using an X-gap threshold
+    for (const row of rows) {
+      row.sort((a, b) => a.x - b.x);
+      const cells = [];
+      let cell = row[0].text;
+      let lastX = row[0].x + row[0].text.length * 4; // rough width estimate
+      const colGapThreshold = 10;
+      for (let i = 1; i < row.length; i++) {
+        if (row[i].x - lastX > colGapThreshold) {
+          cells.push(cell.trim());
+          cell = row[i].text;
+        } else {
+          cell += row[i].text;
+        }
+        lastX = row[i].x + row[i].text.length * 4;
+      }
+      cells.push(cell.trim());
+      grid.push(cells);
+    }
+  }
+  return grid;
+}
+
+// ================= NEW PDF TOOL CONFIG RENDERERS =================
+
+async function runPdfToWord(file) {
+  showProcessingState('Extracting text...');
+  try {
+    const pages = await extractPdfTextPages(file);
+    const { Document, Packer, Paragraph } = await import('docx');
+    const doc = new Document({
+      sections: [{
+        children: pages.flatMap((text, i) => [
+          new Paragraph({ text: `Page ${i + 1}`, heading: 'Heading2' }),
+          ...text.split(/\n+/).map((line) => new Paragraph(line)),
+        ]),
+      }],
+    });
+    const blob = await Packer.toBlob(doc);
+    showResultState(blob, `${file.name.split('.')[0]}.docx`);
+  } catch (err) { showErrorState(err.message); }
+}
+
+async function runPdfToExcel(file) {
+  showProcessingState('Extracting data...');
+  try {
+    const grid = await extractPdfTableGrid(file);
+    const XLSX = await import('xlsx');
+    const worksheet = XLSX.utils.aoa_to_sheet(grid);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    showResultState(new Blob([wbout], { type: 'application/octet-stream' }), `${file.name.split('.')[0]}.xlsx`);
+  } catch (err) { showErrorState(err.message); }
+}
+
+async function runPdfToJpg(file) {
+  showProcessingState('Rendering pages...');
+  try {
+    const pdfjsLib = await getPdfjsLib();
+    const bytes = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+    if (pdfDoc.numPages === 1) {
+      const page = await pdfDoc.getPage(1);
+      const canvas = await renderPdfPageToCanvas(page);
+      canvas.toBlob((blob) => showResultState(blob, `${file.name.split('.')[0]}.jpg`), 'image/jpeg', 0.92);
+    } else {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        updateProcessingCaption(`Rendering page ${i} of ${pdfDoc.numPages}...`);
+        const page = await pdfDoc.getPage(i);
+        const canvas = await renderPdfPageToCanvas(page);
+        const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92));
+        zip.file(`page-${i}.jpg`, blob);
+      }
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      showResultState(zipBlob, `${file.name.split('.')[0]}-pages.zip`);
+    }
+  } catch (err) { showErrorState(err.message); }
+}
+
+async function runPdfToPpt(file) {
+  showProcessingState('Building slides...');
+  try {
+    const pdfjsLib = await getPdfjsLib();
+    const bytes = await file.arrayBuffer();
+    const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+    const pptxgen = (await import('pptxgenjs')).default;
+    const pptx = new pptxgen();
+    for (let i = 1; i <= pdfDoc.numPages; i++) {
+      updateProcessingCaption(`Adding slide ${i} of ${pdfDoc.numPages}...`);
+      const page = await pdfDoc.getPage(i);
+      const canvas = await renderPdfPageToCanvas(page);
+      const slide = pptx.addSlide();
+      slide.addImage({ data: canvas.toDataURL('image/jpeg', 0.9), x: 0, y: 0, w: 10, h: 5.63 });
+    }
+    const blob = await pptx.write('blob');
+    showResultState(blob, `${file.name.split('.')[0]}.pptx`);
+  } catch (err) { showErrorState(err.message); }
+}
+
+async function runPdfToMarkdown(file) {
+  showProcessingState('Converting to Markdown...');
+  try {
+    const pages = await extractPdfTextPages(file);
+    const md = pages.map((text, i) => `## Page ${i + 1}\n\n${text.replace(/\s{2,}/g, '\n\n')}`).join('\n\n');
+    showResultState(new Blob([md], { type: 'text/markdown' }), `${file.name.split('.')[0]}.md`);
+  } catch (err) { showErrorState(err.message); }
+}
+
+// ================= CAMERA (Scan to PDF) =================
+function renderScanToPdfTool() {
+  let mediaStream = null;
+  let captures = [];
+  modalBody.innerHTML = `
+    <video id="scanVideo" autoplay playsinline style="width:100%; border-radius:10px; background:#000;"></video>
+    <div class="config-panel">
+      <button type="button" class="config-action-btn" id="captureBtn">📷 Capture Page</button>
+      <button class="config-action-btn" id="doneScanBtn" disabled>Create PDF (<span id="captureCount">0</span> pages)</button>
+    </div>
+    <div id="scanThumbs" class="file-list"></div>
+    <p id="cameraError" style="color: var(--red-dark); font-size:0.9rem;"></p>
+  `;
+  const video = document.querySelector('#scanVideo');
+  const thumbsEl = document.querySelector('#scanThumbs');
+  const countEl = document.querySelector('#captureCount');
+  const doneBtn = document.querySelector('#doneScanBtn');
+
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+    .then((stream) => { mediaStream = stream; video.srcObject = stream; })
+    .catch(() => {
+      document.querySelector('#cameraError').textContent = "Couldn't access your camera. Check your browser's camera permission for this site.";
+    });
+
+  document.querySelector('#captureBtn').addEventListener('click', () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    canvas.toBlob((blob) => {
+      captures.push(blob);
+      countEl.textContent = captures.length;
+      doneBtn.disabled = captures.length < 1;
+      const thumb = document.createElement('div');
+      thumb.className = 'file-row';
+      thumb.innerHTML = `<img class="file-thumb" src="${URL.createObjectURL(blob)}" /><span class="file-name">Page ${captures.length}</span>`;
+      thumbsEl.appendChild(thumb);
+    }, 'image/jpeg', 0.9);
+  });
+
+  doneBtn.addEventListener('click', async () => {
+    if (mediaStream) mediaStream.getTracks().forEach((t) => t.stop());
+    showProcessingState('Building your PDF...');
+    const loadImg = (blob) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(blob); });
+    const first = await loadImg(captures[0]);
+    const pdf = newImagePdf(first.width, first.height);
+    drawImageOnPdfPage(pdf, first, first.width, first.height);
+    for (let i = 1; i < captures.length; i++) {
+      const img = await loadImg(captures[i]);
+      addImagePdfPage(pdf, img.width, img.height);
+      drawImageOnPdfPage(pdf, img, img.width, img.height);
+    }
+    await minWait(600);
+    showResultState(pdf.output('blob'), 'scanned.pdf');
+  });
+}
+
+// ================= COMPARE PDF =================
+function simpleLineDiff(linesA, linesB) {
+  const m = linesA.length, n = linesB.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = m - 1; i >= 0; i--) {
+    for (let j = n - 1; j >= 0; j--) {
+      dp[i][j] = linesA[i] === linesB[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    }
+  }
+  const result = [];
+  let i = 0, j = 0;
+  while (i < m && j < n) {
+    if (linesA[i] === linesB[j]) { result.push({ type: 'same', text: linesA[i] }); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]) { result.push({ type: 'removed', text: linesA[i] }); i++; }
+    else { result.push({ type: 'added', text: linesB[j] }); j++; }
+  }
+  while (i < m) { result.push({ type: 'removed', text: linesA[i] }); i++; }
+  while (j < n) { result.push({ type: 'added', text: linesB[j] }); j++; }
+  return result;
+}
+
+function renderCompareTool() {
+  let fileA = null, fileB = null;
+  modalBody.innerHTML = `
+    <div class="config-panel" style="flex-direction:column; align-items:stretch;">
+      <label>First PDF <input type="file" id="compareFileA" accept=".pdf" /></label>
+      <label>Second PDF <input type="file" id="compareFileB" accept=".pdf" /></label>
+      <button class="config-action-btn" id="compareBtn" disabled>Compare</button>
+    </div>
+    <div id="compareOutput"></div>
+  `;
+  const btn = document.querySelector('#compareBtn');
+  document.querySelector('#compareFileA').addEventListener('change', (e) => { fileA = e.target.files[0]; btn.disabled = !(fileA && fileB); });
+  document.querySelector('#compareFileB').addEventListener('change', (e) => { fileB = e.target.files[0]; btn.disabled = !(fileA && fileB); });
+
+  btn.addEventListener('click', async () => {
+    showProcessingState('Comparing documents...');
+    try {
+      const pagesA = await extractPdfTextPages(fileA);
+      const pagesB = await extractPdfTextPages(fileB);
+      const linesA = pagesA.join('\n').split(/\n+/).filter((l) => l.trim());
+      const linesB = pagesB.join('\n').split(/\n+/).filter((l) => l.trim());
+      const diff = simpleLineDiff(linesA, linesB);
+      const html = diff.map((d) => {
+        if (d.type === 'same') return `<p style="margin:2px 0; color:var(--text-muted); font-size:0.88rem;">${d.text}</p>`;
+        if (d.type === 'removed') return `<p style="margin:2px 0; background:#FCEBEB; color:var(--red-dark); font-size:0.88rem; text-decoration:line-through;">${d.text}</p>`;
+        return `<p style="margin:2px 0; background:#EAF3DE; color:var(--green); font-size:0.88rem;">${d.text}</p>`;
+      }).join('');
+      await minWait(400);
+      modalBody.innerHTML = `
+        <div style="max-height:400px; overflow-y:auto; text-align:left; border:1px solid var(--border); border-radius:8px; padding:12px;">${html || '<p>No text differences found.</p>'}</div>
+        <button class="reset-btn" id="compareResetBtn" style="margin-top:14px;">Compare different files</button>
+      `;
+      document.querySelector('#compareResetBtn').addEventListener('click', renderCompareTool);
+    } catch (err) { showErrorState(err.message); }
+  });
+}
+
+// ================= HTML TO PDF =================
+function renderHtmlToPdfTool() {
+  modalBody.innerHTML = `
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste HTML code below. Complex CSS (grid, flexbox, sticky positioning) may not render perfectly.</p>
+    <textarea id="h2pInput" rows="8" placeholder="<h1>Hello</h1><p>Some styled content...</p>" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:monospace; font-size:0.85rem;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate PDF</button></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const html = document.querySelector('#h2pInput').value.trim();
+    if (!html) return;
+    showProcessingState('Rendering your HTML...');
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const container = document.createElement('div');
+      container.style.cssText = 'position:fixed; left:-9999px; top:0; width:800px; background:#fff; padding:20px;';
+      container.innerHTML = html;
+      document.body.appendChild(container);
+      const canvas = await html2canvas(container, { backgroundColor: '#ffffff' });
+      document.body.removeChild(container);
+      const pdf = newImagePdf(canvas.width, canvas.height);
+      drawImageOnPdfPage(pdf, canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height);
+      await minWait(400);
+      showResultState(pdf.output('blob'), 'html-export.pdf');
+    } catch (err) { showErrorState(err.message); }
+  });
+}
+
+// ================= HTML TO EXCEL =================
+function renderHtmlToExcelTool() {
+  modalBody.innerHTML = `
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste HTML code containing a table (or any HTML — plain text will be extracted if no table is found).</p>
+    <textarea id="h2eInput" rows="8" placeholder="<table><tr><td>Name</td><td>Score</td></tr><tr><td>Alex</td><td>92</td></tr></table>" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:monospace; font-size:0.85rem;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate Excel</button></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const html = document.querySelector('#h2eInput').value.trim();
+    if (!html) return;
+    showProcessingState('Extracting data...');
+    try {
+      const XLSX = await import('xlsx');
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const tables = doc.querySelectorAll('table');
+      const workbook = XLSX.utils.book_new();
+      if (tables.length > 0) {
+        tables.forEach((table, i) => {
+          const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
+            Array.from(tr.querySelectorAll('td, th')).map((cell) => cell.textContent.trim())
+          );
+          XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), `Table${i + 1}`);
+        });
+      } else {
+        const text = doc.body ? doc.body.textContent.trim() : html;
+        const rows = text.split('\n').filter((l) => l.trim()).map((l) => [l.trim()]);
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(rows), 'Sheet1');
+      }
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      await minWait(400);
+      showResultState(new Blob([wbout], { type: 'application/octet-stream' }), 'html-export.xlsx');
+    } catch (err) { showErrorState(err.message); }
+  });
+}
+
+// ================= AI SUMMARIZER =================
+let summarizerPipeline = null;
+function renderAiSummarizerTool() {
+  modalBody.innerHTML = `
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste text to summarize. First use downloads a small AI model (one-time, cached after) — everything runs in your browser, nothing is sent anywhere.</p>
+    <textarea id="aiInput" rows="8" placeholder="Paste an article, essay, or long passage here..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Summarize</button></div>
+    <div id="aiOutWrap"></div>
+  `;
+  document.querySelector('#cfgGen').addEventListener('click', async () => {
+    const text = document.querySelector('#aiInput').value.trim();
+    if (!text) return;
+    showProcessingState('Loading AI model...');
+    const captionEl = document.querySelector('#overlayCaption') || { textContent: '' };
+    try {
+      if (!summarizerPipeline) {
+        const { pipeline } = await import('@huggingface/transformers');
+        summarizerPipeline = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6', {
+          progress_callback: (p) => {
+            if (p.status === 'progress' && p.progress != null) {
+              updateProcessingCaption(`Downloading AI model... ${Math.round(p.progress)}%`);
+            } else {
+              updateProcessingCaption('Loading AI model...');
+            }
+          },
+        });
+      }
+      updateProcessingCaption('Summarizing...');
+      const result = await summarizerPipeline(text, { max_new_tokens: 120, min_new_tokens: 20 });
+      const summary = result[0].summary_text;
+      await minWait(300);
+      modalBody.innerHTML = `
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px;">Summary:</p>
+        <p id="aiSummaryResult" style="font-size:1rem; line-height:1.6;">${summary}</p>
+        ${copyBtn('#aiSummaryResult')}
+        <button class="reset-btn" id="aiResetBtn" style="margin-top:14px; display:block;">Summarize something else</button>
+      `;
+      wireCopyButtons();
+      document.querySelector('#aiResetBtn').addEventListener('click', renderAiSummarizerTool);
+    } catch (err) { showErrorState(err.message); }
+  });
+}
+
+// ================= MULTI-FILE TOOLS =================
+
+
+function renderMultiFileTool(initialFiles) {
+  let files = [...initialFiles];
+  const meta = toolMeta[currentToolKey];
+  const showReorder = currentToolKey === 'pdfmerge';
+  modalBody.innerHTML = `
+    <div class="config-panel"><button type="button" id="addMoreBtn">+ Add another file</button></div>
+    <div id="multiWarning" class="batch-warning" style="display:none;"></div>
+    <div class="file-list" id="multiFileList"></div>
+    <div class="config-panel"><button class="config-action-btn" id="multiApply" disabled>Continue</button></div>
+  `;
+  const listEl = document.querySelector('#multiFileList');
+  const warnEl = document.querySelector('#multiWarning');
+  const goBtn = document.querySelector('#multiApply');
+
+  document.querySelector('#addMoreBtn').addEventListener('click', () => {
+    closeToolModal(false);
+    awaitingToolKey = currentToolKey;
+    awaitingExistingFiles = [...files];
+    updateHeroDropZoneLabel();
+    const dropWrap = document.querySelector('#heroDropZone');
+    if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  function renderList() {
+    listEl.innerHTML = files.map((f, i) => `
+      <div class="file-row">
+        <img class="file-thumb" src="${f.type.startsWith('image/') ? URL.createObjectURL(f) : ''}" onerror="this.style.display='none'" />
+        <span class="file-name">${f.name}</span>
+        ${showReorder ? `<button type="button" data-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button><button type="button" data-down="${i}" ${i === files.length - 1 ? 'disabled' : ''}>↓</button>` : ''}
+        <button type="button" data-rm="${i}">✕</button>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { files.splice(+b.dataset.rm, 1); renderList(); }));
+    listEl.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.up; [files[i - 1], files[i]] = [files[i], files[i - 1]]; renderList(); }));
+    listEl.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.down; [files[i + 1], files[i]] = [files[i], files[i + 1]]; renderList(); }));
+    warnEl.style.display = files.length > 22 ? 'block' : 'none';
+    if (files.length > 22) warnEl.textContent = `⚠ ${files.length} files — large batches may use a lot of memory.`;
+    goBtn.disabled = currentToolKey === 'pdfmerge' ? files.length < 2 : files.length < 1;
+  }
+  renderList();
+
+  goBtn.addEventListener('click', async () => {
+    showProcessingState('Combining your files...');
+    try {
+      if (currentToolKey === 'pdf') {
+        const loadImg = (f) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(f); });
+        const first = await loadImg(files[0]);
+        const pdf = newImagePdf(first.width, first.height);
+        drawImageOnPdfPage(pdf, first, first.width, first.height);
+        for (let i = 1; i < files.length; i++) {
+          updateProcessingCaption(`Processing file ${i + 1} of ${files.length}...`);
+          const img = await loadImg(files[i]);
+          addImagePdfPage(pdf, img.width, img.height);
+          drawImageOnPdfPage(pdf, img, img.width, img.height);
+        }
+        showResultState(pdf.output('blob'), 'images-combined.pdf');
+      } else if (currentToolKey === 'imagetoppt') {
+        const pptxgen = (await import('pptxgenjs')).default;
+        const pptx = new pptxgen();
+        for (let i = 0; i < files.length; i++) {
+          updateProcessingCaption(`Adding slide ${i + 1} of ${files.length}...`);
+          const slide = pptx.addSlide();
+          slide.addImage({ path: URL.createObjectURL(files[i]), x: 0, y: 0, w: 10, h: 5.63 });
+        }
+        const blob = await pptx.write('blob');
+        showResultState(blob, 'images-slides.pptx');
+      } else if (currentToolKey === 'collagemaker') {
+        const loadImg = (f) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(f); });
+        const cols = Math.ceil(Math.sqrt(files.length));
+        const rows = Math.ceil(files.length / cols);
+        const cellSize = 400, gap = 6;
+        const canvas = document.createElement('canvas');
+        canvas.width = cols * cellSize + (cols + 1) * gap;
+        canvas.height = rows * cellSize + (rows + 1) * gap;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < files.length; i++) {
+          updateProcessingCaption(`Placing image ${i + 1} of ${files.length}...`);
+          const img = await loadImg(files[i]);
+          const col = i % cols, row = Math.floor(i / cols);
+          const x = gap + col * (cellSize + gap), y = gap + row * (cellSize + gap);
+          const scale = Math.max(cellSize / img.width, cellSize / img.height);
+          const sw = img.width * scale, sh = img.height * scale;
+          ctx.save(); ctx.beginPath(); ctx.rect(x, y, cellSize, cellSize); ctx.clip();
+          ctx.drawImage(img, x + (cellSize - sw) / 2, y + (cellSize - sh) / 2, sw, sh);
+          ctx.restore();
+        }
+        canvas.toBlob((blob) => showResultState(blob, 'collage.png'));
+      } else if (currentToolKey === 'pdfmerge') {
+        const mergedPdf = await PDFDocument.create();
+        for (let i = 0; i < files.length; i++) {
+          updateProcessingCaption(`Merging file ${i + 1} of ${files.length}...`);
+          const bytes = await files[i].arrayBuffer();
+          const src = await PDFDocument.load(bytes);
+          const pages = await mergedPdf.copyPages(src, src.getPageIndices());
+          pages.forEach((p) => mergedPdf.addPage(p));
+        }
+        const outBytes = await mergedPdf.save();
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), 'merged.pdf');
+      } else if (currentToolKey === 'zipfiles') {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        files.forEach((f) => zip.file(f.name, f));
+        const blob = await zip.generateAsync({ type: 'blob' });
+        showResultState(blob, 'archive.zip');
+      }
+    } catch (err) { showErrorState(err.message); }
+  });
+}
+
+function detectCategoryFromFile(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.heic') || name.endsWith('.heif') || file.type.startsWith('image/')) return 'image';
+  if (name.endsWith('.docx')) return 'word';
+  if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return 'excel';
+  if (name.endsWith('.pdf')) return 'pdf';
+  if (name.endsWith('.pptx')) return 'ppt';
+  return null;
+}
+
+function wireHeroDropZone() {
+  const dz = document.querySelector('#heroDropZone');
+  if (!dz) return;
+  const input = document.querySelector('#heroFileInput');
+  const cancelBtn = document.querySelector('#cancelAwaitingTool');
+
+  dz.addEventListener('click', (e) => { if (e.target !== input) input.click(); });
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-active'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-active'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('drag-active');
+    if (e.dataTransfer.files.length) routeHeroFile(e.dataTransfer.files[0]);
+  });
+  input.addEventListener('change', (e) => {
+    if (e.target.files.length) routeHeroFile(e.target.files[0]);
+  });
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      awaitingToolKey = null;
+      updateHeroDropZoneLabel();
+    });
+  }
+}
+
+async function routeHeroFile(file) {
+  // If a specific tool is waiting for this drop, go straight there
+  if (awaitingToolKey && toolMeta[awaitingToolKey]) {
+    const meta = toolMeta[awaitingToolKey];
+    if (!validateFileType(file, meta.accept)) {
+      showTypeRejection(meta.label, meta.accept);
+      return;
+    }
+    const toolKey = awaitingToolKey;
+
+    if (meta.multiFile) {
+      awaitingExistingFiles = [...(awaitingExistingFiles || []), file];
+      awaitingToolKey = null;
+      const filesToOpen = awaitingExistingFiles;
+      awaitingExistingFiles = null;
+      updateHeroDropZoneLabel();
+      openToolModal(toolKey, null, filesToOpen);
+      return;
+    }
+
+    awaitingToolKey = null;
+    pendingHeroFile = file;
+    updateHeroDropZoneLabel();
+    openToolModal(toolKey);
+    return;
+  }
+
+  const cat = detectCategoryFromFile(file);
+  if (!cat) {
+    alert("We couldn't recognize that file type. Try browsing a category above instead.");
+    return;
+  }
+  await storePendingHeroFile(file);
+  const pageMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html' };
+  if (window.location.pathname.endsWith(pageMap[cat])) {
+    pendingHeroFile = file;
+    document.querySelector('#toolGrid').scrollIntoView({ behavior: 'smooth' });
+  } else {
+    window.location.href = pageMap[cat];
+  }
+}
+
+function storePendingHeroFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        sessionStorage.setItem('pendingHeroFile', JSON.stringify({
+          name: file.name, type: file.type, dataUrl: reader.result,
+        }));
+      } catch {
+        // file too large for sessionStorage — degrade gracefully, no carry-over
+      }
+      resolve();
+    };
+    reader.onerror = () => resolve();
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadPendingHeroFile() {
+  const raw = sessionStorage.getItem('pendingHeroFile');
+  if (!raw) return;
+  sessionStorage.removeItem('pendingHeroFile');
+  try {
+    const { name, type, dataUrl } = JSON.parse(raw);
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    pendingHeroFile = new File([blob], name, { type });
+  } catch {
+    pendingHeroFile = null;
+  }
+}
+
+const pageUrlMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html', text: '/text.html', utilities: '/utilities.html' };
+
+function buildSearchIndex() {
+  return Object.entries(toolMeta)
+    .filter(([, meta]) => !meta.comingSoon)
+    .map(([key, meta]) => ({ key, ...meta }));
+}
+
+function wireSearch(inputId, resultsId) {
+  const input = document.querySelector(`#${inputId}`);
+  const resultsEl = document.querySelector(`#${resultsId}`);
+  if (!input || !resultsEl) return;
+  const index = buildSearchIndex();
+  let debounceTimer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { resultsEl.classList.remove('visible'); resultsEl.innerHTML = ''; return; }
+
+      const matches = index.filter((t) => t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+      if (!matches.length) {
+        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
+      } else {
+        resultsEl.innerHTML = matches.slice(0, 8).map((t) => `
+          <div class="search-result-item" data-key="${t.key}" data-cat="${t.category}">
+            <img src="${CATEGORY_ICONS[t.category] || ''}" alt="" />
+            <span>${t.label}</span>
+          </div>
+        `).join('');
+      }
+      resultsEl.classList.add('visible');
+
+      resultsEl.querySelectorAll('.search-result-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          const key = item.dataset.key;
+          const cat = item.dataset.cat;
+          resultsEl.classList.remove('visible');
+          input.value = '';
+          if (window.location.pathname.endsWith(pageUrlMap[cat])) {
+            openToolModal(key);
+          } else {
+            window.location.href = `${pageUrlMap[cat]}?tool=${key}`;
+          }
+        });
+      });
+    }, 180);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !resultsEl.contains(e.target)) {
+      resultsEl.classList.remove('visible');
+    }
+  });
+}
+
+function wireHamburger() {
+  const btn = document.querySelector('#hamburgerBtn');
+  const menuBackdrop = document.querySelector('#mobileMenuBackdrop');
+  const menuClose = document.querySelector('#mobileMenuClose');
+  if (!btn || !menuBackdrop) return;
+
+  btn.addEventListener('click', () => menuBackdrop.classList.remove('hidden'));
+  menuClose.addEventListener('click', () => menuBackdrop.classList.add('hidden'));
+  menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) menuBackdrop.classList.add('hidden'); });
+}
+
+// ================= CATEGORY-SPECIFIC HEADER NAV =================
+const CATEGORY_NAV_CONFIG = {
+  image: {
+    top3: ['resize', 'compress', 'crop'],
+    groups: [
+      { label: 'Convert', tools: ['pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'heictojpg'] },
+      { label: 'Modify', tools: ['rotateflip', 'grayscale', 'sepia', 'blurimage', 'socialresize', 'colorpalette'] },
+      { label: 'Create', tools: ['memecreator', 'collagemaker'] },
+      { label: 'Security', tools: ['watermarkimage'] },
+      { label: 'AI', tools: ['bgremove'] },
+    ],
+    allLabel: 'All Image Tools',
+    allLink: '/image.html',
+  },
+  pdf: {
+    top3: ['pdfmerge', 'pdfcompress', 'pdfsplit'],
+    groups: [
+      { label: 'Convert', tools: ['pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdftomarkdown'] },
+      { label: 'Organize', tools: ['pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfcrop'] },
+      { label: 'Security', tools: ['pdfwatermark', 'pdfprotect', 'pdfunlock', 'pdfsign'] },
+      { label: 'Create', tools: ['scantopdf'] },
+      { label: 'Review', tools: ['pdfcompare'] },
+    ],
+    allLabel: 'All PDF Tools',
+    allLink: '/pdf.html',
+  },
+  utilities: {
+    top3: ['qrcode', 'passwordgen', 'aisummarizer'],
+    groups: [
+      { label: 'Convert', tools: ['htmltopdf', 'htmltoexcel'] },
+      { label: 'Generate', tools: ['loremipsum', 'randomgen', 'citationgen'] },
+      { label: 'Calculate', tools: ['unitconverter', 'gpacalculator'] },
+      { label: 'Documents', tools: ['invoicegen', 'resumebuilder'] },
+      { label: 'Files', tools: ['zipfiles', 'unzipfiles'] },
+      { label: 'Developer', tools: ['jsonformatter', 'base64'] },
+    ],
+    allLabel: 'All Utilities',
+    allLink: '/utilities.html',
+  },
+};
+
+function populateHomeCategoryDropdowns() {
+  document.querySelectorAll('[data-home-cat]').forEach((dropdownEl) => {
+    const category = dropdownEl.dataset.homeCat;
+    const config = CATEGORY_NAV_CONFIG[category];
+    let keys;
+    if (config) {
+      keys = [...config.top3, ...config.groups.flatMap((g) => g.tools)];
+    } else {
+      keys = categoryTools[category] || [];
+    }
+    keys = keys.filter((k) => !toolMeta[k].comingSoon);
+    dropdownEl.innerHTML = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
+  });
+
+  document.querySelectorAll('#homeMainNav [data-nav-tool]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openToolModal(link.dataset.navTool, link);
+    });
+  });
+}
+
+function renderCategoryNav(category) {
+  const config = CATEGORY_NAV_CONFIG[category];
+  const navEl = document.querySelector('.main-nav');
+  if (!navEl) return;
+
+  if (!config) {
+    // small categories: single hover dropdown listing every tool, no top3/group split needed
+    const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
+    const label = category.charAt(0).toUpperCase() + category.slice(1);
+    const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
+    navEl.innerHTML = `
+      <div class="nav-item">
+        <button class="nav-trigger">${label} Tools</button>
+        <div class="dropdown">${linksHtml}</div>
+      </div>
+      <a href="/" class="nav-link">All Categories</a>
+    `;
+  } else {
+    const top3Html = config.top3.map((k) => `
+      <a href="?tool=${k}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
+    `).join('');
+    const groupsHtml = config.groups.map((group) => `
+      <div class="mega-menu-section">
+        <p class="mega-menu-label">${group.label}</p>
+        ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+      </div>
+    `).join('');
+    navEl.innerHTML = `
+      ${top3Html}
+      <div class="nav-item">
+        <button class="nav-trigger">More Tools</button>
+        <div class="dropdown mega-menu">${groupsHtml}</div>
+      </div>
+      <a href="${config.allLink}" class="nav-link">${config.allLabel}</a>
+      <a href="/" class="nav-link">All Categories</a>
+    `;
+  }
+
+  navEl.querySelectorAll('[data-nav-tool]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openToolModal(link.dataset.navTool, link);
+    });
+  });
+}
+
+// ================= PAGE INIT =================
+export function initToolPage(pageCategory) {
+  wireHeroDropZone();
+  wireHamburger();
+  wireSearch('siteSearchInput', 'siteSearchResults');
+  if (pageCategory !== 'all') renderCategoryNav(pageCategory);
+  else populateHomeCategoryDropdowns();
+  wireSearch('mobileSearchInput', 'mobileSearchResults');
+  loadPendingHeroFile();
+  const grid = document.querySelector('#toolGrid');
+  const tabs = document.querySelectorAll('.filter-tab');
+
+  if (grid) {
+    const keys = pageCategory === 'all'
+      ? Object.keys(toolMeta)
+      : categoryTools[pageCategory] || [];
+    renderToolGrid(grid, keys);
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const cat = tab.dataset.filter;
+      const keys = cat === 'all' ? Object.keys(toolMeta) : categoryTools[cat] || [];
+      renderToolGrid(grid, keys);
+    });
+  });
+
+  const params = new URLSearchParams(window.location.search);
+  const deepLinkTool = params.get('tool');
+  if (deepLinkTool && toolMeta[deepLinkTool]) {
+    openToolModal(deepLinkTool);
+  }
+}

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free PDF Tools Online — Merge, Rotate, Watermark & More | FileForge</title>
+    <meta name="description" content="Merge, rotate, watermark, and edit PDF files free, entirely in your browser. No upload, no account, no file limit." />
+    <link rel="canonical" href="https://yoursite.com/pdf.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!--HEADER-->
+
+    <div class="breadcrumbs"><a href="/">Home</a> / PDF Tools</div>
+
+    <section class="hero">
+      <h1>Free PDF tools</h1>
+      <p class="category-intro">Merge, rotate, extract pages, add watermarks, and more — every PDF tool runs locally in your browser, so your documents are never uploaded to a server.</p>
+    </section>
+
+    <div class="tool-grid" id="toolGrid"></div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <!--FOOTER-->
+
+    <script type="module">
+      import { initToolPage } from '/src/main.js';
+      initToolPage('pdf');
+    </script>
+  </body>
+</html>

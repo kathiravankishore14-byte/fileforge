@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FileForge — Free Online File Tools, No Upload Required</title>
+    <meta name="description" content="Resize images, merge PDFs, generate QR codes, and more — every tool runs entirely in your browser. No account, no file limit, no server upload." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!--HEADER-->
+
+    <section class="hero">
+      <h1>Every tool you need, in one place</h1>
+      <p>Free image, document, and PDF tools that run entirely in your browser. Nothing is ever uploaded to a server.</p>
+    </section>
+
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">All</button>
+      <button class="filter-tab" data-filter="image">Image</button>
+      <button class="filter-tab" data-filter="word">Word</button>
+      <button class="filter-tab" data-filter="excel">Excel</button>
+      <button class="filter-tab" data-filter="pdf">PDF</button>
+      <button class="filter-tab" data-filter="text">Text</button>
+      <button class="filter-tab" data-filter="utilities">Utilities</button>
+    </div>
+
+    <div class="tool-grid" id="toolGrid"></div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <!--FOOTER-->
+
+    <script type="module">
+      import { initToolPage } from '/src/main.js';
+      initToolPage('all');
+    </script>
+  </body>
+</html>

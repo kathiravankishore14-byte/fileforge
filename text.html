@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Free Text Tools Online — Text to PPT, PDF, Word Counter | FileForge</title>
+    <meta name="description" content="Turn text into slides or a PDF, count words, or convert case — free, entirely in your browser." />
+    <link rel="canonical" href="https://yoursite.com/text.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!--HEADER-->
+
+    <div class="breadcrumbs"><a href="/">Home</a> / Text Tools</div>
+
+    <section class="hero">
+      <h1>Free text tools</h1>
+      <p class="category-intro">Paste your text and turn it into slides or a PDF, count words instantly, or convert case — no file needed, nothing ever leaves your browser.</p>
+    </section>
+
+    <div class="tool-grid" id="toolGrid"></div>
+
+    <div class="modal-backdrop hidden" id="modalBackdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+
+    <!--FOOTER-->
+
+    <script type="module">
+      import { initToolPage } from '/src/main.js';
+      initToolPage('text');
+    </script>
+  </body>
+</html>

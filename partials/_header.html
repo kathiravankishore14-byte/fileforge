@@ -1,0 +1,55 @@
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <span class="logo-mark">⌁</span> FileForge
+    </a>
+    <nav class="main-nav">
+      <a href="/image.html" class="nav-link"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="24" alt="" /> Image</a>
+      <a href="/word.html" class="nav-link"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="24" alt="" /> Word</a>
+      <a href="/excel.html" class="nav-link"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="24" alt="" /> Excel</a>
+      <a href="/pdf.html" class="nav-link"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="24" alt="" /> PDF</a>
+      <a href="/ppt.html" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="24" alt="" /> PPT</a>
+      <a href="/text.html" class="nav-link"><img src="/icons/icon-text.svg" class="nav-icon" width="20" height="24" alt="" /> Text</a>
+      <a href="/utilities.html" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="24" alt="" /> Utilities</a>
+    </nav>
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-menu-backdrop hidden" id="mobileMenuBackdrop">
+  <div class="mobile-menu-panel" id="mobileMenuPanel">
+    <div class="mobile-menu-header">
+      <span class="logo"><span class="logo-mark">⌁</span> FileForge</span>
+      <button class="modal-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
+    </div>
+    <div class="mobile-search-wrap">
+      <input type="text" id="mobileSearchInput" class="site-search-input" placeholder="Search all tools..." />
+      <div id="mobileSearchResults" class="search-results-list"></div>
+    </div>
+    <nav class="mobile-nav-links">
+      <a href="/image.html"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="24" alt="" /> Image</a>
+      <a href="/word.html"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="24" alt="" /> Word</a>
+      <a href="/excel.html"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="24" alt="" /> Excel</a>
+      <a href="/pdf.html"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="24" alt="" /> PDF</a>
+      <a href="/ppt.html"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="24" alt="" /> PPT</a>
+      <a href="/text.html"><img src="/icons/icon-text.svg" class="nav-icon" width="20" height="24" alt="" /> Text</a>
+      <a href="/utilities.html"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="24" alt="" /> Utilities</a>
+    </nav>
+  </div>
+</div>
+
+<div class="hero-drop-wrap">
+  <div class="site-search-wrap" id="desktopSearchWrap">
+    <input type="text" id="siteSearchInput" class="site-search-input" placeholder="Search all 49+ tools..." />
+    <div id="siteSearchResults" class="search-results-list"></div>
+  </div>
+  <div class="hero-drop-zone" id="heroDropZone">
+    <input type="file" id="heroFileInput" />
+    <p class="hero-drop-text">Drop any file here to get started — we'll find the right tool</p>
+  </div>
+  <p class="awaiting-tool-hint" id="awaitingToolHint" style="display:none;">
+    <button type="button" id="cancelAwaitingTool">← Choose a different tool</button>
+  </p>
+</div>
