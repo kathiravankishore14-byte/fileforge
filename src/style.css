@@ -191,6 +191,7 @@ a { color: inherit; }
 .mega-menu a img { width: 18px; height: 22px; flex-shrink: 0; }
 .mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .mega-menu-icons .arrow { font-size: 0.91rem; color: var(--text-muted); }
+.all-tools-menu { grid-template-columns: repeat(4, 1fr); }
 
 @media (max-width: 1000px) {
   .main-nav { display: none; }
