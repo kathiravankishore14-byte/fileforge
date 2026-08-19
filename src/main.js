@@ -40,8 +40,6 @@ const toolMeta = {
 
   exceltopdf: { label: 'Excel to PDF', desc: 'Convert a spreadsheet into a PDF table.', needsConfig: true, accept: '.xlsx,.xls,.csv', category: 'excel', iconTo: 'pdf' },
   exceltocsv: { label: 'Excel to CSV', desc: 'Export a sheet as plain CSV.', needsConfig: true, accept: '.xlsx,.xls', category: 'excel', iconTo: 'excel' },
-  exceltoword: { label: 'Excel to Word', desc: 'Turn a spreadsheet into a table in a Word document.', needsConfig: false, accept: '.xlsx,.xls,.csv', category: 'excel', iconTo: 'word' },
-  csvtoexcel: { label: 'CSV to Excel', desc: 'Convert a CSV file into a spreadsheet.', needsConfig: false, accept: '.csv', category: 'excel', iconTo: 'excel' },
 
   pdfmerge: { label: 'Merge PDFs', desc: 'Combine PDFs in the order you choose.', needsConfig: true, multiFile: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfrotate: { label: 'Rotate PDF Pages', desc: 'Rotate every page in a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
@@ -59,17 +57,14 @@ const toolMeta = {
   pdfcrop: { label: 'Crop PDF', desc: 'Trim the margins of every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfunlock: { label: 'Unlock PDF', desc: 'Remove a password you already know.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdftomarkdown: { label: 'PDF to Markdown', desc: 'Convert pages into basic Markdown text.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'text' },
-  pdftotext: { label: 'PDF to Text', desc: 'Extract plain text from a PDF.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'text' },
   pdfsign: { label: 'Sign PDF', desc: 'Draw a signature and place it on a page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   scantopdf: { label: 'Scan to PDF', desc: 'Capture pages with your camera.', noFile: true, category: 'pdf', iconTo: 'pdf' },
   pdfcompare: { label: 'Compare PDF', desc: 'See text differences between two PDFs.', needsConfig: true, compareFiles: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
 
   ppttotext: { label: 'PPT to Text', desc: 'Extract all text from a slide deck.', needsConfig: false, accept: '.pptx', category: 'ppt', iconTo: 'text' },
-  ppttoimage: { label: 'PPT to Image', desc: 'Basic image summary of each slide (text + images, not a full design render).', needsConfig: false, accept: '.pptx', category: 'ppt', iconTo: 'image' },
 
   texttoppt: { label: 'Text to PPT', desc: 'Turn pasted text into slides.', noFile: true, category: 'text', iconTo: 'ppt' },
   textopdf: { label: 'Text to PDF', desc: 'Turn pasted text into a PDF.', noFile: true, category: 'text', iconTo: 'pdf' },
-  texttoword: { label: 'Text to Word', desc: 'Turn pasted text into a Word document.', noFile: true, category: 'text', iconTo: 'word' },
   wordcounter: { label: 'Word Counter', desc: 'Count words and characters instantly.', noFile: true, category: 'text', iconTo: 'text' },
   caseconverter: { label: 'Case Converter', desc: 'Switch between upper, lower, and title case.', noFile: true, category: 'text', iconTo: 'text' },
 
@@ -94,10 +89,10 @@ const toolMeta = {
 const categoryTools = {
   image: ['resize', 'compress', 'crop', 'pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'rotateflip', 'watermarkimage', 'bgremove', 'colorpalette', 'socialresize', 'grayscale', 'sepia', 'blurimage', 'heictojpg', 'memecreator', 'collagemaker'],
   word: ['wordtoexcel', 'wordtopdf', 'wordtotext'],
-  excel: ['exceltopdf', 'exceltocsv', 'exceltoword', 'csvtoexcel'],
-  pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdftotext', 'pdfsign', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
-  ppt: ['ppttotext', 'ppttoimage'],
-  text: ['texttoppt', 'textopdf', 'texttoword', 'wordcounter', 'caseconverter'],
+  excel: ['exceltopdf', 'exceltocsv'],
+  pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdfsign', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
+  ppt: ['ppttotext'],
+  text: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'],
   utilities: ['qrcode', 'passwordgen', 'jsonformatter', 'base64', 'loremipsum', 'unitconverter', 'gpacalculator', 'citationgen', 'randomgen', 'zipfiles', 'unzipfiles', 'invoicegen', 'resumebuilder', 'htmltopdf', 'htmltoexcel', 'aisummarizer'],
 };
 
@@ -378,6 +373,9 @@ function showProcessingState(captionText) {
     <div class="processing-row">
       <video class="bird-video" src="/bird/bird-loading.mp4" autoplay loop muted playsinline></video>
       <p class="processing-status" id="processingCaption" aria-live="polite">${captionText || 'Working...'}</p>
+      <div class="progress-bar-track" id="progressBarTrack" style="display:none;">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
     </div>
   `;
 }
@@ -385,6 +383,14 @@ function showProcessingState(captionText) {
 function updateProcessingCaption(text) {
   const el = document.querySelector('#processingCaption');
   if (el) el.textContent = text;
+}
+
+function updateProcessingProgress(percent, text) {
+  const track = document.querySelector('#progressBarTrack');
+  const fill = document.querySelector('#progressBarFill');
+  if (track) track.style.display = 'block';
+  if (fill) fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  if (text) updateProcessingCaption(text);
 }
 
 // ---------- Result state ----------
@@ -450,18 +456,6 @@ async function runSimpleTool() {
       return;
     } else if (currentToolKey === 'pdftomarkdown') {
       await runPdfToMarkdown(currentFile);
-      return;
-    } else if (currentToolKey === 'pdftotext') {
-      await runPdfToText(currentFile);
-      return;
-    } else if (currentToolKey === 'exceltoword') {
-      await runExcelToWord(currentFile);
-      return;
-    } else if (currentToolKey === 'csvtoexcel') {
-      await runCsvToExcel(currentFile);
-      return;
-    } else if (currentToolKey === 'ppttoimage') {
-      await runPptToImage(currentFile);
       return;
     }
     await minWait(1200);
@@ -1071,15 +1065,17 @@ function renderSingleFileConfig() {
   else if (currentToolKey === 'bgremove') {
     area.insertAdjacentHTML('beforeend', `
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a small AI model (~15-30MB, one time).</p>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a full-precision AI model (larger download, better accuracy) — one time, cached after.</p>
     `);
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Downloading AI model...');
       try {
         const blob = await removeBackground(currentFile, {
+          model: 'isnet', // full precision — noticeably more accurate than the default fp16 model, especially on cluttered real-world backgrounds
           progress: (key, current, total) => {
             const pct = total ? Math.round((current / total) * 100) : 0;
-            updateProcessingCaption(key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`);
+            const label = key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`;
+            updateProcessingProgress(pct, label);
           },
         });
         showResultState(blob, `no-bg-${currentFile.name.split('.')[0]}.png`);
@@ -1711,7 +1707,6 @@ async function processAndShow(blob, filename) {
 // ================= NO-FILE (TEXT / UTILITY) TOOLS =================
 function renderNoFileTool(toolKey) {
   if (toolKey === 'texttoppt') renderTextToPptTool();
-  if (toolKey === 'texttoword') renderTextToWordTool();
   if (toolKey === 'textopdf') renderTextToPdfTool();
   if (toolKey === 'wordcounter') renderWordCounterTool();
   if (toolKey === 'caseconverter') renderCaseConverterTool();
@@ -1747,27 +1742,6 @@ function wireCopyButtons() {
         setTimeout(() => { btn.textContent = original; }, 1200);
       });
     });
-  });
-}
-
-function renderTextToWordTool() {
-  modalBody.innerHTML = `
-    <textarea id="t2wordText" rows="10" placeholder="Paste or type your text here..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
-    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate Word Document</button></div>
-  `;
-  document.querySelector('#cfgGen').addEventListener('click', async () => {
-    const text = document.querySelector('#t2wordText').value.trim();
-    if (!text) return;
-    showProcessingState('Building your Word document...');
-    const { Document, Packer, Paragraph } = await import('docx');
-    const doc = new Document({
-      sections: [{
-        children: text.split('\n').map((line) => new Paragraph(line)),
-      }],
-    });
-    const blob = await Packer.toBlob(doc);
-    await minWait(500);
-    showResultState(blob, 'document.docx');
   });
 }
 
@@ -2362,143 +2336,6 @@ async function runPdfToMarkdown(file) {
   } catch (err) { showErrorState(err.message); }
 }
 
-async function runPdfToText(file) {
-  showProcessingState('Extracting text...');
-  try {
-    const pages = await extractPdfTextPages(file);
-    const text = pages.map((t, i) => `--- Page ${i + 1} ---\n${t}`).join('\n\n');
-    showResultState(new Blob([text], { type: 'text/plain' }), `${file.name.split('.')[0]}.txt`);
-  } catch (err) { showErrorState(err.message); }
-}
-
-async function runExcelToWord(file) {
-  showProcessingState('Building your Word document...');
-  try {
-    const XLSX = await import('xlsx');
-    const { Document, Packer, Table, TableRow, TableCell, Paragraph, WidthType } = await import('docx');
-    const arrayBuffer = await file.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-    const sheetName = workbook.SheetNames[0];
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1 });
-
-    const tableRows = rows.map((row) => new TableRow({
-      children: row.map((cell) => new TableCell({
-        width: { size: 2000, type: WidthType.DXA },
-        children: [new Paragraph(cell != null ? String(cell) : '')],
-      })),
-    }));
-
-    const doc = new Document({
-      sections: [{
-        children: [
-          new Paragraph({ text: `Sheet: ${sheetName}`, heading: 'Heading2' }),
-          new Table({ rows: tableRows }),
-        ],
-      }],
-    });
-    const blob = await Packer.toBlob(doc);
-    showResultState(blob, `${file.name.split('.')[0]}.docx`);
-  } catch (err) { showErrorState(err.message); }
-}
-
-async function runCsvToExcel(file) {
-  showProcessingState('Building your spreadsheet...');
-  try {
-    const XLSX = await import('xlsx');
-    const csvText = await file.text();
-    const workbook = XLSX.read(csvText, { type: 'string' });
-    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    showResultState(new Blob([wbout], { type: 'application/octet-stream' }), `${file.name.split('.')[0]}.xlsx`);
-  } catch (err) { showErrorState(err.message); }
-}
-
-async function runPptToImage(file) {
-  showProcessingState('Building slide images...');
-  try {
-    const JSZip = (await import('jszip')).default;
-    const zip = await JSZip.loadAsync(file);
-    const slideFiles = Object.keys(zip.files)
-      .filter((name) => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-      .sort((a, b) => parseInt(a.match(/slide(\d+)\.xml/)[1]) - parseInt(b.match(/slide(\d+)\.xml/)[1]));
-
-    const slideBlobs = [];
-    for (let i = 0; i < slideFiles.length; i++) {
-      updateProcessingCaption(`Building slide ${i + 1} of ${slideFiles.length}...`);
-      const slideName = slideFiles[i].split('/').pop();
-      const slideXml = await zip.files[slideFiles[i]].async('text');
-      const slideDoc = new DOMParser().parseFromString(slideXml, 'text/xml');
-      const text = Array.from(slideDoc.getElementsByTagName('a:t')).map((n) => n.textContent).join(' ');
-
-      // Resolve embedded images via the slide's relationships file
-      const relsPath = `ppt/slides/_rels/${slideName}.rels`;
-      const imageBlobs = [];
-      if (zip.files[relsPath]) {
-        const relsXml = await zip.files[relsPath].async('text');
-        const relsDoc = new DOMParser().parseFromString(relsXml, 'text/xml');
-        const relationships = Array.from(relsDoc.getElementsByTagName('Relationship'))
-          .filter((r) => /image/i.test(r.getAttribute('Type') || ''));
-        for (const rel of relationships) {
-          const target = rel.getAttribute('Target'); // e.g. ../media/image1.png
-          const mediaPath = 'ppt/' + target.replace('../', '');
-          if (zip.files[mediaPath]) {
-            const blob = await zip.files[mediaPath].async('blob');
-            imageBlobs.push(blob);
-          }
-        }
-      }
-
-      // Composite: white canvas, embedded images laid out left-to-right, extracted text below
-      const canvas = document.createElement('canvas');
-      canvas.width = 960; canvas.height = 540;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const loadImg = (blob) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(blob); });
-      if (imageBlobs.length) {
-        const cellW = canvas.width / imageBlobs.length;
-        for (let j = 0; j < imageBlobs.length; j++) {
-          const img = await loadImg(imageBlobs[j]);
-          const scale = Math.min(cellW / img.width, 340 / img.height);
-          const w = img.width * scale, h = img.height * scale;
-          ctx.drawImage(img, j * cellW + (cellW - w) / 2, 20, w, h);
-        }
-      }
-      if (text.trim()) {
-        ctx.fillStyle = '#1B2430';
-        ctx.font = '24px Arial';
-        const words = text.trim().split(' ');
-        let line = '', y = imageBlobs.length ? 400 : 260, lineHeight = 30;
-        const maxWidth = canvas.width - 60;
-        for (const word of words) {
-          const testLine = line ? `${line} ${word}` : word;
-          if (ctx.measureText(testLine).width > maxWidth && line) {
-            ctx.fillText(line, 30, y);
-            y += lineHeight;
-            line = word;
-            if (y > canvas.height - 20) break;
-          } else {
-            line = testLine;
-          }
-        }
-        if (line && y <= canvas.height - 20) ctx.fillText(line, 30, y);
-      }
-
-      const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.9));
-      slideBlobs.push(blob);
-    }
-
-    if (slideBlobs.length === 1) {
-      showResultState(slideBlobs[0], `${file.name.split('.')[0]}-slide1.jpg`, "Basic image summary — text and embedded images only, not a full design render.");
-    } else {
-      const JSZip2 = (await import('jszip')).default;
-      const zipOut = new JSZip2();
-      slideBlobs.forEach((b, i) => zipOut.file(`slide-${i + 1}.jpg`, b));
-      const zipBlob = await zipOut.generateAsync({ type: 'blob' });
-      showResultState(zipBlob, `${file.name.split('.')[0]}-slides.zip`, "Basic image summary of each slide — text and embedded images only, not a full design render.");
-    }
-  } catch (err) { showErrorState(err.message); }
-}
-
 // ================= CAMERA (Scan to PDF) =================
 function renderScanToPdfTool() {
   let mediaStream = null;
@@ -3085,20 +2922,9 @@ function renderCategoryNav(category) {
     navEl.innerHTML = `
       <div class="nav-item">
         <button class="nav-trigger">${label} Tools</button>
-        <div class="dropdown mega-menu all-tools-menu">${linksHtml}</div>
+        <div class="dropdown">${linksHtml}</div>
       </div>
-      <div class="nav-item">
-        <button class="nav-trigger">All Categories</button>
-        <div class="dropdown">
-          <a href="/image.html"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="24" alt="" /> Image Tools</a>
-          <a href="/word.html"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="24" alt="" /> Word Tools</a>
-          <a href="/excel.html"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="24" alt="" /> Excel Tools</a>
-          <a href="/pdf.html"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="24" alt="" /> PDF Tools</a>
-          <a href="/ppt.html"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="24" alt="" /> PowerPoint Tools</a>
-          <a href="/text.html"><img src="/icons/icon-text.svg" class="nav-icon" width="20" height="24" alt="" /> Text Tools</a>
-          <a href="/utilities.html"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="24" alt="" /> Utilities</a>
-        </div>
-      </div>
+      <a href="/" class="nav-link">All Categories</a>
     `;
   } else {
     const top3Html = config.top3.map((k) => `
@@ -3110,30 +2936,14 @@ function renderCategoryNav(category) {
         ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
       </div>
     `).join('');
-    const allToolsKeys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
-    const allToolsHtml = allToolsKeys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
     navEl.innerHTML = `
       ${top3Html}
       <div class="nav-item">
         <button class="nav-trigger">More Tools</button>
         <div class="dropdown mega-menu">${groupsHtml}</div>
       </div>
-      <div class="nav-item">
-        <button class="nav-trigger">${config.allLabel}</button>
-        <div class="dropdown mega-menu all-tools-menu">${allToolsHtml}</div>
-      </div>
-      <div class="nav-item">
-        <button class="nav-trigger">All Categories</button>
-        <div class="dropdown">
-          <a href="/image.html"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="24" alt="" /> Image Tools</a>
-          <a href="/word.html"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="24" alt="" /> Word Tools</a>
-          <a href="/excel.html"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="24" alt="" /> Excel Tools</a>
-          <a href="/pdf.html"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="24" alt="" /> PDF Tools</a>
-          <a href="/ppt.html"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="24" alt="" /> PowerPoint Tools</a>
-          <a href="/text.html"><img src="/icons/icon-text.svg" class="nav-icon" width="20" height="24" alt="" /> Text Tools</a>
-          <a href="/utilities.html"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="24" alt="" /> Utilities</a>
-        </div>
-      </div>
+      <a href="${config.allLink}" class="nav-link">${config.allLabel}</a>
+      <a href="/" class="nav-link">All Categories</a>
     `;
   }
 
@@ -3151,6 +2961,7 @@ export function initToolPage(pageCategory) {
   wireHamburger();
   wireSearch('siteSearchInput', 'siteSearchResults');
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
+  else populateHomeCategoryDropdowns();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   loadPendingHeroFile();
   const grid = document.querySelector('#toolGrid');
