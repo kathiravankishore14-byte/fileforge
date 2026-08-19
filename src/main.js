@@ -8,6 +8,22 @@ import { removeBackground } from '@imgly/background-removal';
 import { PDFDocument, degrees, PDFName, PDFRawStream } from 'pdf-lib';
 import './style.css';
 
+// ================= STALE DEPLOY RECOVERY =================
+// Every build gets new content-hashed chunk filenames (e.g. the AI model
+// bundle behind "Remove Background"). Cloudflare Workers static assets
+// replaces the whole asset set on each deploy, so a tab left open from
+// before the latest deploy can end up asking for a chunk that no longer
+// exists ("Failed to fetch dynamically imported module..."). Vite fires
+// 'vite:preloadError' whenever one of these lazy imports 404s — recover
+// automatically with a single reload instead of leaving the user stuck.
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  if (!sessionStorage.getItem('ff-reloaded-after-preload-error')) {
+    sessionStorage.setItem('ff-reloaded-after-preload-error', 'true');
+    window.location.reload();
+  }
+});
+
 // ================= TOOL DATA (shared across every page) =================
 const CATEGORY_ICONS = {
   image: '/icons/icon-image.svg', word: '/icons/icon-word.svg', excel: '/icons/icon-excel.svg',
