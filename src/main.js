@@ -415,15 +415,114 @@ function showResultState(blob, filename, extraNote) {
   modalBody.innerHTML = `
     <div class="result-box">
       ${extraNote ? `<p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">${extraNote}</p>` : ''}
+      <div class="result-preview-wrap" id="resultPreviewWrap">
+        <p class="result-preview-caption">Loading preview…</p>
+      </div>
       <a href="${url}" download="${filename}" class="download-btn">Download ${filename}</a>
       <button class="reset-btn" id="resetToolBtn">Convert another file</button>
     </div>
   `;
+  renderResultPreview(blob, url);
   document.querySelector('#resetToolBtn').addEventListener('click', () => {
     currentFile = null;
     closeToolModal(false);
     handleToolCardClick(currentToolKey, lastFocusedElement);
   });
+}
+
+// Shows what the output actually looks like before the user downloads it.
+// Images render directly; PDFs render page 1 via pdf.js (same renderer used
+// for input previews); everything else (docx/xlsx/pptx/zip/text/etc.) falls
+// back to a simple "ready to download" line since there's no visual to show.
+async function renderResultPreview(blob, url) {
+  const wrap = document.querySelector('#resultPreviewWrap');
+  if (!wrap) return;
+  const type = blob.type || '';
+
+  if (type.startsWith('image/')) {
+    wrap.innerHTML = `<img src="${url}" class="preview-img result-preview-img" alt="Result preview" />`;
+    return;
+  }
+
+  if (type === 'application/pdf') {
+    try {
+      const pdfjsLib = await getPdfjsLib();
+      const bytes = await blob.arrayBuffer();
+      const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+      const page = await pdfDoc.getPage(1);
+      const canvas = await renderPdfPageToCanvas(page, 1.0);
+      const freshWrap = document.querySelector('#resultPreviewWrap');
+      if (!freshWrap) return; // user already moved on (reset/closed) while this was loading
+      const img = document.createElement('img');
+      img.className = 'preview-img result-preview-img';
+      img.alt = 'Result preview';
+      img.src = canvas.toDataURL('image/jpeg', 0.85);
+      freshWrap.innerHTML = '';
+      freshWrap.appendChild(img);
+      if (pdfDoc.numPages > 1) {
+        freshWrap.insertAdjacentHTML('beforeend', `<p class="result-preview-caption">Page 1 of ${pdfDoc.numPages} shown</p>`);
+      }
+    } catch {
+      const freshWrap = document.querySelector('#resultPreviewWrap');
+      if (freshWrap) freshWrap.innerHTML = `<p class="result-preview-caption">📄 Preview unavailable</p>`;
+    }
+    return;
+  }
+
+  const kindLabel = type || 'File';
+  wrap.innerHTML = `<p class="result-preview-caption">📦 ${kindLabel} ready to download</p>`;
+}
+
+function loadImageFromBlob(blob) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Could not read the processed image.'));
+    img.src = URL.createObjectURL(blob);
+  });
+}
+
+// Combines the AI cutout with the user's keep/erase marks: green marks force
+// those pixels back to fully opaque + original color, red marks force those
+// pixels to fully transparent — everything unmarked keeps the AI's decision.
+async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
+  const cutoutImg = await loadImageFromBlob(cutoutBlob);
+  const w = cutoutImg.naturalWidth;
+  const h = cutoutImg.naturalHeight;
+
+  const out = document.createElement('canvas');
+  out.width = w; out.height = h;
+  const octx = out.getContext('2d');
+  octx.drawImage(cutoutImg, 0, 0, w, h);
+
+  const hasMarks = markCanvas && markCanvas.width > 0 && markCanvas.height > 0;
+  if (hasMarks) {
+    const origCanvas = document.createElement('canvas');
+    origCanvas.width = w; origCanvas.height = h;
+    origCanvas.getContext('2d').drawImage(sourceImg, 0, 0, w, h);
+    const origData = origCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = w; maskCanvas.height = h;
+    maskCanvas.getContext('2d').drawImage(markCanvas, 0, 0, w, h);
+    const maskData = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+
+    const outData = octx.getImageData(0, 0, w, h);
+    const od = outData.data;
+    for (let i = 0; i < od.length; i += 4) {
+      const markAlpha = maskData[i + 3];
+      if (markAlpha <= 10) continue; // unmarked — leave the AI's decision as-is
+      const r = maskData[i], g = maskData[i + 1];
+      if (r > g) {
+        od[i + 3] = 0; // erase mark
+      } else if (g > r) {
+        od[i] = origData[i]; od[i + 1] = origData[i + 1]; od[i + 2] = origData[i + 2]; od[i + 3] = 255; // keep mark
+      }
+    }
+    octx.putImageData(outData, 0, 0);
+  }
+
+  return new Promise((resolve) => out.toBlob(resolve, 'image/png'));
 }
 
 function showErrorState(message) {
@@ -1080,13 +1179,92 @@ function renderSingleFileConfig() {
 
   else if (currentToolKey === 'bgremove') {
     area.insertAdjacentHTML('beforeend', `
+      <div class="mark-toolbar">
+        <button type="button" class="mark-mode-btn" data-mode="keep">🟢 Mark to keep</button>
+        <button type="button" class="mark-mode-btn" data-mode="erase">🔴 Mark to erase</button>
+        <label class="mark-brush-label">Brush size <input type="range" id="markBrushSize" min="8" max="70" value="28" /></label>
+        <button type="button" class="mark-clear-btn" id="markClearBtn">Clear marks</button>
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Optional: paint green over anything the AI should always keep, or red over anything it should always erase (stray background it misses, or part of the subject it might cut off) — before running it.</p>
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
       <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a full-precision AI model (larger download, better accuracy) — one time, cached after.</p>
     `);
+
+    // Turn the plain preview <img> into an image + drawable mark-canvas stack
+    // so the user can paint keep/erase hints directly on top of the photo.
+    const previewImg = area.querySelector('.preview-img');
+    const canvasWrap = document.createElement('div');
+    canvasWrap.className = 'bgremove-canvas-wrap';
+    previewImg.replaceWith(canvasWrap);
+    canvasWrap.appendChild(previewImg);
+    const markCanvas = document.createElement('canvas');
+    markCanvas.className = 'bgremove-mark-canvas';
+    canvasWrap.appendChild(markCanvas);
+
+    const sizeMarkCanvas = () => {
+      markCanvas.width = previewImg.naturalWidth || 800;
+      markCanvas.height = previewImg.naturalHeight || 600;
+    };
+    if (previewImg.complete && previewImg.naturalWidth) sizeMarkCanvas();
+    else previewImg.addEventListener('load', sizeMarkCanvas, { once: true });
+
+    const mctx = markCanvas.getContext('2d');
+    let markMode = null; // 'keep' | 'erase' | null
+    let isDrawing = false;
+    let brushSize = 28;
+
+    const modeButtons = area.querySelectorAll('.mark-mode-btn');
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const clickedMode = btn.dataset.mode;
+        markMode = markMode === clickedMode ? null : clickedMode;
+        modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === markMode));
+        markCanvas.style.cursor = markMode ? 'crosshair' : 'default';
+      });
+    });
+
+    area.querySelector('#markBrushSize').addEventListener('input', (e) => {
+      brushSize = Number(e.target.value);
+    });
+
+    area.querySelector('#markClearBtn').addEventListener('click', () => {
+      mctx.clearRect(0, 0, markCanvas.width, markCanvas.height);
+    });
+
+    const pointToCanvas = (e) => {
+      const rect = markCanvas.getBoundingClientRect();
+      const scaleX = markCanvas.width / rect.width;
+      const scaleY = markCanvas.height / rect.height;
+      return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    };
+
+    const drawDot = (x, y) => {
+      mctx.fillStyle = markMode === 'erase' ? 'rgba(231,76,60,0.55)' : 'rgba(46,204,113,0.55)';
+      mctx.beginPath();
+      mctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+      mctx.fill();
+    };
+
+    markCanvas.addEventListener('pointerdown', (e) => {
+      if (!markMode) return;
+      isDrawing = true;
+      markCanvas.setPointerCapture(e.pointerId);
+      const p = pointToCanvas(e);
+      drawDot(p.x, p.y);
+    });
+    markCanvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing || !markMode) return;
+      const p = pointToCanvas(e);
+      drawDot(p.x, p.y);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
+      markCanvas.addEventListener(evt, () => { isDrawing = false; });
+    });
+
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Downloading AI model...');
       try {
-        const blob = await removeBackground(currentFile, {
+        const cutoutBlob = await removeBackground(currentFile, {
           model: 'isnet', // full precision — noticeably more accurate than the default fp16 model, especially on cluttered real-world backgrounds
           progress: (key, current, total) => {
             const pct = total ? Math.round((current / total) * 100) : 0;
@@ -1094,7 +1272,8 @@ function renderSingleFileConfig() {
             updateProcessingProgress(pct, label);
           },
         });
-        showResultState(blob, `no-bg-${currentFile.name.split('.')[0]}.png`);
+        const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, previewImg);
+        showResultState(finalBlob, `no-bg-${currentFile.name.split('.')[0]}.png`);
       } catch (err) { showErrorState(err.message); }
     });
   }
@@ -2925,27 +3104,50 @@ function populateHomeCategoryDropdowns() {
   });
 }
 
+const CATEGORY_LABELS = { image: 'Image', word: 'Word', excel: 'Excel', pdf: 'PDF', ppt: 'PPT', text: 'Text', utilities: 'Utilities' };
+
 function renderCategoryNav(category) {
   const config = CATEGORY_NAV_CONFIG[category];
   const navEl = document.querySelector('.main-nav');
   if (!navEl) return;
 
+  // "Categories" dropdown: lets you jump straight to any other category page
+  // from wherever you are, instead of routing back through the home page.
+  const categoriesLinksHtml = Object.keys(categoryTools)
+    .map((cat) => `<a href="/${cat}.html">${CATEGORY_LABELS[cat] || cat}</a>`)
+    .join('');
+  const categoriesDropdownHtml = `
+    <div class="nav-item">
+      <button class="nav-trigger">Categories</button>
+      <div class="dropdown">${categoriesLinksHtml}</div>
+    </div>
+  `;
+
   if (!config) {
-    // small categories: single hover dropdown listing every tool, no top3/group split needed
+    // small categories: single hover dropdown listing every tool in the category
     const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
-    const label = category.charAt(0).toUpperCase() + category.slice(1);
+    const label = CATEGORY_LABELS[category] || (category.charAt(0).toUpperCase() + category.slice(1));
     const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
     navEl.innerHTML = `
       <div class="nav-item">
-        <button class="nav-trigger">${label} Tools</button>
+        <button class="nav-trigger">All ${label} Tools</button>
         <div class="dropdown">${linksHtml}</div>
       </div>
-      <a href="/" class="nav-link">All Categories</a>
+      ${categoriesDropdownHtml}
     `;
   } else {
+    // categories with a bigger tool list get a grouped mega-menu, with the
+    // top picks pinned in their own "Popular" section at the front — and
+    // also surfaced as direct quick links right on the nav bar itself.
     const top3Html = config.top3.map((k) => `
       <a href="?tool=${k}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
     `).join('');
+    const popularHtml = `
+      <div class="mega-menu-section">
+        <p class="mega-menu-label">Popular</p>
+        ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+      </div>
+    `;
     const groupsHtml = config.groups.map((group) => `
       <div class="mega-menu-section">
         <p class="mega-menu-label">${group.label}</p>
@@ -2955,11 +3157,10 @@ function renderCategoryNav(category) {
     navEl.innerHTML = `
       ${top3Html}
       <div class="nav-item">
-        <button class="nav-trigger">More Tools</button>
-        <div class="dropdown mega-menu">${groupsHtml}</div>
+        <button class="nav-trigger">${config.allLabel}</button>
+        <div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>
       </div>
-      <a href="${config.allLink}" class="nav-link">${config.allLabel}</a>
-      <a href="/" class="nav-link">All Categories</a>
+      ${categoriesDropdownHtml}
     `;
   }
 
