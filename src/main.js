@@ -79,10 +79,13 @@ const toolMeta = {
 
   ppttotext: { label: 'PPT to Text', desc: 'Extract all text from a slide deck.', needsConfig: false, accept: '.pptx', category: 'ppt', iconTo: 'text' },
 
-  texttoppt: { label: 'Text to PPT', desc: 'Turn pasted text into slides.', noFile: true, category: 'text', iconTo: 'ppt' },
-  textopdf: { label: 'Text to PDF', desc: 'Turn pasted text into a PDF.', noFile: true, category: 'text', iconTo: 'pdf' },
-  wordcounter: { label: 'Word Counter', desc: 'Count words and characters instantly.', noFile: true, category: 'text', iconTo: 'text' },
-  caseconverter: { label: 'Case Converter', desc: 'Switch between upper, lower, and title case.', noFile: true, category: 'text', iconTo: 'text' },
+  // These 4 used to be their own "Text" category; Text was folded into
+  // Other Tools (utilities), so their `category` now points there too —
+  // that's what drives their icon badge, grid placement, and nav entry.
+  texttoppt: { label: 'Text to PPT', desc: 'Turn pasted text into slides.', noFile: true, category: 'utilities', iconTo: 'ppt' },
+  textopdf: { label: 'Text to PDF', desc: 'Turn pasted text into a PDF.', noFile: true, category: 'utilities', iconTo: 'pdf' },
+  wordcounter: { label: 'Word Counter', desc: 'Count words and characters instantly.', noFile: true, category: 'utilities', iconTo: 'text' },
+  caseconverter: { label: 'Case Converter', desc: 'Switch between upper, lower, and title case.', noFile: true, category: 'utilities', iconTo: 'text' },
 
   qrcode: { label: 'QR Code Generator', desc: 'Turn a link or text into a QR code.', noFile: true, category: 'utilities', iconTo: 'utilities' },
   passwordgen: { label: 'Password Generator', desc: 'Create a strong random password.', noFile: true, category: 'utilities', iconTo: 'utilities' },
@@ -99,17 +102,20 @@ const toolMeta = {
   resumebuilder: { label: 'Resume Builder', desc: 'Build and download a simple resume.', noFile: true, category: 'utilities', iconTo: 'pdf' },
   htmltopdf: { label: 'HTML to PDF', desc: 'Paste HTML code and export it as a PDF.', noFile: true, category: 'utilities', iconTo: 'pdf' },
   htmltoexcel: { label: 'HTML to Excel', desc: 'Extract tables from HTML into a spreadsheet.', noFile: true, category: 'utilities', iconTo: 'excel' },
-  aisummarizer: { label: 'AI Summarizer', desc: 'Summarize text privately, right in your browser.', noFile: true, category: 'utilities', iconTo: 'text' },
+  aisummarizer: { label: 'Content Paraphraser', desc: 'Reword and condense text privately, right in your browser.', noFile: true, category: 'utilities', iconTo: 'text' },
 };
 
+// Key order here drives display order wherever categories are listed
+// end-to-end (the "Categories" nav dropdown on category pages, etc.):
+// PDF, Image, Excel, Word, PPT, then Other Tools (utilities) last.
+// "text" is gone as a category — its 4 tools moved into "utilities" below.
 const categoryTools = {
-  image: ['resize', 'compress', 'crop', 'pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'rotateflip', 'watermarkimage', 'bgremove', 'colorpalette', 'socialresize', 'grayscale', 'sepia', 'blurimage', 'heictojpg', 'memecreator', 'collagemaker'],
-  word: ['wordtoexcel', 'wordtopdf', 'wordtotext'],
-  excel: ['exceltopdf', 'exceltocsv'],
   pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdfsign', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
+  image: ['resize', 'compress', 'crop', 'pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'rotateflip', 'watermarkimage', 'bgremove', 'colorpalette', 'socialresize', 'grayscale', 'sepia', 'blurimage', 'heictojpg', 'memecreator', 'collagemaker'],
+  excel: ['exceltopdf', 'exceltocsv'],
+  word: ['wordtoexcel', 'wordtopdf', 'wordtotext'],
   ppt: ['ppttotext'],
-  text: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'],
-  utilities: ['qrcode', 'passwordgen', 'jsonformatter', 'base64', 'loremipsum', 'unitconverter', 'gpacalculator', 'citationgen', 'randomgen', 'zipfiles', 'unzipfiles', 'invoicegen', 'resumebuilder', 'htmltopdf', 'htmltoexcel', 'aisummarizer'],
+  utilities: ['qrcode', 'passwordgen', 'jsonformatter', 'base64', 'loremipsum', 'unitconverter', 'gpacalculator', 'citationgen', 'randomgen', 'zipfiles', 'unzipfiles', 'invoicegen', 'resumebuilder', 'htmltopdf', 'htmltoexcel', 'aisummarizer', 'texttoppt', 'textopdf', 'wordcounter', 'caseconverter'],
 };
 
 // ================= ICON BADGE RENDERING =================
@@ -123,34 +129,73 @@ function renderIconBadge(fromCategory, toCategory) {
 }
 
 // ================= TOOL GRID RENDERING =================
-function renderToolGrid(containerEl, toolKeys) {
-  containerEl.innerHTML = toolKeys.map((key) => {
-    const meta = toolMeta[key];
-    if (!meta) return '';
-    const iconHtml = renderIconBadge(meta.category, meta.iconTo);
-    if (meta.comingSoon) {
-      return `
-        <div class="tool-card coming-soon">
-          <span class="coming-soon-badge">Coming Soon</span>
-          <div class="tool-icon-badge">${iconHtml}</div>
-          <h3>${meta.label}</h3>
-          <p>${meta.desc}</p>
-        </div>
-      `;
-    }
+// Icon + name cards, background tinted per category, no description
+// text. Only the first 3 rows (6 per row = 18 cells) show by default;
+// when there are more tools than that, the 18th cell becomes a "⋯
+// Tools" tile that reveals the rest on click, so the grid still reads
+// as exactly 3 full rows either way.
+const TOOL_GRID_VISIBLE_ROWS = 3;
+const TOOL_GRID_COLUMNS = 6;
+const TOOL_GRID_VISIBLE_LIMIT = TOOL_GRID_VISIBLE_ROWS * TOOL_GRID_COLUMNS;
+
+function toolCardHtml(key, hidden) {
+  const meta = toolMeta[key];
+  if (!meta) return '';
+  const iconHtml = renderIconBadge(meta.category, meta.iconTo);
+  const hiddenClass = hidden ? ' tool-card-hidden' : '';
+  const catClass = ` cat-${meta.category}`;
+  if (meta.comingSoon) {
     return `
-      <div class="tool-card" data-tool="${key}">
-        ${meta.multiFile ? '<span class="multi-file-badge">Multiple files</span>' : ''}
+      <div class="tool-card${catClass} coming-soon${hiddenClass}">
         <div class="tool-icon-badge">${iconHtml}</div>
         <h3>${meta.label}</h3>
-        <p>${meta.desc}</p>
       </div>
     `;
-  }).join('');
+  }
+  return `
+    <div class="tool-card${catClass}${hiddenClass}" data-tool="${key}">
+      <div class="tool-icon-badge">${iconHtml}</div>
+      <h3>${meta.label}</h3>
+    </div>
+  `;
+}
+
+function renderToolGrid(containerEl, toolKeys) {
+  const needsMore = toolKeys.length > TOOL_GRID_VISIBLE_LIMIT;
+  // Reserve the last of the 18 visible cells for the "more" tile, so
+  // 17 real tools + 1 tile still fill exactly 3 rows.
+  const shownKeys = needsMore ? toolKeys.slice(0, TOOL_GRID_VISIBLE_LIMIT - 1) : toolKeys;
+  const hiddenKeys = needsMore ? toolKeys.slice(TOOL_GRID_VISIBLE_LIMIT - 1) : [];
+
+  let html = shownKeys.map((key) => toolCardHtml(key, false)).join('')
+    + hiddenKeys.map((key) => toolCardHtml(key, true)).join('');
+
+  if (needsMore) {
+    html += `
+      <div class="tool-card tool-grid-more-tile" id="toolGridMore" role="button" tabindex="0" aria-label="Show all tools">
+        <div class="tool-icon-badge"><span class="tool-grid-more-dots">⋯</span></div>
+        <h3>Tools</h3>
+      </div>
+    `;
+  }
+
+  containerEl.innerHTML = html;
 
   containerEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
     card.addEventListener('click', () => handleToolCardClick(card.dataset.tool, card));
   });
+
+  const moreTile = containerEl.querySelector('#toolGridMore');
+  if (moreTile) {
+    const reveal = () => {
+      containerEl.querySelectorAll('.tool-card-hidden').forEach((card) => card.classList.remove('tool-card-hidden'));
+      moreTile.remove();
+    };
+    moreTile.addEventListener('click', reveal);
+    moreTile.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); reveal(); }
+    });
+  }
 }
 
 function handleToolCardClick(toolKey, card) {
@@ -178,6 +223,13 @@ function handleToolCardClick(toolKey, card) {
 }
 
 function updateHeroDropZoneLabel() {
+  // If a specific tool just got requested (e.g. from a tool card) while the
+  // drop zone was showing analyzing/preview content from an unrelated
+  // earlier drop, snap it back to the plain idle state first so the
+  // "drop your file for X" hint has somewhere to render.
+  if (awaitingToolKey && !document.querySelector('.hero-drop-text')) {
+    resetHeroUploadFlow();
+  }
   const textEl = document.querySelector('.hero-drop-text');
   const hintEl = document.querySelector('#awaitingToolHint');
   if (!textEl) return;
@@ -188,7 +240,7 @@ function updateHeroDropZoneLabel() {
       : `Drop your file here for ${toolMeta[awaitingToolKey].label}`;
     if (hintEl) hintEl.style.display = 'block';
   } else {
-    textEl.textContent = "Drop any file here to get started — we'll find the right tool";
+    textEl.textContent = "Drop any file here to get started, we'll find the right tool";
     if (hintEl) hintEl.style.display = 'none';
   }
 }
@@ -523,6 +575,127 @@ async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
   }
 
   return new Promise((resolve) => out.toBlob(resolve, 'image/png'));
+}
+
+// ---------- Remove Background: touch-up screen (shown after the AI runs) ----------
+// Marking happens AFTER you see the actual result, not before: the AI cutout
+// is shown over a checkerboard so transparency is visible, and you paint
+// green (keep) / red (erase) directly on top of it. Nothing is baked in
+// until you click Download, so marks can be adjusted freely beforehand.
+function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
+  const cutoutUrl = URL.createObjectURL(cutoutBlob);
+  const filename = `no-bg-${sourceFile.name.split('.')[0]}.png`;
+
+  modalBody.innerHTML = `
+    <div class="result-box">
+      <p class="result-preview-caption">Optional: paint green over anything to keep, or red over anything to erase, then download.</p>
+      <div class="mark-toolbar">
+        <button type="button" class="mark-mode-btn" data-mode="keep">🟢 Mark to keep</button>
+        <button type="button" class="mark-mode-btn" data-mode="erase">🔴 Mark to erase</button>
+        <label class="mark-brush-label">Brush size <input type="range" id="markBrushSize" min="8" max="70" value="28" /></label>
+        <button type="button" class="mark-clear-btn" id="markClearBtn">Clear marks</button>
+      </div>
+      <div class="bgremove-canvas-wrap bgremove-checkerboard" id="bgResultWrap">
+        <img src="${cutoutUrl}" class="preview-img" id="bgResultImg" alt="Background-removed result" />
+        <canvas class="bgremove-mark-canvas" id="bgResultMarkCanvas"></canvas>
+      </div>
+      <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download ${filename}</button>
+      <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+    </div>
+  `;
+
+  const resultImg = document.querySelector('#bgResultImg');
+  const markCanvas = document.querySelector('#bgResultMarkCanvas');
+  const mctx = markCanvas.getContext('2d');
+
+  const sizeMarkCanvas = () => {
+    markCanvas.width = resultImg.naturalWidth || 800;
+    markCanvas.height = resultImg.naturalHeight || 600;
+  };
+  if (resultImg.complete && resultImg.naturalWidth) sizeMarkCanvas();
+  else resultImg.addEventListener('load', sizeMarkCanvas, { once: true });
+
+  let markMode = null; // 'keep' | 'erase' | null
+  let isDrawing = false;
+  let brushSize = 28;
+
+  const modeButtons = document.querySelectorAll('.mark-mode-btn');
+  modeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const clickedMode = btn.dataset.mode;
+      markMode = markMode === clickedMode ? null : clickedMode;
+      modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === markMode));
+      markCanvas.style.cursor = markMode ? 'crosshair' : 'default';
+    });
+  });
+
+  document.querySelector('#markBrushSize').addEventListener('input', (e) => {
+    brushSize = Number(e.target.value);
+  });
+
+  document.querySelector('#markClearBtn').addEventListener('click', () => {
+    mctx.clearRect(0, 0, markCanvas.width, markCanvas.height);
+  });
+
+  const pointToCanvas = (e) => {
+    const rect = markCanvas.getBoundingClientRect();
+    const scaleX = markCanvas.width / rect.width;
+    const scaleY = markCanvas.height / rect.height;
+    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+  };
+
+  const drawDot = (x, y) => {
+    mctx.fillStyle = markMode === 'erase' ? 'rgba(231,76,60,0.55)' : 'rgba(46,204,113,0.55)';
+    mctx.beginPath();
+    mctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+    mctx.fill();
+  };
+
+  markCanvas.addEventListener('pointerdown', (e) => {
+    if (!markMode) return;
+    isDrawing = true;
+    markCanvas.setPointerCapture(e.pointerId);
+    const p = pointToCanvas(e);
+    drawDot(p.x, p.y);
+  });
+  markCanvas.addEventListener('pointermove', (e) => {
+    if (!isDrawing || !markMode) return;
+    const p = pointToCanvas(e);
+    drawDot(p.x, p.y);
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
+    markCanvas.addEventListener(evt, () => { isDrawing = false; });
+  });
+
+  document.querySelector('#bgDownloadBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing…';
+    try {
+      const sourceImg = await loadImageFromBlob(sourceFile);
+      const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg);
+      const url = URL.createObjectURL(finalBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch (err) {
+      showErrorState(err.message);
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  });
+
+  document.querySelector('#resetToolBtn').addEventListener('click', () => {
+    currentFile = null;
+    closeToolModal(false);
+    handleToolCardClick(currentToolKey, lastFocusedElement);
+  });
 }
 
 function showErrorState(message) {
@@ -1179,88 +1352,9 @@ function renderSingleFileConfig() {
 
   else if (currentToolKey === 'bgremove') {
     area.insertAdjacentHTML('beforeend', `
-      <div class="mark-toolbar">
-        <button type="button" class="mark-mode-btn" data-mode="keep">🟢 Mark to keep</button>
-        <button type="button" class="mark-mode-btn" data-mode="erase">🔴 Mark to erase</button>
-        <label class="mark-brush-label">Brush size <input type="range" id="markBrushSize" min="8" max="70" value="28" /></label>
-        <button type="button" class="mark-clear-btn" id="markClearBtn">Clear marks</button>
-      </div>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px;">Optional: paint green over anything the AI should always keep, or red over anything it should always erase (stray background it misses, or part of the subject it might cut off) — before running it.</p>
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a full-precision AI model (larger download, better accuracy) — one time, cached after.</p>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a full-precision AI model (larger download, better accuracy), just once, cached after. You'll get a chance to touch up the result before downloading.</p>
     `);
-
-    // Turn the plain preview <img> into an image + drawable mark-canvas stack
-    // so the user can paint keep/erase hints directly on top of the photo.
-    const previewImg = area.querySelector('.preview-img');
-    const canvasWrap = document.createElement('div');
-    canvasWrap.className = 'bgremove-canvas-wrap';
-    previewImg.replaceWith(canvasWrap);
-    canvasWrap.appendChild(previewImg);
-    const markCanvas = document.createElement('canvas');
-    markCanvas.className = 'bgremove-mark-canvas';
-    canvasWrap.appendChild(markCanvas);
-
-    const sizeMarkCanvas = () => {
-      markCanvas.width = previewImg.naturalWidth || 800;
-      markCanvas.height = previewImg.naturalHeight || 600;
-    };
-    if (previewImg.complete && previewImg.naturalWidth) sizeMarkCanvas();
-    else previewImg.addEventListener('load', sizeMarkCanvas, { once: true });
-
-    const mctx = markCanvas.getContext('2d');
-    let markMode = null; // 'keep' | 'erase' | null
-    let isDrawing = false;
-    let brushSize = 28;
-
-    const modeButtons = area.querySelectorAll('.mark-mode-btn');
-    modeButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const clickedMode = btn.dataset.mode;
-        markMode = markMode === clickedMode ? null : clickedMode;
-        modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === markMode));
-        markCanvas.style.cursor = markMode ? 'crosshair' : 'default';
-      });
-    });
-
-    area.querySelector('#markBrushSize').addEventListener('input', (e) => {
-      brushSize = Number(e.target.value);
-    });
-
-    area.querySelector('#markClearBtn').addEventListener('click', () => {
-      mctx.clearRect(0, 0, markCanvas.width, markCanvas.height);
-    });
-
-    const pointToCanvas = (e) => {
-      const rect = markCanvas.getBoundingClientRect();
-      const scaleX = markCanvas.width / rect.width;
-      const scaleY = markCanvas.height / rect.height;
-      return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
-    };
-
-    const drawDot = (x, y) => {
-      mctx.fillStyle = markMode === 'erase' ? 'rgba(231,76,60,0.55)' : 'rgba(46,204,113,0.55)';
-      mctx.beginPath();
-      mctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-      mctx.fill();
-    };
-
-    markCanvas.addEventListener('pointerdown', (e) => {
-      if (!markMode) return;
-      isDrawing = true;
-      markCanvas.setPointerCapture(e.pointerId);
-      const p = pointToCanvas(e);
-      drawDot(p.x, p.y);
-    });
-    markCanvas.addEventListener('pointermove', (e) => {
-      if (!isDrawing || !markMode) return;
-      const p = pointToCanvas(e);
-      drawDot(p.x, p.y);
-    });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
-      markCanvas.addEventListener(evt, () => { isDrawing = false; });
-    });
-
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Downloading AI model...');
       try {
@@ -1272,8 +1366,7 @@ function renderSingleFileConfig() {
             updateProcessingProgress(pct, label);
           },
         });
-        const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, previewImg);
-        showResultState(finalBlob, `no-bg-${currentFile.name.split('.')[0]}.png`);
+        showBgRemoveTouchUpState(cutoutBlob, currentFile);
       } catch (err) { showErrorState(err.message); }
     });
   }
@@ -1695,7 +1788,7 @@ function renderSingleFileConfig() {
         const wrap = document.querySelector('#sheetPreviewWrap');
         if (wrap) {
           const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${cell ?? ''}</td>`).join('')}</tr>`).join('');
-          wrap.innerHTML = `<p class="doc-label">Sheet "${sheetName}" — ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
+          wrap.innerHTML = `<p class="doc-label">Sheet "${sheetName}": ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
         }
       } catch {
         const wrap = document.querySelector('#sheetPreviewWrap');
@@ -1750,7 +1843,7 @@ function renderSingleFileConfig() {
 
   else if (currentToolKey === 'pdfcompress') {
     area.insertAdjacentHTML('beforeend', `
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images inside the PDF — all text and vector content stays exactly as-is, fully selectable and sharp. Images stored in other formats are left untouched.</p>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images inside the PDF. All text and vector content stays exactly as-is, fully selectable and sharp. Images stored in other formats are left untouched.</p>
       <div class="config-panel">
         <label>Image quality
           <select id="cfgQuality">
@@ -1869,8 +1962,8 @@ function renderSingleFileConfig() {
         const newKB = blob.size / 1024;
         const pct = Math.round(100 - (newKB / originalKB) * 100);
         const note = recompressedCount === 0
-          ? 'No JPEG images found to recompress — this PDF may be mostly text/vector already, or uses image formats this tool doesn\'t touch.'
-          : `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'}) — ${recompressedCount} image(s) recompressed, text untouched.`;
+          ? 'No JPEG images found to recompress. This PDF may be mostly text/vector already, or uses image formats this tool doesn\'t touch.'
+          : `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'}); ${recompressedCount} image(s) recompressed, text untouched.`;
         await minWait(300);
         showResultState(blob, `compressed-${currentFile.name}`, note);
       } catch (err) { showErrorState(err.message); }
@@ -1919,7 +2012,7 @@ function renderNoFileTool(toolKey) {
   if (toolKey === 'scantopdf') renderScanToPdfTool();
   if (toolKey === 'htmltopdf') renderHtmlToPdfTool();
   if (toolKey === 'htmltoexcel') renderHtmlToExcelTool();
-  if (toolKey === 'aisummarizer') renderAiSummarizerTool();
+  if (toolKey === 'aisummarizer') renderContentParaphraserTool();
 }
 
 function copyBtn(targetSelector) {
@@ -2676,7 +2769,7 @@ function renderHtmlToPdfTool() {
 // ================= HTML TO EXCEL =================
 function renderHtmlToExcelTool() {
   modalBody.innerHTML = `
-    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste HTML code containing a table (or any HTML — plain text will be extracted if no table is found).</p>
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste HTML code containing a table (or any HTML; plain text will be extracted if no table is found).</p>
     <textarea id="h2eInput" rows="8" placeholder="<table><tr><td>Name</td><td>Score</td></tr><tr><td>Alex</td><td>92</td></tr></table>" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:monospace; font-size:0.85rem;"></textarea>
     <div class="config-panel"><button class="config-action-btn" id="cfgGen">Generate Excel</button></div>
   `;
@@ -2710,11 +2803,11 @@ function renderHtmlToExcelTool() {
 
 // ================= AI SUMMARIZER =================
 let summarizerPipeline = null;
-function renderAiSummarizerTool() {
+function renderContentParaphraserTool() {
   modalBody.innerHTML = `
-    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste text to summarize. First use downloads a small AI model (one-time, cached after) — everything runs in your browser, nothing is sent anywhere.</p>
+    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste text to paraphrase. First use downloads a small AI model (one-time, cached after); everything runs in your browser, nothing is sent anywhere.</p>
     <textarea id="aiInput" rows="8" placeholder="Paste an article, essay, or long passage here..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
-    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Summarize</button></div>
+    <div class="config-panel"><button class="config-action-btn" id="cfgGen">Paraphrase</button></div>
     <div id="aiOutWrap"></div>
   `;
   document.querySelector('#cfgGen').addEventListener('click', async () => {
@@ -2735,18 +2828,18 @@ function renderAiSummarizerTool() {
           },
         });
       }
-      updateProcessingCaption('Summarizing...');
+      updateProcessingCaption('Paraphrasing...');
       const result = await summarizerPipeline(text, { max_new_tokens: 120, min_new_tokens: 20 });
       const summary = result[0].summary_text;
       await minWait(300);
       modalBody.innerHTML = `
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px;">Summary:</p>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px;">Paraphrased version:</p>
         <p id="aiSummaryResult" style="font-size:1rem; line-height:1.6;">${summary}</p>
         ${copyBtn('#aiSummaryResult')}
-        <button class="reset-btn" id="aiResetBtn" style="margin-top:14px; display:block;">Summarize something else</button>
+        <button class="reset-btn" id="aiResetBtn" style="margin-top:14px; display:block;">Paraphrase something else</button>
       `;
       wireCopyButtons();
-      document.querySelector('#aiResetBtn').addEventListener('click', renderAiSummarizerTool);
+      document.querySelector('#aiResetBtn').addEventListener('click', renderContentParaphraserTool);
     } catch (err) { showErrorState(err.message); }
   });
 }
@@ -2790,7 +2883,7 @@ function renderMultiFileTool(initialFiles) {
     listEl.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.up; [files[i - 1], files[i]] = [files[i], files[i - 1]]; renderList(); }));
     listEl.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.down; [files[i + 1], files[i]] = [files[i], files[i + 1]]; renderList(); }));
     warnEl.style.display = files.length > 22 ? 'block' : 'none';
-    if (files.length > 22) warnEl.textContent = `⚠ ${files.length} files — large batches may use a lot of memory.`;
+    if (files.length > 22) warnEl.textContent = `⚠ ${files.length} files, large batches may use a lot of memory.`;
     goBtn.disabled = currentToolKey === 'pdfmerge' ? files.length < 2 : files.length < 1;
   }
   renderList();
@@ -2880,16 +2973,24 @@ function wireHeroDropZone() {
   const input = document.querySelector('#heroFileInput');
   const cancelBtn = document.querySelector('#cancelAwaitingTool');
 
-  dz.addEventListener('click', (e) => { if (e.target !== input) input.click(); });
+  // The file input covers the whole box (see CSS) and stays in the DOM the
+  // entire time — only #heroDropContent's innerHTML gets swapped between
+  // idle/analyzing/preview states, so this listener never needs rewiring.
+  dz.addEventListener('click', (e) => {
+    if (e.target === input) return;
+    if (e.target.closest('button, a')) return;
+    input.click();
+  });
   dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-active'); });
   dz.addEventListener('dragleave', () => dz.classList.remove('drag-active'));
   dz.addEventListener('drop', (e) => {
     e.preventDefault();
     dz.classList.remove('drag-active');
-    if (e.dataTransfer.files.length) routeHeroFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files.length) routeHeroFiles(Array.from(e.dataTransfer.files));
   });
   input.addEventListener('change', (e) => {
-    if (e.target.files.length) routeHeroFile(e.target.files[0]);
+    if (e.target.files.length) routeHeroFiles(Array.from(e.target.files));
+    input.value = '';
   });
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
@@ -2899,18 +3000,22 @@ function wireHeroDropZone() {
   }
 }
 
-async function routeHeroFile(file) {
-  // If a specific tool is waiting for this drop, go straight there
+async function routeHeroFiles(files) {
+  if (!files || !files.length) return;
+
+  // If a specific tool is waiting for this drop, go straight there —
+  // same as before, just now accepts several files in one go too.
   if (awaitingToolKey && toolMeta[awaitingToolKey]) {
     const meta = toolMeta[awaitingToolKey];
-    if (!validateFileType(file, meta.accept)) {
-      showTypeRejection(meta.label, meta.accept);
-      return;
-    }
     const toolKey = awaitingToolKey;
 
     if (meta.multiFile) {
-      awaitingExistingFiles = [...(awaitingExistingFiles || []), file];
+      const valid = files.filter((f) => {
+        if (!validateFileType(f, meta.accept)) { showTypeRejection(meta.label, meta.accept); return false; }
+        return true;
+      });
+      if (!valid.length) return;
+      awaitingExistingFiles = [...(awaitingExistingFiles || []), ...valid];
       awaitingToolKey = null;
       const filesToOpen = awaitingExistingFiles;
       awaitingExistingFiles = null;
@@ -2919,6 +3024,11 @@ async function routeHeroFile(file) {
       return;
     }
 
+    const file = files[0];
+    if (!validateFileType(file, meta.accept)) {
+      showTypeRejection(meta.label, meta.accept);
+      return;
+    }
     awaitingToolKey = null;
     pendingHeroFile = file;
     updateHeroDropZoneLabel();
@@ -2926,19 +3036,233 @@ async function routeHeroFile(file) {
     return;
   }
 
-  const cat = detectCategoryFromFile(file);
-  if (!cat) {
+  // Otherwise: no tool picked yet — run the inline analyze → suggest flow.
+  analyzeAndSuggestHeroFiles(files);
+}
+
+// ================= HERO PREDICT-THE-TOOL FLOW =================
+// Files dropped with no specific tool already chosen accumulate here.
+// { file, category } — category comes from detectCategoryFromFile.
+let heroFiles = [];
+
+const HERO_CATEGORY_EMOJI = { pdf: '📕', word: '📄', excel: '📊', ppt: '📽️', image: '🖼️' };
+
+// Default 3 suggested tools per category, tuned separately for a single
+// file vs. several files of the same type (e.g. multiple PDFs bumps
+// Merge PDF to the top instead of a single-file-oriented tool).
+const HERO_SUGGEST_CONFIG = {
+  pdf: { single: ['pdfcompress', 'pdftoword', 'pdfrotate'], multi: ['pdfmerge', 'pdfrotate', 'pdfcompress'] },
+  image: { single: ['resize', 'compress', 'crop'], multi: ['collagemaker', 'pdf', 'imagetoppt'] },
+  word: { single: ['wordtopdf', 'wordtoexcel', 'wordtotext'], multi: ['wordtopdf', 'wordtoexcel', 'wordtotext'] },
+  excel: { single: ['exceltopdf', 'exceltocsv'], multi: ['exceltopdf', 'exceltocsv'] },
+  ppt: { single: ['ppttotext'], multi: ['ppttotext'] },
+};
+
+function analyzeAndSuggestHeroFiles(newFiles) {
+  const recognized = [];
+  newFiles.forEach((file) => {
+    const cat = detectCategoryFromFile(file);
+    if (cat) recognized.push({ file, category: cat });
+  });
+  if (!recognized.length) {
     alert("We couldn't recognize that file type. Try browsing a category above instead.");
     return;
   }
-  await storePendingHeroFile(file);
-  const pageMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html' };
-  if (window.location.pathname.endsWith(pageMap[cat])) {
-    pendingHeroFile = file;
-    document.querySelector('#toolGrid').scrollIntoView({ behavior: 'smooth' });
-  } else {
-    window.location.href = pageMap[cat];
+  heroFiles = [...heroFiles, ...recognized];
+  showHeroAnalyzing();
+  setTimeout(renderHeroSuggestions, 1100);
+}
+
+function showHeroAnalyzing() {
+  const dz = document.querySelector('#heroDropZone');
+  const content = document.querySelector('#heroDropContent');
+  if (!dz || !content) return;
+  dz.classList.add('compact');
+  content.innerHTML = `
+    <div class="hero-analyzing">
+      <div class="hero-analyzing-icons">
+        <span class="hero-analyzing-doc">📄</span>
+        <span class="hero-analyzing-glass">🔍</span>
+      </div>
+      <p class="hero-analyzing-text">Analyzing file type…</p>
+      <div class="progress-bar-track"><div class="progress-bar-fill" id="heroProgressFill"></div></div>
+    </div>
+  `;
+  const fill = document.querySelector('#heroProgressFill');
+  if (fill) {
+    fill.style.transition = 'width 1s ease';
+    requestAnimationFrame(() => { fill.style.width = '100%'; });
   }
+}
+
+function resetHeroUploadFlow() {
+  heroFiles = [];
+  const dz = document.querySelector('#heroDropZone');
+  const content = document.querySelector('#heroDropContent');
+  const panel = document.querySelector('#heroSuggestPanel');
+  if (dz) dz.classList.remove('compact');
+  if (panel) { panel.classList.remove('visible'); panel.innerHTML = ''; }
+  if (content) {
+    content.innerHTML = `
+      <div class="hero-drop-idle" id="heroDropIdle">
+        <p class="hero-drop-text">Drop any file here to get started, we'll find the right tool</p>
+      </div>
+    `;
+  }
+}
+
+// Removes a single file (by its index in heroFiles) from the hero
+// upload flow — used by both the single-file thumb's "✕" and the
+// per-row "✕" in the multi-file list. Falls back to a full reset once
+// the last file is removed.
+function removeHeroFile(index) {
+  heroFiles.splice(index, 1);
+  if (!heroFiles.length) {
+    resetHeroUploadFlow();
+  } else {
+    renderHeroSuggestions();
+  }
+}
+
+function renderHeroSuggestions() {
+  const dz = document.querySelector('#heroDropZone');
+  const content = document.querySelector('#heroDropContent');
+  const panel = document.querySelector('#heroSuggestPanel');
+  if (!dz || !content || !panel || !heroFiles.length) return;
+
+  dz.classList.add('compact');
+
+  const cats = [...new Set(heroFiles.map((f) => f.category))];
+  const countByCat = {};
+  heroFiles.forEach((f) => { countByCat[f.category] = (countByCat[f.category] || 0) + 1; });
+  const dominant = cats.reduce((a, b) => (countByCat[b] > countByCat[a] ? b : a), cats[0]);
+  const isMulti = heroFiles.length > 1;
+  const latest = heroFiles[heroFiles.length - 1];
+
+  const badgeHtml = heroFiles.length > 1 ? `<span class="hero-file-badge">${heroFiles.length}</span>` : '';
+  const latestIndex = heroFiles.length - 1;
+  const removeBtnHtml = `<button type="button" class="hero-file-remove-btn" data-remove-index="${latestIndex}" aria-label="Remove this file" title="Remove this file">✕</button>`;
+  const fileListHtml = heroFiles.length > 1 ? `
+    <div class="hero-file-list">
+      ${heroFiles.map((f, i) => `
+        <div class="hero-file-row">
+          <span class="hero-file-row-icon">${HERO_CATEGORY_EMOJI[f.category] || '📁'}</span>
+          <span class="hero-file-row-name">${f.file.name}</span>
+          <button type="button" class="hero-file-row-remove" data-remove-index="${i}" aria-label="Remove ${f.file.name}" title="Remove this file">✕</button>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+  content.innerHTML = `
+    <div class="hero-preview">
+      ${latest.file.type.startsWith('image/')
+        ? `<div class="hero-preview-thumb-wrap"><img class="hero-preview-thumb" src="${URL.createObjectURL(latest.file)}" />${badgeHtml}${removeBtnHtml}</div>`
+        : `<div class="hero-preview-icon">${HERO_CATEGORY_EMOJI[latest.category] || '📁'}${badgeHtml}${removeBtnHtml}</div>`}
+      <p class="hero-preview-name">${heroFiles.length > 1 ? `${heroFiles.length} files selected` : latest.file.name}</p>
+      ${cats.length > 1 ? `<div class="batch-warning">⚠ These files span more than one category (${cats.map((c) => CATEGORY_LABELS[c] || c).join(', ')}); suggestions below are based on the most common type.</div>` : ''}
+      ${fileListHtml}
+      <button type="button" class="hero-add-more-btn" id="heroAddMoreFilesBtn">+ Add more files</button>
+      <button type="button" class="hero-clear-btn" id="heroClearFilesBtn">Start over</button>
+    </div>
+  `;
+  document.querySelector('#heroAddMoreFilesBtn').addEventListener('click', () => {
+    document.querySelector('#heroFileInput').click();
+  });
+  document.querySelector('#heroClearFilesBtn').addEventListener('click', () => resetHeroUploadFlow());
+  content.querySelectorAll('[data-remove-index]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeHeroFile(Number(btn.dataset.removeIndex));
+    });
+  });
+
+  const config = HERO_SUGGEST_CONFIG[dominant];
+  const matchingFiles = heroFiles.filter((f) => f.category === dominant).map((f) => f.file);
+  const suggestedKeys = (config ? (isMulti ? config.multi : config.single) : [])
+    .filter((k) => toolMeta[k] && !toolMeta[k].comingSoon)
+    .slice(0, 3);
+
+  const cardsHtml = suggestedKeys.map((key) => {
+    const meta = toolMeta[key];
+    return `
+      <div class="hero-suggest-card" data-suggest-tool="${key}">
+        ${renderIconBadge(meta.category, meta.iconTo)}
+        <div>
+          <div class="hero-suggest-label">${meta.label}</div>
+          <div class="hero-suggest-desc">${meta.desc}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const moreLink = pageUrlMap[dominant] || '#';
+  const moreLabel = CATEGORY_LABELS[dominant] || dominant;
+
+  panel.innerHTML = `
+    <p class="hero-suggest-title">Which tool would you like to use?</p>
+    ${cardsHtml}
+    <a class="hero-suggest-card hero-suggest-more" href="${moreLink}">See all ${moreLabel} tools →</a>
+  `;
+  panel.classList.add('visible');
+
+  panel.querySelectorAll('[data-suggest-tool]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.suggestTool;
+      const meta = toolMeta[key];
+      if (!meta) return;
+      const validForTool = matchingFiles.filter((f) => validateFileType(f, meta.accept));
+      if (meta.multiFile) {
+        openToolModal(key, card, validForTool.length ? validForTool : matchingFiles);
+      } else {
+        pendingHeroFile = validForTool[0] || matchingFiles[0];
+        openToolModal(key, card);
+      }
+    });
+  });
+
+  updateSuggestTailPosition();
+}
+
+// ================= SUGGESTION-BUBBLE TAIL TRACKING =================
+// The suggestion panel's speech-bubble tail should always point at the
+// mascot, who is fixed to the viewport corner. As the page scrolls the
+// panel moves but the mascot doesn't, so the tail's position *within*
+// the panel has to be recomputed continuously — this keeps it level
+// ("in parallel") with the mascot at any scroll depth.
+let suggestTailRaf = null;
+
+function updateSuggestTailPosition() {
+  const widget = document.querySelector('#ffhWidget');
+  const panel = document.querySelector('#heroSuggestPanel');
+  if (!widget || !panel || !panel.classList.contains('visible')) return;
+  const widgetRect = widget.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  if (!panelRect.height) return;
+  // Aim roughly at the mascot's chest/speech-bubble height, not his feet.
+  const mascotY = widgetRect.top + widgetRect.height * 0.32;
+  let tailTop = mascotY - panelRect.top;
+  // Keep the tail on the flat part of the panel's right edge, clear of
+  // the 24px rounded corners (plus the triangle's own ~13px half-height)
+  // — otherwise it clips into the curve and looks jagged/detached
+  // instead of a smooth, properly-seated speech-bubble tail.
+  const cornerClearance = 40;
+  const clampMin = cornerClearance;
+  const clampMax = panelRect.height - cornerClearance;
+  tailTop = Math.max(clampMin, Math.min(clampMax, tailTop));
+  panel.style.setProperty('--tail-top', `${tailTop}px`);
+}
+
+function requestSuggestTailUpdate() {
+  if (suggestTailRaf) return;
+  suggestTailRaf = requestAnimationFrame(() => {
+    suggestTailRaf = null;
+    updateSuggestTailPosition();
+  });
+}
+
+function wireSuggestTailTracking() {
+  window.addEventListener('scroll', requestSuggestTailUpdate, { passive: true });
+  window.addEventListener('resize', requestSuggestTailUpdate);
 }
 
 function storePendingHeroFile(file) {
@@ -2973,7 +3297,7 @@ async function loadPendingHeroFile() {
   }
 }
 
-const pageUrlMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html', text: '/text.html', utilities: '/utilities.html' };
+const pageUrlMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html', text: '/other-tools.html', utilities: '/other-tools.html' };
 
 function buildSearchIndex() {
   return Object.entries(toolMeta)
@@ -3041,6 +3365,113 @@ function wireHamburger() {
   menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) menuBackdrop.classList.add('hidden'); });
 }
 
+// ================= HERO MASCOT WIDGET =================
+function wireHeroMascot() {
+  const widget = document.querySelector('#ffhWidget');
+  const eyeL = document.querySelector('#ffhEyeL');
+  const eyeR = document.querySelector('#ffhEyeR');
+  const pupilL = document.querySelector('#ffhPupilL');
+  const pupilR = document.querySelector('#ffhPupilR');
+  const headGroup = document.querySelector('#ffhHeadGroup');
+  const headCircle = document.querySelector('#ffhHeadCircle');
+  const armLGroup = document.querySelector('#ffhArmL');
+  const armRGroup = document.querySelector('#ffhArmR');
+  const heroWrap = document.querySelector('#ffhHeroWrap');
+  const speechBubble = document.querySelector('#ffhSpeechBubble');
+  const eyelidL = document.querySelector('#ffhEyelidL');
+  const eyelidR = document.querySelector('#ffhEyelidR');
+  const hint = document.querySelector('#ffhHint');
+  if (!widget || !eyeL || !eyeR || !headGroup || !headCircle) return;
+
+  const maxPupilOffset = 4.5;
+  let isWaving = false;
+
+  [pupilL, pupilR].forEach((p) => {
+    p.setAttribute('data-base-cx', p.getAttribute('cx'));
+    p.setAttribute('data-base-cy', p.getAttribute('cy'));
+  });
+
+  function moveEye(eyeEl, pupilEl, mouseX, mouseY) {
+    const rect = eyeEl.getBoundingClientRect();
+    const eyeCenterX = rect.left + rect.width / 2;
+    const eyeCenterY = rect.top + rect.height / 2;
+    const dx = mouseX - eyeCenterX;
+    const dy = mouseY - eyeCenterY;
+    const angle = Math.atan2(dy, dx);
+    const distance = Math.min(Math.hypot(dx, dy) / 18, maxPupilOffset);
+    const baseCx = parseFloat(pupilEl.getAttribute('data-base-cx'));
+    const baseCy = parseFloat(pupilEl.getAttribute('data-base-cy'));
+    pupilEl.setAttribute('cx', baseCx + Math.cos(angle) * distance);
+    pupilEl.setAttribute('cy', baseCy + Math.sin(angle) * distance);
+  }
+
+  function updateFullBodyTracking(mouseX, mouseY) {
+    if (isWaving) return;
+    const headRect = headCircle.getBoundingClientRect();
+    const charCenterX = headRect.left + headRect.width / 2;
+    const charCenterY = headRect.top + headRect.height / 2 + 40;
+    const dx = mouseX - charCenterX;
+    const dy = mouseY - charCenterY;
+    const headMaxAngle = 10;
+    const headAngle = Math.max(-headMaxAngle, Math.min(headMaxAngle, (dx / 300) * headMaxAngle));
+    const headTiltY = Math.max(-6, Math.min(6, (dy / 300) * 6));
+    headGroup.style.transform = `rotate(${headAngle.toFixed(2)}deg) translateY(${headTiltY.toFixed(2)}px)`;
+  }
+
+  function handlePointerMove(x, y) {
+    moveEye(eyeL, pupilL, x, y);
+    moveEye(eyeR, pupilR, x, y);
+    updateFullBodyTracking(x, y);
+  }
+
+  window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+  window.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    if (touch) handlePointerMove(touch.clientX, touch.clientY);
+  });
+
+  function blink() {
+    if (!isWaving && eyelidL && eyelidR) {
+      [eyelidL, eyelidR].forEach((el) => {
+        el.style.transition = 'transform 0.09s cubic-bezier(0.4, 0, 1, 1)';
+        el.style.transform = 'scaleY(1)';
+      });
+      setTimeout(() => {
+        [eyelidL, eyelidR].forEach((el) => {
+          el.style.transition = 'transform 0.14s cubic-bezier(0, 0, 0.2, 1)';
+          el.style.transform = 'scaleY(0)';
+        });
+      }, 90 + Math.random() * 40);
+    }
+    setTimeout(blink, 2400 + Math.random() * 3200);
+  }
+  setTimeout(blink, 1800);
+
+  function waveHello() {
+    if (isWaving) return;
+    isWaving = true;
+    // Mouth stays neutral throughout — no smiling, on proximity or here.
+    if (speechBubble) speechBubble.classList.add('show');
+    if (hint) hint.style.opacity = '0';
+    armRGroup.style.transform = 'rotate(-100deg)';
+    armRGroup.classList.add('ffh-waving-now');
+    setTimeout(() => {
+      armRGroup.classList.remove('ffh-waving-now');
+      armRGroup.classList.add('ffh-lowering');
+      requestAnimationFrame(() => {
+        armRGroup.style.transform = 'rotate(-18deg)';
+      });
+      if (speechBubble) speechBubble.classList.remove('show');
+      if (hint) hint.style.opacity = '';
+      setTimeout(() => {
+        armRGroup.classList.remove('ffh-lowering');
+        isWaving = false;
+      }, 400);
+    }, 1500);
+  }
+  widget.addEventListener('click', waveHello);
+}
+
 // ================= CATEGORY-SPECIFIC HEADER NAV =================
 const CATEGORY_NAV_CONFIG = {
   image: {
@@ -3076,35 +3507,73 @@ const CATEGORY_NAV_CONFIG = {
       { label: 'Documents', tools: ['invoicegen', 'resumebuilder'] },
       { label: 'Files', tools: ['zipfiles', 'unzipfiles'] },
       { label: 'Developer', tools: ['jsonformatter', 'base64'] },
+      // Text's 4 tools, folded in here now that Text is no longer its own category.
+      { label: 'Text', tools: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'] },
     ],
-    allLabel: 'All Utilities',
-    allLink: '/utilities.html',
+    allLabel: 'All Other Tools',
+    allLink: '/other-tools.html',
   },
 };
 
-function populateHomeCategoryDropdowns() {
-  document.querySelectorAll('[data-home-cat]').forEach((dropdownEl) => {
-    const category = dropdownEl.dataset.homeCat;
-    const config = CATEGORY_NAV_CONFIG[category];
-    let keys;
-    if (config) {
-      keys = [...config.top3, ...config.groups.flatMap((g) => g.tools)];
-    } else {
-      keys = categoryTools[category] || [];
-    }
-    keys = keys.filter((k) => !toolMeta[k].comingSoon);
-    dropdownEl.innerHTML = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
-  });
+const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PPT', utilities: 'Other Tools' };
 
-  document.querySelectorAll('#homeMainNav [data-nav-tool]').forEach((link) => {
+// Home ("all") page nav: every top-level category gets its own hover
+// dropdown listing every tool in that category, same grid/mega-menu
+// styling category pages use for their own current category, just
+// applied across all six at once since the home page has no single
+// "current" category to special-case.
+const NAV_CATEGORY_ICON = { pdf: 'icon-pdf', image: 'icon-image', excel: 'icon-excel', word: 'icon-word', ppt: 'icon-ppt', utilities: 'icon-utilities' };
+const NAV_CATEGORY_ORDER = ['pdf', 'image', 'excel', 'word', 'ppt', 'utilities'];
+
+function populateHomeCategoryDropdowns() {
+  const navEl = document.querySelector('.main-nav');
+  if (!navEl) return;
+
+  navEl.innerHTML = NAV_CATEGORY_ORDER.map((category) => {
+    const label = CATEGORY_LABELS[category] || category;
+    const iconHtml = `<img src="/icons/${NAV_CATEGORY_ICON[category]}.svg" class="nav-icon" width="20" height="24" alt="" />`;
+    const config = CATEGORY_NAV_CONFIG[category];
+
+    let dropdownHtml;
+    if (config) {
+      // Bigger categories: grouped mega-menu grid, same as on that
+      // category's own page.
+      const popularHtml = `
+        <div class="mega-menu-section">
+          <p class="mega-menu-label">Popular</p>
+          ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+        </div>
+      `;
+      const groupsHtml = config.groups.map((group) => `
+        <div class="mega-menu-section">
+          <p class="mega-menu-label">${group.label}</p>
+          ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+        </div>
+      `).join('');
+      dropdownHtml = `<div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>`;
+    } else {
+      // Smaller categories (Excel, Word, PPT): a single flat dropdown
+      // listing every tool in the category.
+      const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
+      const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
+      dropdownHtml = `<div class="dropdown">${linksHtml}</div>`;
+    }
+
+    return `
+      <div class="nav-item">
+        <a href="${pageUrlMap[category] || `/${category}.html`}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
+        ${dropdownHtml}
+      </div>
+    `;
+  }).join('');
+
+  navEl.querySelectorAll('[data-nav-tool]').forEach((link) => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
       openToolModal(link.dataset.navTool, link);
     });
   });
 }
-
-const CATEGORY_LABELS = { image: 'Image', word: 'Word', excel: 'Excel', pdf: 'PDF', ppt: 'PPT', text: 'Text', utilities: 'Utilities' };
 
 function renderCategoryNav(category) {
   const config = CATEGORY_NAV_CONFIG[category];
@@ -3114,7 +3583,7 @@ function renderCategoryNav(category) {
   // "Categories" dropdown: lets you jump straight to any other category page
   // from wherever you are, instead of routing back through the home page.
   const categoriesLinksHtml = Object.keys(categoryTools)
-    .map((cat) => `<a href="/${cat}.html">${CATEGORY_LABELS[cat] || cat}</a>`)
+    .map((cat) => `<a href="${pageUrlMap[cat] || `/${cat}.html`}">${CATEGORY_LABELS[cat] || cat}</a>`)
     .join('');
   const categoriesDropdownHtml = `
     <div class="nav-item">
@@ -3172,13 +3641,87 @@ function renderCategoryNav(category) {
   });
 }
 
+// ================= FEATURED TOOLS BANNER (replaces search box) =================
+const FEATURED_TOOL_KEYS = ['pdfmerge', 'bgremove', 'resize', 'wordtopdf', 'compress', 'qrcode', 'pdfcompress', 'aisummarizer'];
+const FEATURED_SLIDE_INTERVAL = 4000;
+
+function wireFeaturedBanner() {
+  const banner = document.querySelector('#ffhBanner');
+  const track = document.querySelector('#ffhBannerTrack');
+  const dotsEl = document.querySelector('#ffhBannerDots');
+  if (!banner || !track || !dotsEl) return;
+
+  const keys = FEATURED_TOOL_KEYS.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon);
+  if (!keys.length) return;
+
+  track.innerHTML = keys.map((key) => {
+    const meta = toolMeta[key];
+    const href = `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
+    return `
+      <a class="ffh-banner-slide" href="${href}">
+        ${renderIconBadge(meta.category, meta.iconTo)}
+        <span>✨ ${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
+      </a>
+    `;
+  }).join('');
+
+  dotsEl.innerHTML = keys.map((_, i) => `<span class="ffh-banner-dot${i === 0 ? ' active' : ''}"></span>`).join('');
+  const dots = dotsEl.querySelectorAll('.ffh-banner-dot');
+
+  let index = 0;
+  function goTo(i) {
+    index = (i + keys.length) % keys.length;
+    track.style.transform = `translateX(-${index * 100}%)`;
+    dots.forEach((d, di) => d.classList.toggle('active', di === index));
+  }
+  let timer = setInterval(() => goTo(index + 1), FEATURED_SLIDE_INTERVAL);
+  banner.addEventListener('mouseenter', () => clearInterval(timer));
+  banner.addEventListener('mouseleave', () => { timer = setInterval(() => goTo(index + 1), FEATURED_SLIDE_INTERVAL); });
+}
+
+// Hover-intent for the nav dropdowns/mega-menus: wait a beat before
+// opening so brushing past the nav on the way somewhere else doesn't
+// pop a dropdown open. Closes a little faster than it opens.
+const NAV_DROPDOWN_OPEN_DELAY = 220;
+const NAV_DROPDOWN_CLOSE_DELAY = 120;
+
+function wireNavDropdowns() {
+  const items = document.querySelectorAll('.main-nav .nav-item');
+  items.forEach((item) => {
+    let openTimer = null;
+    let closeTimer = null;
+
+    item.addEventListener('mouseenter', () => {
+      if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
+      if (openTimer || item.classList.contains('nav-item-open')) return;
+      openTimer = setTimeout(() => {
+        item.classList.add('nav-item-open');
+        openTimer = null;
+      }, NAV_DROPDOWN_OPEN_DELAY);
+    });
+
+    item.addEventListener('mouseleave', () => {
+      if (openTimer) { clearTimeout(openTimer); openTimer = null; }
+      closeTimer = setTimeout(() => {
+        item.classList.remove('nav-item-open');
+        closeTimer = null;
+      }, NAV_DROPDOWN_CLOSE_DELAY);
+    });
+  });
+}
+
 // ================= PAGE INIT =================
 export function initToolPage(pageCategory) {
   wireHeroDropZone();
   wireHamburger();
-  wireSearch('siteSearchInput', 'siteSearchResults');
+  wireHeroMascot();
+  wireFeaturedBanner();
+  wireSuggestTailTracking();
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
+  wireNavDropdowns();
+  // Desktop search box is gone (replaced by the featured-tools banner
+  // above) — search still works from the mobile hamburger menu.
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   loadPendingHeroFile();
   const grid = document.querySelector('#toolGrid');

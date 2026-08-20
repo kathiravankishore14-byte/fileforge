@@ -29,8 +29,13 @@ export default defineConfig({
         excel: resolve(__dirname, 'excel.html'),
         pdf: resolve(__dirname, 'pdf.html'),
         ppt: resolve(__dirname, 'ppt.html'),
+        // Both text.html and utilities.html are kept as build entries even
+        // though neither is linked from the nav anymore — they've become
+        // thin redirect stubs (see the files themselves) so old bookmarks
+        // and inbound links to the pre-merge URLs still land somewhere.
         text: resolve(__dirname, 'text.html'),
         utilities: resolve(__dirname, 'utilities.html'),
+        otherTools: resolve(__dirname, 'other-tools.html'),
       },
     },
   },
