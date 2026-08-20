@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-texttoppt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#C7852A"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-texttoppt)"/>
+  <text x="50" y="53" font-family="Arial, sans-serif" font-weight="800" font-size="50" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF">T</text>
+</svg>

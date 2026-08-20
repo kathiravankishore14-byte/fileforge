@@ -30,6 +30,34 @@ const CATEGORY_ICONS = {
   pdf: '/icons/icon-pdf.svg', text: '/icons/icon-text.svg', ppt: '/icons/icon-ppt.svg', utilities: '/icons/icon-utilities.svg',
 };
 
+// "Other Tools" (utilities) bundles together many unrelated one-off
+// tools that all otherwise share the same generic category icon — so
+// each one gets its own distinct glyph here instead, keyed by tool
+// key. renderIconBadge() checks this first for the "from" icon before
+// falling back to CATEGORY_ICONS, so every other category is untouched.
+const TOOL_ICON_OVERRIDES = {
+  qrcode: '/icons/icon-tool-qrcode.svg',
+  passwordgen: '/icons/icon-tool-passwordgen.svg',
+  jsonformatter: '/icons/icon-tool-jsonformatter.svg',
+  base64: '/icons/icon-tool-base64.svg',
+  loremipsum: '/icons/icon-tool-loremipsum.svg',
+  unitconverter: '/icons/icon-tool-unitconverter.svg',
+  gpacalculator: '/icons/icon-tool-gpacalculator.svg',
+  citationgen: '/icons/icon-tool-citationgen.svg',
+  randomgen: '/icons/icon-tool-randomgen.svg',
+  zipfiles: '/icons/icon-tool-zipfiles.svg',
+  unzipfiles: '/icons/icon-tool-unzipfiles.svg',
+  invoicegen: '/icons/icon-tool-invoicegen.svg',
+  resumebuilder: '/icons/icon-tool-resumebuilder.svg',
+  htmltopdf: '/icons/icon-tool-htmltopdf.svg',
+  htmltoexcel: '/icons/icon-tool-htmltoexcel.svg',
+  texttoppt: '/icons/icon-tool-texttoppt.svg',
+  textopdf: '/icons/icon-tool-textopdf.svg',
+  wordcounter: '/icons/icon-tool-wordcounter.svg',
+  caseconverter: '/icons/icon-tool-caseconverter.svg',
+  aisummarizer: '/icons/icon-tool-aisummarizer.svg',
+};
+
 const toolMeta = {
   resize: { label: 'Resize Image', desc: 'Set exact pixel dimensions for any photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   compress: { label: 'Compress Image', desc: 'Shrink file size with a quality slider.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
@@ -119,7 +147,15 @@ const categoryTools = {
 };
 
 // ================= ICON BADGE RENDERING =================
-function renderIconBadge(fromCategory, toCategory) {
+function renderIconBadge(fromCategory, toCategory, toolKey) {
+  // A tool-specific icon (Other Tools) already fully identifies that one
+  // tool on its own — pairing it with a destination-format overlay would
+  // just bury the custom glyph behind the (now much larger) overlap
+  // badge, so it always renders alone, ignoring toCategory.
+  const overrideIcon = toolKey && TOOL_ICON_OVERRIDES[toolKey];
+  if (overrideIcon) {
+    return `<img src="${overrideIcon}" alt="" />`;
+  }
   const fromIcon = CATEGORY_ICONS[fromCategory];
   const toIcon = CATEGORY_ICONS[toCategory];
   if (!toCategory || fromCategory === toCategory) {
@@ -141,7 +177,7 @@ const TOOL_GRID_VISIBLE_LIMIT = TOOL_GRID_VISIBLE_ROWS * TOOL_GRID_COLUMNS;
 function toolCardHtml(key, hidden) {
   const meta = toolMeta[key];
   if (!meta) return '';
-  const iconHtml = renderIconBadge(meta.category, meta.iconTo);
+  const iconHtml = renderIconBadge(meta.category, meta.iconTo, key);
   const hiddenClass = hidden ? ' tool-card-hidden' : '';
   const catClass = ` cat-${meta.category}`;
   if (meta.comingSoon) {
@@ -3186,7 +3222,7 @@ function renderHeroSuggestions() {
     const meta = toolMeta[key];
     return `
       <div class="hero-suggest-card" data-suggest-tool="${key}">
-        ${renderIconBadge(meta.category, meta.iconTo)}
+        ${renderIconBadge(meta.category, meta.iconTo, key)}
         <div>
           <div class="hero-suggest-label">${meta.label}</div>
           <div class="hero-suggest-desc">${meta.desc}</div>
@@ -3541,13 +3577,13 @@ function populateHomeCategoryDropdowns() {
       const popularHtml = `
         <div class="mega-menu-section">
           <p class="mega-menu-label">Popular</p>
-          ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+          ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
         </div>
       `;
       const groupsHtml = config.groups.map((group) => `
         <div class="mega-menu-section">
           <p class="mega-menu-label">${group.label}</p>
-          ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+          ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
         </div>
       `).join('');
       dropdownHtml = `<div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>`;
@@ -3555,7 +3591,7 @@ function populateHomeCategoryDropdowns() {
       // Smaller categories (Excel, Word, PPT): a single flat dropdown
       // listing every tool in the category.
       const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
-      const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
+      const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
       dropdownHtml = `<div class="dropdown">${linksHtml}</div>`;
     }
 
@@ -3596,7 +3632,7 @@ function renderCategoryNav(category) {
     // small categories: single hover dropdown listing every tool in the category
     const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
     const label = CATEGORY_LABELS[category] || (category.charAt(0).toUpperCase() + category.slice(1));
-    const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('');
+    const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
     navEl.innerHTML = `
       <div class="nav-item">
         <button class="nav-trigger">All ${label} Tools</button>
@@ -3614,13 +3650,13 @@ function renderCategoryNav(category) {
     const popularHtml = `
       <div class="mega-menu-section">
         <p class="mega-menu-label">Popular</p>
-        ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+        ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
       </div>
     `;
     const groupsHtml = config.groups.map((group) => `
       <div class="mega-menu-section">
         <p class="mega-menu-label">${group.label}</p>
-        ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo)}</span>${toolMeta[k].label}</a>`).join('')}
+        ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
       </div>
     `).join('');
     navEl.innerHTML = `
@@ -3659,7 +3695,7 @@ function wireFeaturedBanner() {
     const href = `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
     return `
       <a class="ffh-banner-slide" href="${href}">
-        ${renderIconBadge(meta.category, meta.iconTo)}
+        ${renderIconBadge(meta.category, meta.iconTo, key)}
         <span>✨ ${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
       </a>
     `;

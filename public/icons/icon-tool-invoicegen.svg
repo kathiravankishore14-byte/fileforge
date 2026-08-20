@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-invoicegen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#C7852A"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-invoicegen)"/>
+  <path d="M28 20 H72 V70 L66 64 L60 70 L54 64 L48 70 L42 64 L36 70 L30 64 L28 70 Z" fill="#FFFFFF"/>
+  <rect x="36" y="30" width="28" height="4" rx="2" fill="#C7852A"/>
+  <rect x="36" y="40" width="28" height="4" rx="2" fill="#C7852A"/>
+  <rect x="36" y="50" width="18" height="4" rx="2" fill="#C7852A"/>
+</svg>

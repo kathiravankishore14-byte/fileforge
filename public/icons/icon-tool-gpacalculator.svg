@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-gpacalculator" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#C7852A"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-gpacalculator)"/>
+  <path d="M50 26 L84 44 L50 60 L16 44 Z" fill="#FFFFFF"/>
+  <path d="M32 50 V66 c0 6 8 10 18 10 s18 -4 18 -10 V50" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+  <line x1="80" y1="46" x2="80" y2="64" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="80" cy="69" r="3.5" fill="#FFFFFF"/>
+</svg>
