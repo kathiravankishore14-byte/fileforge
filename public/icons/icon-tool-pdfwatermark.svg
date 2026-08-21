@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-pdfwatermark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#D63A2E"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-pdfwatermark)"/>
+
+  <g transform="rotate(-16 50 50)">
+    <rect x="26" y="34" width="48" height="34" rx="6" fill="#FFFFFF"/>
+    <line x1="34" y1="45" x2="66" y2="45" stroke="#D63A2E" stroke-width="4"/>
+    <line x1="34" y1="53" x2="66" y2="53" stroke="#D63A2E" stroke-width="4"/>
+    <line x1="34" y1="61" x2="54" y2="61" stroke="#D63A2E" stroke-width="4"/>
+  </g>
+
+</svg>

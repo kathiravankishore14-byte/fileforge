@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-pdfsplit" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#D63A2E"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-pdfsplit)"/>
+
+  <path d="M16 22 H36 L40 26 V72 H16 Z" fill="#FFFFFF"/>
+  <path d="M60 22 H80 L84 26 V72 H60 Z" fill="#FFFFFF"/>
+  <path d="M48 30 V44 M48 56 V70" stroke="#FFFFFF" stroke-width="4.4" stroke-linecap="round" stroke-dasharray="2 8"/>
+  <path d="M44 47 L48 51 L52 47 M44 53 L48 49 L52 53" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+</svg>

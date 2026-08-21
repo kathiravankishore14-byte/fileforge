@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-pdfcompare" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#D63A2E"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-pdfcompare)"/>
+
+  <path d="M14 20 H32 L36 24 V68 H14 Z" fill="#FFFFFF" opacity="0.85"/>
+  <path d="M46 20 H64 L68 24 V68 H46 Z" fill="#FFFFFF" opacity="0.85"/>
+  <circle cx="66" cy="66" r="14" fill="none" stroke="#FFFFFF" stroke-width="4.6"/>
+  <line x1="76" y1="76" x2="86" y2="86" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"/>
+
+</svg>

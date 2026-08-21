@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 import Tesseract from 'tesseract.js';
 import { removeBackground } from '@imgly/background-removal';
 import { PDFDocument, degrees, PDFName, PDFRawStream } from 'pdf-lib';
+import { TOOL_SLUGS, toolUrl } from './toolSlugs.js';
 import './style.css';
 
 // ================= STALE DEPLOY RECOVERY =================
@@ -35,6 +36,15 @@ const CATEGORY_ICONS = {
 // each one gets its own distinct glyph here instead, keyed by tool
 // key. renderIconBadge() checks this first for the "from" icon before
 // falling back to CATEGORY_ICONS, so every other category is untouched.
+//
+// Image and PDF tools that stay within their own category (iconTo ===
+// category) also got their own unique glyph below for the same reason
+// — otherwise every plain image/PDF tool renders the exact same generic
+// category icon. Tools that genuinely convert to a different format
+// (e.g. Convert to PDF, PDF to Word, Image to Excel) are deliberately
+// left OUT of this map: those already get a distinctive two-icon
+// "from → to" badge from renderIconBadge(), so adding an override there
+// would just hide that badge behind a single icon instead.
 const TOOL_ICON_OVERRIDES = {
   qrcode: '/icons/icon-tool-qrcode.svg',
   passwordgen: '/icons/icon-tool-passwordgen.svg',
@@ -56,6 +66,39 @@ const TOOL_ICON_OVERRIDES = {
   wordcounter: '/icons/icon-tool-wordcounter.svg',
   caseconverter: '/icons/icon-tool-caseconverter.svg',
   aisummarizer: '/icons/icon-tool-aisummarizer.svg',
+
+  // Image tools (same-category only — see note above)
+  resize: '/icons/icon-tool-resize.svg',
+  compress: '/icons/icon-tool-compress.svg',
+  crop: '/icons/icon-tool-crop.svg',
+  convertformat: '/icons/icon-tool-convertformat.svg',
+  rotateflip: '/icons/icon-tool-rotateflip.svg',
+  watermarkimage: '/icons/icon-tool-watermarkimage.svg',
+  bgremove: '/icons/icon-tool-bgremove.svg',
+  colorpalette: '/icons/icon-tool-colorpalette.svg',
+  socialresize: '/icons/icon-tool-socialresize.svg',
+  grayscale: '/icons/icon-tool-grayscale.svg',
+  sepia: '/icons/icon-tool-sepia.svg',
+  blurimage: '/icons/icon-tool-blurimage.svg',
+  heictojpg: '/icons/icon-tool-heictojpg.svg',
+  memecreator: '/icons/icon-tool-memecreator.svg',
+  collagemaker: '/icons/icon-tool-collagemaker.svg',
+
+  // PDF tools (same-category only — see note above)
+  pdfmerge: '/icons/icon-tool-pdfmerge.svg',
+  pdfrotate: '/icons/icon-tool-pdfrotate.svg',
+  pdfpagenumbers: '/icons/icon-tool-pdfpagenumbers.svg',
+  pdfextract: '/icons/icon-tool-pdfextract.svg',
+  pdfdelete: '/icons/icon-tool-pdfdelete.svg',
+  pdfwatermark: '/icons/icon-tool-pdfwatermark.svg',
+  pdfsplit: '/icons/icon-tool-pdfsplit.svg',
+  pdfcompress: '/icons/icon-tool-pdfcompress.svg',
+  pdfprotect: '/icons/icon-tool-pdfprotect.svg',
+  pdfcrop: '/icons/icon-tool-pdfcrop.svg',
+  pdfunlock: '/icons/icon-tool-pdfunlock.svg',
+  pdfsign: '/icons/icon-tool-pdfsign.svg',
+  scantopdf: '/icons/icon-tool-scantopdf.svg',
+  pdfcompare: '/icons/icon-tool-pdfcompare.svg',
 };
 
 const toolMeta = {
@@ -188,11 +231,15 @@ function toolCardHtml(key, hidden) {
       </div>
     `;
   }
+  // A real <a href> to the tool's dedicated URL — crawlable and
+  // shareable on its own — but the click is still intercepted below so
+  // the existing "route to the drop zone if no file is ready yet" flow
+  // keeps working exactly as before for real users.
   return `
-    <div class="tool-card${catClass}${hiddenClass}" data-tool="${key}">
+    <a class="tool-card${catClass}${hiddenClass}" href="${toolUrl(key) || '#'}" data-tool="${key}">
       <div class="tool-icon-badge">${iconHtml}</div>
       <h3>${meta.label}</h3>
-    </div>
+    </a>
   `;
 }
 
@@ -218,7 +265,10 @@ function renderToolGrid(containerEl, toolKeys) {
   containerEl.innerHTML = html;
 
   containerEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
-    card.addEventListener('click', () => handleToolCardClick(card.dataset.tool, card));
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleToolCardClick(card.dataset.tool, card);
+    });
   });
 
   const moreTile = containerEl.querySelector('#toolGridMore');
@@ -3141,7 +3191,8 @@ function resetHeroUploadFlow() {
   if (content) {
     content.innerHTML = `
       <div class="hero-drop-idle" id="heroDropIdle">
-        <p class="hero-drop-text">Drop any file here to get started, we'll find the right tool</p>
+        <p class="hero-drop-text">Drag your file or browse</p>
+        <p class="hero-drop-subtext">Accepts PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
       </div>
     `;
   }
@@ -3333,7 +3384,11 @@ async function loadPendingHeroFile() {
   }
 }
 
-const pageUrlMap = { image: '/image.html', word: '/word.html', excel: '/excel.html', pdf: '/pdf.html', ppt: '/ppt.html', text: '/other-tools.html', utilities: '/other-tools.html' };
+// Cloudflare's static-asset routing (html_handling: auto-trailing-slash,
+// the default) auto-serves these extensionless URLs from the matching
+// *.html file and 307-redirects the .html form to this one — so these
+// ARE each category's true canonical URL, not just a display nicety.
+const pageUrlMap = { image: '/image', word: '/word', excel: '/excel', pdf: '/pdf', ppt: '/ppt', text: '/other-tools', utilities: '/other-tools' };
 
 function buildSearchIndex() {
   return Object.entries(toolMeta)
@@ -3354,13 +3409,16 @@ function wireSearch(inputId, resultsId) {
       const q = input.value.trim().toLowerCase();
       if (!q) { resultsEl.classList.remove('visible'); resultsEl.innerHTML = ''; return; }
 
-      const matches = index.filter((t) => t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q));
+      const matches = index.filter((t) => {
+        const categoryLabel = (CATEGORY_LABELS[t.category] || t.category).toLowerCase();
+        return t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || categoryLabel.includes(q);
+      });
       if (!matches.length) {
         resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
       } else {
         resultsEl.innerHTML = matches.slice(0, 8).map((t) => `
           <div class="search-result-item" data-key="${t.key}" data-cat="${t.category}">
-            <img src="${CATEGORY_ICONS[t.category] || ''}" alt="" />
+            <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" />
             <span>${t.label}</span>
           </div>
         `).join('');
@@ -3376,7 +3434,7 @@ function wireSearch(inputId, resultsId) {
           if (window.location.pathname.endsWith(pageUrlMap[cat])) {
             openToolModal(key);
           } else {
-            window.location.href = `${pageUrlMap[cat]}?tool=${key}`;
+            window.location.href = toolUrl(key) || `${pageUrlMap[cat]}?tool=${key}`;
           }
         });
       });
@@ -3386,6 +3444,28 @@ function wireSearch(inputId, resultsId) {
   document.addEventListener('click', (e) => {
     if (!input.contains(e.target) && !resultsEl.contains(e.target)) {
       resultsEl.classList.remove('visible');
+    }
+  });
+}
+
+// Ctrl/Cmd+K focuses the prominent homepage search box; on any other
+// page (no #homeSearchInput present) it opens the mobile menu instead
+// and focuses the search box there, so the shortcut works everywhere.
+function wireSearchShortcut() {
+  document.addEventListener('keydown', (e) => {
+    if (!(e.key === 'k' && (e.metaKey || e.ctrlKey))) return;
+    const homeInput = document.querySelector('#homeSearchInput');
+    if (homeInput) {
+      e.preventDefault();
+      homeInput.focus();
+      return;
+    }
+    const menuBackdrop = document.querySelector('#mobileMenuBackdrop');
+    const mobileInput = document.querySelector('#mobileSearchInput');
+    if (menuBackdrop && mobileInput) {
+      e.preventDefault();
+      menuBackdrop.classList.remove('hidden');
+      mobileInput.focus();
     }
   });
 }
@@ -3520,7 +3600,7 @@ const CATEGORY_NAV_CONFIG = {
       { label: 'AI', tools: ['bgremove'] },
     ],
     allLabel: 'All Image Tools',
-    allLink: '/image.html',
+    allLink: '/image',
   },
   pdf: {
     top3: ['pdfmerge', 'pdfcompress', 'pdfsplit'],
@@ -3532,7 +3612,7 @@ const CATEGORY_NAV_CONFIG = {
       { label: 'Review', tools: ['pdfcompare'] },
     ],
     allLabel: 'All PDF Tools',
-    allLink: '/pdf.html',
+    allLink: '/pdf',
   },
   utilities: {
     top3: ['qrcode', 'passwordgen', 'aisummarizer'],
@@ -3547,7 +3627,7 @@ const CATEGORY_NAV_CONFIG = {
       { label: 'Text', tools: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'] },
     ],
     allLabel: 'All Other Tools',
-    allLink: '/other-tools.html',
+    allLink: '/other-tools',
   },
 };
 
@@ -3577,13 +3657,13 @@ function populateHomeCategoryDropdowns() {
       const popularHtml = `
         <div class="mega-menu-section">
           <p class="mega-menu-label">Popular</p>
-          ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
+          ${config.top3.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
         </div>
       `;
       const groupsHtml = config.groups.map((group) => `
         <div class="mega-menu-section">
           <p class="mega-menu-label">${group.label}</p>
-          ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
+          ${group.tools.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
         </div>
       `).join('');
       dropdownHtml = `<div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>`;
@@ -3591,24 +3671,20 @@ function populateHomeCategoryDropdowns() {
       // Smaller categories (Excel, Word, PPT): a single flat dropdown
       // listing every tool in the category.
       const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
-      const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
+      const linksHtml = keys.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
       dropdownHtml = `<div class="dropdown">${linksHtml}</div>`;
     }
 
     return `
       <div class="nav-item">
-        <a href="${pageUrlMap[category] || `/${category}.html`}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
+        <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
         ${dropdownHtml}
       </div>
     `;
   }).join('');
-
-  navEl.querySelectorAll('[data-nav-tool]').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      openToolModal(link.dataset.navTool, link);
-    });
-  });
+  // Nav/mega-menu links now point straight at each tool's dedicated,
+  // indexable URL (toolUrl(k)) and navigate normally — no click
+  // interception needed here anymore.
 }
 
 function renderCategoryNav(category) {
@@ -3619,7 +3695,7 @@ function renderCategoryNav(category) {
   // "Categories" dropdown: lets you jump straight to any other category page
   // from wherever you are, instead of routing back through the home page.
   const categoriesLinksHtml = Object.keys(categoryTools)
-    .map((cat) => `<a href="${pageUrlMap[cat] || `/${cat}.html`}">${CATEGORY_LABELS[cat] || cat}</a>`)
+    .map((cat) => `<a href="${pageUrlMap[cat] || `/${cat}`}">${CATEGORY_LABELS[cat] || cat}</a>`)
     .join('');
   const categoriesDropdownHtml = `
     <div class="nav-item">
@@ -3632,7 +3708,7 @@ function renderCategoryNav(category) {
     // small categories: single hover dropdown listing every tool in the category
     const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
     const label = CATEGORY_LABELS[category] || (category.charAt(0).toUpperCase() + category.slice(1));
-    const linksHtml = keys.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
+    const linksHtml = keys.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
     navEl.innerHTML = `
       <div class="nav-item">
         <button class="nav-trigger">All ${label} Tools</button>
@@ -3645,18 +3721,18 @@ function renderCategoryNav(category) {
     // top picks pinned in their own "Popular" section at the front — and
     // also surfaced as direct quick links right on the nav bar itself.
     const top3Html = config.top3.map((k) => `
-      <a href="?tool=${k}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
+      <a href="${toolUrl(k) || `?tool=${k}`}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
     `).join('');
     const popularHtml = `
       <div class="mega-menu-section">
         <p class="mega-menu-label">Popular</p>
-        ${config.top3.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
+        ${config.top3.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
       </div>
     `;
     const groupsHtml = config.groups.map((group) => `
       <div class="mega-menu-section">
         <p class="mega-menu-label">${group.label}</p>
-        ${group.tools.map((k) => `<a href="?tool=${k}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
+        ${group.tools.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
       </div>
     `).join('');
     navEl.innerHTML = `
@@ -3668,13 +3744,8 @@ function renderCategoryNav(category) {
       ${categoriesDropdownHtml}
     `;
   }
-
-  navEl.querySelectorAll('[data-nav-tool]').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      openToolModal(link.dataset.navTool, link);
-    });
-  });
+  // Nav/mega-menu links point straight at each tool's dedicated,
+  // indexable URL (toolUrl(k)) and navigate normally.
 }
 
 // ================= FEATURED TOOLS BANNER (replaces search box) =================
@@ -3692,7 +3763,7 @@ function wireFeaturedBanner() {
 
   track.innerHTML = keys.map((key) => {
     const meta = toolMeta[key];
-    const href = `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
+    const href = toolUrl(key) || `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
     return `
       <a class="ffh-banner-slide" href="${href}">
         ${renderIconBadge(meta.category, meta.iconTo, key)}
@@ -3756,9 +3827,11 @@ export function initToolPage(pageCategory) {
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
   wireNavDropdowns();
-  // Desktop search box is gone (replaced by the featured-tools banner
-  // above) — search still works from the mobile hamburger menu.
   wireSearch('mobileSearchInput', 'mobileSearchResults');
+  // Prominent homepage search (only present on index.html — wireSearch
+  // no-ops elsewhere since the elements won't exist).
+  wireSearch('homeSearchInput', 'homeSearchResults');
+  wireSearchShortcut();
   loadPendingHeroFile();
   const grid = document.querySelector('#toolGrid');
   const tabs = document.querySelectorAll('.filter-tab');
@@ -3783,6 +3856,96 @@ export function initToolPage(pageCategory) {
   const params = new URLSearchParams(window.location.search);
   const deepLinkTool = params.get('tool');
   if (deepLinkTool && toolMeta[deepLinkTool]) {
+    // Old-style deep link (e.g. /pdf.html?tool=pdfmerge) landed on
+    // directly from a bookmark, backlink, or old search result: send
+    // the visitor straight to that tool's dedicated, indexable URL
+    // (e.g. /merge-pdf) instead of opening the modal in place here.
+    // This only fires on the very first load of the page with the
+    // param already in the URL — internal clicks that push `?tool=`
+    // via history.pushState afterward never re-run initToolPage, so
+    // they're unaffected.
+    const cleanUrl = toolUrl(deepLinkTool);
+    if (cleanUrl) {
+      window.location.replace(cleanUrl);
+      return;
+    }
     openToolModal(deepLinkTool);
+  }
+}
+
+// ================= DEDICATED TOOL LANDING PAGES =================
+// Bootstraps a single-tool SEO landing page (e.g. /resize-image.html,
+// generated by scripts/generate-seo-pages.mjs). All the SEO content
+// (breadcrumb, H1, intro, related tools, FAQ) is already static HTML
+// on these pages — this only wires the shared nav/mascot/search chrome
+// and mounts the real, already-working tool UI (the same modal every
+// other page uses) as high on the page as possible.
+function wireToolPageDropZone(toolKey, meta) {
+  const dz = document.querySelector('#tpDropZone');
+  const input = document.querySelector('#tpFileInput');
+  if (!dz || !input) return;
+
+  const openWithFiles = (files) => {
+    const valid = files.filter((f) => validateFileType(f, meta.accept));
+    if (!valid.length) return;
+    if (meta.multiFile) {
+      openToolModal(toolKey, dz, valid);
+    } else {
+      pendingHeroFile = valid[0];
+      openToolModal(toolKey, dz);
+    }
+  };
+
+  dz.addEventListener('click', (e) => { if (e.target !== input) input.click(); });
+  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-active'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-active'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('drag-active');
+    if (e.dataTransfer.files.length) openWithFiles(Array.from(e.dataTransfer.files));
+  });
+  input.addEventListener('change', () => {
+    if (input.files.length) openWithFiles(Array.from(input.files));
+    input.value = '';
+  });
+}
+
+export function initToolLandingPage(toolKey) {
+  const meta = toolMeta[toolKey];
+  if (!meta) return;
+
+  wireHamburger();
+  wireHeroMascot();
+  wireNavDropdowns();
+  wireSearch('mobileSearchInput', 'mobileSearchResults');
+  wireSearchShortcut();
+  renderCategoryNav(meta.category);
+
+  const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
+  if (needsFile) wireToolPageDropZone(toolKey, meta);
+
+  loadPendingHeroFile().then(() => {
+    const hasReadyFile = pendingHeroFile && validateFileType(pendingHeroFile, meta.accept);
+    // No-file tools (generators/calculators) and Compare PDF can open
+    // immediately — nothing to wait on. File-based tools only auto-open
+    // if a valid file already carried over from elsewhere on the site;
+    // otherwise the on-page drop zone above stays visible and waiting,
+    // which is exactly the "clear upload zone above the fold" state a
+    // fresh visitor from search should land on.
+    if (!needsFile || hasReadyFile) {
+      openToolModal(toolKey);
+    }
+  });
+
+  const openBtn = document.querySelector('#tpOpenToolBtn');
+  if (openBtn) {
+    openBtn.addEventListener('click', () => {
+      const hasReadyFile = pendingHeroFile && validateFileType(pendingHeroFile, meta.accept);
+      if (needsFile && !hasReadyFile) {
+        document.querySelector('#tpDropZone')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        openToolModal(toolKey, openBtn);
+      }
+    });
   }
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-pdfextract" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#D63A2E"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-pdfextract)"/>
+
+  <path d="M20 26 H50 L56 32 V70 H20 Z" fill="#FFFFFF" opacity="0.45"/>
+  <path d="M46 46 H70 L76 52 V84 H46 Z" fill="#FFFFFF"/>
+  <path d="M60 40 V16 M60 16 L53 23 M60 16 L67 23" fill="none" stroke="#FFFFFF" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+</svg>

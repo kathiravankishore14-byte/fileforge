@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-socialresize" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#7C3AED"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-socialresize)"/>
+
+  <rect x="18" y="30" width="40" height="40" rx="5" fill="none" stroke="#FFFFFF" stroke-width="4.5" opacity="0.5"/>
+  <rect x="46" y="16" width="26" height="48" rx="5" fill="#FFFFFF"/>
+  <circle cx="46" cy="16" r="3.6" fill="#7C3AED"/>
+  <circle cx="72" cy="16" r="3.6" fill="#7C3AED"/>
+  <circle cx="46" cy="64" r="3.6" fill="#7C3AED"/>
+  <circle cx="72" cy="64" r="3.6" fill="#7C3AED"/>
+
+</svg>

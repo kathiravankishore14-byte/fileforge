@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="sheen-heictojpg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="28" fill="#7C3AED"/>
+  <rect width="100" height="100" rx="28" fill="url(#sheen-heictojpg)"/>
+
+  <rect x="24" y="14" width="30" height="54" rx="7" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+  <circle cx="39" cy="61" r="2.6" fill="#FFFFFF"/>
+  <path d="M39 26 V42 M39 42 L33 36 M39 42 L45 36" fill="none" stroke="#FFFFFF" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="62" y="52" width="24" height="24" rx="4" fill="#FFFFFF"/>
+  <circle cx="69" cy="60" r="2.6" fill="#7C3AED"/>
+  <path d="M64 71 L71 63 L76 68 L81 62" fill="none" stroke="#7C3AED" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+</svg>

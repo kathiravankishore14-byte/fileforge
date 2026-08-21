@@ -1,0 +1,632 @@
+[
+  {
+    "key": "resize",
+    "label": "Resize Image",
+    "category": "image",
+    "slug": "resize-image",
+    "oldUrl": "/image?tool=resize",
+    "title": "Resize Image Online Free | FileForge",
+    "h1": "Resize Image Online",
+    "description": "Set exact pixel dimensions for any photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "compress",
+    "label": "Compress Image",
+    "category": "image",
+    "slug": "compress-image",
+    "oldUrl": "/image?tool=compress",
+    "title": "Compress Image Online Free | FileForge",
+    "h1": "Compress Image Online",
+    "description": "Shrink file size with a quality slider. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "crop",
+    "label": "Crop Image",
+    "category": "image",
+    "slug": "crop-image",
+    "oldUrl": "/image?tool=crop",
+    "title": "Crop Image Online Free | FileForge",
+    "h1": "Crop Image Online",
+    "description": "Trim an image down to the area you need. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdf",
+    "label": "Convert to PDF",
+    "category": "image",
+    "slug": "image-to-pdf",
+    "oldUrl": "/image?tool=pdf",
+    "title": "Convert to PDF Online Free | FileForge",
+    "h1": "Convert to PDF Online",
+    "description": "Turn one or more images into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "imagetoexcel",
+    "label": "Image to Excel",
+    "category": "image",
+    "slug": "image-to-excel",
+    "oldUrl": "/image?tool=imagetoexcel",
+    "title": "Image to Excel Online Free | FileForge",
+    "h1": "Image to Excel Online",
+    "description": "Extract tabular data from a photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "imagetoppt",
+    "label": "Image to PPT",
+    "category": "image",
+    "slug": "image-to-ppt",
+    "oldUrl": "/image?tool=imagetoppt",
+    "title": "Image to PPT Online Free | FileForge",
+    "h1": "Image to PPT Online",
+    "description": "Place one or more images onto slides. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "convertformat",
+    "label": "Convert Image Format",
+    "category": "image",
+    "slug": "convert-image-format",
+    "oldUrl": "/image?tool=convertformat",
+    "title": "Convert Image Format Online Free | FileForge",
+    "h1": "Convert Image Format Online",
+    "description": "Switch between JPG, PNG, and WebP. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "rotateflip",
+    "label": "Rotate / Flip Image",
+    "category": "image",
+    "slug": "rotate-flip-image",
+    "oldUrl": "/image?tool=rotateflip",
+    "title": "Rotate / Flip Image Online Free | FileForge",
+    "h1": "Rotate / Flip Image Online",
+    "description": "Fix orientation or mirror a photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "watermarkimage",
+    "label": "Watermark Image",
+    "category": "image",
+    "slug": "watermark-image",
+    "oldUrl": "/image?tool=watermarkimage",
+    "title": "Watermark Image Online Free | FileForge",
+    "h1": "Watermark Image Online",
+    "description": "Stamp text across a photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "bgremove",
+    "label": "Remove Background",
+    "category": "image",
+    "slug": "remove-background",
+    "oldUrl": "/image?tool=bgremove",
+    "title": "Remove Background Online Free | FileForge",
+    "h1": "Remove Background Online",
+    "description": "AI cutout, no green screen needed. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "colorpalette",
+    "label": "Color Palette Extractor",
+    "category": "image",
+    "slug": "color-palette-extractor",
+    "oldUrl": "/image?tool=colorpalette",
+    "title": "Color Palette Extractor Online Free | FileForge",
+    "h1": "Color Palette Extractor Online",
+    "description": "Pull the dominant colors from a photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "socialresize",
+    "label": "Social Media Resize",
+    "category": "image",
+    "slug": "social-media-image-resize",
+    "oldUrl": "/image?tool=socialresize",
+    "title": "Social Media Resize Online Free | FileForge",
+    "h1": "Social Media Resize Online",
+    "description": "Preset sizes for Instagram, YouTube, and more. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "grayscale",
+    "label": "Grayscale Converter",
+    "category": "image",
+    "slug": "grayscale-image-converter",
+    "oldUrl": "/image?tool=grayscale",
+    "title": "Grayscale Converter Online Free | FileForge",
+    "h1": "Grayscale Converter Online",
+    "description": "Convert a photo to black and white. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "sepia",
+    "label": "Sepia / Vintage Filter",
+    "category": "image",
+    "slug": "sepia-vintage-filter",
+    "oldUrl": "/image?tool=sepia",
+    "title": "Sepia / Vintage Filter Online Free | FileForge",
+    "h1": "Sepia / Vintage Filter Online",
+    "description": "Give a photo a warm, aged tone. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "blurimage",
+    "label": "Blur Image",
+    "category": "image",
+    "slug": "blur-image",
+    "oldUrl": "/image?tool=blurimage",
+    "title": "Blur Image Online Free | FileForge",
+    "h1": "Blur Image Online",
+    "description": "Soften part or all of a photo. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "heictojpg",
+    "label": "HEIC to JPG",
+    "category": "image",
+    "slug": "heic-to-jpg",
+    "oldUrl": "/image?tool=heictojpg",
+    "title": "HEIC to JPG Online Free | FileForge",
+    "h1": "HEIC to JPG Online",
+    "description": "Convert iPhone photos to a universal format. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "memecreator",
+    "label": "Meme Creator",
+    "category": "image",
+    "slug": "meme-creator",
+    "oldUrl": "/image?tool=memecreator",
+    "title": "Meme Creator Online Free | FileForge",
+    "h1": "Meme Creator Online",
+    "description": "Add top and bottom caption text. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "collagemaker",
+    "label": "Collage Maker",
+    "category": "image",
+    "slug": "collage-maker",
+    "oldUrl": "/image?tool=collagemaker",
+    "title": "Collage Maker Online Free | FileForge",
+    "h1": "Collage Maker Online",
+    "description": "Combine several photos into a grid. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "wordtoexcel",
+    "label": "Word to Excel",
+    "category": "word",
+    "slug": "word-to-excel",
+    "oldUrl": "/word?tool=wordtoexcel",
+    "title": "Word to Excel Online Free | FileForge",
+    "h1": "Word to Excel Online",
+    "description": "Pull tables from a Word doc into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "wordtopdf",
+    "label": "Word to PDF",
+    "category": "word",
+    "slug": "word-to-pdf",
+    "oldUrl": "/word?tool=wordtopdf",
+    "title": "Word to PDF Online Free | FileForge",
+    "h1": "Word to PDF Online",
+    "description": "Turn a DOCX file into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "wordtotext",
+    "label": "Word to Text",
+    "category": "word",
+    "slug": "word-to-text",
+    "oldUrl": "/word?tool=wordtotext",
+    "title": "Word to Text Online Free | FileForge",
+    "h1": "Word to Text Online",
+    "description": "Extract plain text from a Word doc. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "exceltopdf",
+    "label": "Excel to PDF",
+    "category": "excel",
+    "slug": "excel-to-pdf",
+    "oldUrl": "/excel?tool=exceltopdf",
+    "title": "Excel to PDF Online Free | FileForge",
+    "h1": "Excel to PDF Online",
+    "description": "Convert a spreadsheet into a PDF table. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "exceltocsv",
+    "label": "Excel to CSV",
+    "category": "excel",
+    "slug": "excel-to-csv",
+    "oldUrl": "/excel?tool=exceltocsv",
+    "title": "Excel to CSV Online Free | FileForge",
+    "h1": "Excel to CSV Online",
+    "description": "Export a sheet as plain CSV. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfmerge",
+    "label": "Merge PDFs",
+    "category": "pdf",
+    "slug": "merge-pdf",
+    "oldUrl": "/pdf?tool=pdfmerge",
+    "title": "Merge PDFs Online Free | FileForge",
+    "h1": "Merge PDFs Online",
+    "description": "Combine PDFs in the order you choose. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfrotate",
+    "label": "Rotate PDF Pages",
+    "category": "pdf",
+    "slug": "rotate-pdf",
+    "oldUrl": "/pdf?tool=pdfrotate",
+    "title": "Rotate PDF Pages Online Free | FileForge",
+    "h1": "Rotate PDF Pages Online",
+    "description": "Rotate every page in a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfpagenumbers",
+    "label": "Add Page Numbers",
+    "category": "pdf",
+    "slug": "add-page-numbers-pdf",
+    "oldUrl": "/pdf?tool=pdfpagenumbers",
+    "title": "Add Page Numbers Online Free | FileForge",
+    "h1": "Add Page Numbers Online",
+    "description": "Stamp page numbers onto a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfextract",
+    "label": "Extract Pages",
+    "category": "pdf",
+    "slug": "extract-pdf-pages",
+    "oldUrl": "/pdf?tool=pdfextract",
+    "title": "Extract Pages Online Free | FileForge",
+    "h1": "Extract Pages Online",
+    "description": "Pull specific pages into a new PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfdelete",
+    "label": "Delete Pages",
+    "category": "pdf",
+    "slug": "delete-pdf-pages",
+    "oldUrl": "/pdf?tool=pdfdelete",
+    "title": "Delete Pages Online Free | FileForge",
+    "h1": "Delete Pages Online",
+    "description": "Remove specific pages from a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfwatermark",
+    "label": "Watermark PDF",
+    "category": "pdf",
+    "slug": "watermark-pdf",
+    "oldUrl": "/pdf?tool=pdfwatermark",
+    "title": "Watermark PDF Online Free | FileForge",
+    "h1": "Watermark PDF Online",
+    "description": "Stamp text across every page. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfsplit",
+    "label": "Split PDF",
+    "category": "pdf",
+    "slug": "split-pdf",
+    "oldUrl": "/pdf?tool=pdfsplit",
+    "title": "Split PDF Online Free | FileForge",
+    "h1": "Split PDF Online",
+    "description": "Break a PDF into separate files by page range. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfcompress",
+    "label": "Compress PDF",
+    "category": "pdf",
+    "slug": "compress-pdf",
+    "oldUrl": "/pdf?tool=pdfcompress",
+    "title": "Compress PDF Online Free | FileForge",
+    "h1": "Compress PDF Online",
+    "description": "Shrink file size by flattening pages to compressed images. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdftoword",
+    "label": "PDF to Word",
+    "category": "pdf",
+    "slug": "pdf-to-word",
+    "oldUrl": "/pdf?tool=pdftoword",
+    "title": "PDF to Word Online Free | FileForge",
+    "h1": "PDF to Word Online",
+    "description": "Extract text into an editable Word document. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdftoexcel",
+    "label": "PDF to Excel",
+    "category": "pdf",
+    "slug": "pdf-to-excel",
+    "oldUrl": "/pdf?tool=pdftoexcel",
+    "title": "PDF to Excel Online Free | FileForge",
+    "h1": "PDF to Excel Online",
+    "description": "Pull tabular data into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdftojpg",
+    "label": "PDF to JPG",
+    "category": "pdf",
+    "slug": "pdf-to-jpg",
+    "oldUrl": "/pdf?tool=pdftojpg",
+    "title": "PDF to JPG Online Free | FileForge",
+    "h1": "PDF to JPG Online",
+    "description": "Export every page as an image. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdftoppt",
+    "label": "PDF to PowerPoint",
+    "category": "pdf",
+    "slug": "pdf-to-ppt",
+    "oldUrl": "/pdf?tool=pdftoppt",
+    "title": "PDF to PowerPoint Online Free | FileForge",
+    "h1": "PDF to PowerPoint Online",
+    "description": "Turn each page into a slide. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfprotect",
+    "label": "Protect PDF",
+    "category": "pdf",
+    "slug": "protect-pdf",
+    "oldUrl": "/pdf?tool=pdfprotect",
+    "title": "Protect PDF Online Free | FileForge",
+    "h1": "Protect PDF Online",
+    "description": "Add a password to a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfcrop",
+    "label": "Crop PDF",
+    "category": "pdf",
+    "slug": "crop-pdf",
+    "oldUrl": "/pdf?tool=pdfcrop",
+    "title": "Crop PDF Online Free | FileForge",
+    "h1": "Crop PDF Online",
+    "description": "Trim the margins of every page. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfunlock",
+    "label": "Unlock PDF",
+    "category": "pdf",
+    "slug": "unlock-pdf",
+    "oldUrl": "/pdf?tool=pdfunlock",
+    "title": "Unlock PDF Online Free | FileForge",
+    "h1": "Unlock PDF Online",
+    "description": "Remove a password you already know. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdftomarkdown",
+    "label": "PDF to Markdown",
+    "category": "pdf",
+    "slug": "pdf-to-markdown",
+    "oldUrl": "/pdf?tool=pdftomarkdown",
+    "title": "PDF to Markdown Online Free | FileForge",
+    "h1": "PDF to Markdown Online",
+    "description": "Convert pages into basic Markdown text. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfsign",
+    "label": "Sign PDF",
+    "category": "pdf",
+    "slug": "sign-pdf",
+    "oldUrl": "/pdf?tool=pdfsign",
+    "title": "Sign PDF Online Free | FileForge",
+    "h1": "Sign PDF Online",
+    "description": "Draw a signature and place it on a page. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "scantopdf",
+    "label": "Scan to PDF",
+    "category": "pdf",
+    "slug": "scan-to-pdf",
+    "oldUrl": "/pdf?tool=scantopdf",
+    "title": "Scan to PDF Online Free | FileForge",
+    "h1": "Scan to PDF Online",
+    "description": "Capture pages with your camera. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "pdfcompare",
+    "label": "Compare PDF",
+    "category": "pdf",
+    "slug": "compare-pdf",
+    "oldUrl": "/pdf?tool=pdfcompare",
+    "title": "Compare PDF Online Free | FileForge",
+    "h1": "Compare PDF Online",
+    "description": "See text differences between two PDFs. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "ppttotext",
+    "label": "PPT to Text",
+    "category": "ppt",
+    "slug": "ppt-to-text",
+    "oldUrl": "/ppt?tool=ppttotext",
+    "title": "PPT to Text Online Free | FileForge",
+    "h1": "PPT to Text Online",
+    "description": "Extract all text from a slide deck. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "texttoppt",
+    "label": "Text to PPT",
+    "category": "utilities",
+    "slug": "text-to-ppt",
+    "oldUrl": "/other-tools?tool=texttoppt",
+    "title": "Text to PPT Online Free | FileForge",
+    "h1": "Text to PPT Online",
+    "description": "Turn pasted text into slides. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "textopdf",
+    "label": "Text to PDF",
+    "category": "utilities",
+    "slug": "text-to-pdf",
+    "oldUrl": "/other-tools?tool=textopdf",
+    "title": "Text to PDF Online Free | FileForge",
+    "h1": "Text to PDF Online",
+    "description": "Turn pasted text into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "wordcounter",
+    "label": "Word Counter",
+    "category": "utilities",
+    "slug": "word-counter",
+    "oldUrl": "/other-tools?tool=wordcounter",
+    "title": "Word Counter Online Free | FileForge",
+    "h1": "Word Counter Online",
+    "description": "Count words and characters instantly. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "caseconverter",
+    "label": "Case Converter",
+    "category": "utilities",
+    "slug": "case-converter",
+    "oldUrl": "/other-tools?tool=caseconverter",
+    "title": "Case Converter Online Free | FileForge",
+    "h1": "Case Converter Online",
+    "description": "Switch between upper, lower, and title case. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "qrcode",
+    "label": "QR Code Generator",
+    "category": "utilities",
+    "slug": "qr-code-generator",
+    "oldUrl": "/other-tools?tool=qrcode",
+    "title": "QR Code Generator Online Free | FileForge",
+    "h1": "QR Code Generator Online",
+    "description": "Turn a link or text into a QR code. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "passwordgen",
+    "label": "Password Generator",
+    "category": "utilities",
+    "slug": "password-generator",
+    "oldUrl": "/other-tools?tool=passwordgen",
+    "title": "Password Generator Online Free | FileForge",
+    "h1": "Password Generator Online",
+    "description": "Create a strong random password. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "jsonformatter",
+    "label": "JSON Formatter",
+    "category": "utilities",
+    "slug": "json-formatter",
+    "oldUrl": "/other-tools?tool=jsonformatter",
+    "title": "JSON Formatter Online Free | FileForge",
+    "h1": "JSON Formatter Online",
+    "description": "Pretty-print and validate JSON. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "base64",
+    "label": "Base64 Encode/Decode",
+    "category": "utilities",
+    "slug": "base64-encode-decode",
+    "oldUrl": "/other-tools?tool=base64",
+    "title": "Base64 Encode/Decode Online Free | FileForge",
+    "h1": "Base64 Encode/Decode Online",
+    "description": "Convert text to and from Base64. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "loremipsum",
+    "label": "Lorem Ipsum Generator",
+    "category": "utilities",
+    "slug": "lorem-ipsum-generator",
+    "oldUrl": "/other-tools?tool=loremipsum",
+    "title": "Lorem Ipsum Generator Online Free | FileForge",
+    "h1": "Lorem Ipsum Generator Online",
+    "description": "Generate placeholder paragraphs. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "unitconverter",
+    "label": "Unit Converter",
+    "category": "utilities",
+    "slug": "unit-converter",
+    "oldUrl": "/other-tools?tool=unitconverter",
+    "title": "Unit Converter Online Free | FileForge",
+    "h1": "Unit Converter Online",
+    "description": "Convert length, weight, and temperature. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "gpacalculator",
+    "label": "GPA / CGPA Calculator",
+    "category": "utilities",
+    "slug": "gpa-calculator",
+    "oldUrl": "/other-tools?tool=gpacalculator",
+    "title": "GPA / CGPA Calculator Online Free | FileForge",
+    "h1": "GPA / CGPA Calculator Online",
+    "description": "Calculate your grade point average. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "citationgen",
+    "label": "Citation Generator",
+    "category": "utilities",
+    "slug": "citation-generator",
+    "oldUrl": "/other-tools?tool=citationgen",
+    "title": "Citation Generator Online Free | FileForge",
+    "h1": "Citation Generator Online",
+    "description": "Format a source in APA, MLA, or Chicago. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "randomgen",
+    "label": "Random Generator",
+    "category": "utilities",
+    "slug": "random-generator",
+    "oldUrl": "/other-tools?tool=randomgen",
+    "title": "Random Generator Online Free | FileForge",
+    "h1": "Random Generator Online",
+    "description": "Generate a random number or string. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "zipfiles",
+    "label": "Zip Files",
+    "category": "utilities",
+    "slug": "zip-files",
+    "oldUrl": "/other-tools?tool=zipfiles",
+    "title": "Zip Files Online Free | FileForge",
+    "h1": "Zip Files Online",
+    "description": "Bundle multiple files into one archive. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "unzipfiles",
+    "label": "Unzip Archive",
+    "category": "utilities",
+    "slug": "unzip-archive",
+    "oldUrl": "/other-tools?tool=unzipfiles",
+    "title": "Unzip Archive Online Free | FileForge",
+    "h1": "Unzip Archive Online",
+    "description": "Extract files from a zip archive. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "invoicegen",
+    "label": "Invoice Generator",
+    "category": "utilities",
+    "slug": "invoice-generator",
+    "oldUrl": "/other-tools?tool=invoicegen",
+    "title": "Invoice Generator Online Free | FileForge",
+    "h1": "Invoice Generator Online",
+    "description": "Build and download a simple invoice. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "resumebuilder",
+    "label": "Resume Builder",
+    "category": "utilities",
+    "slug": "resume-builder",
+    "oldUrl": "/other-tools?tool=resumebuilder",
+    "title": "Resume Builder Online Free | FileForge",
+    "h1": "Resume Builder Online",
+    "description": "Build and download a simple resume. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "htmltopdf",
+    "label": "HTML to PDF",
+    "category": "utilities",
+    "slug": "html-to-pdf",
+    "oldUrl": "/other-tools?tool=htmltopdf",
+    "title": "HTML to PDF Online Free | FileForge",
+    "h1": "HTML to PDF Online",
+    "description": "Paste HTML code and export it as a PDF. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "htmltoexcel",
+    "label": "HTML to Excel",
+    "category": "utilities",
+    "slug": "html-to-excel",
+    "oldUrl": "/other-tools?tool=htmltoexcel",
+    "title": "HTML to Excel Online Free | FileForge",
+    "h1": "HTML to Excel Online",
+    "description": "Extract tables from HTML into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
+    "key": "aisummarizer",
+    "label": "Content Paraphraser",
+    "category": "utilities",
+    "slug": "content-paraphraser",
+    "oldUrl": "/other-tools?tool=aisummarizer",
+    "title": "Content Paraphraser Online Free | FileForge",
+    "h1": "Content Paraphraser Online",
+    "description": "Reword and condense text privately, right in your browser. Free, private, and runs right in your browser — no upload, no signup."
+  }
+]
