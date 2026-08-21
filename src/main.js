@@ -3084,6 +3084,41 @@ function wireHeroDropZone() {
       updateHeroDropZoneLabel();
     });
   }
+
+  // Below 860px the drop zone and suggestion panel stack instead of
+  // sitting side by side, so nothing here naturally keeps them the same
+  // height any more (desktop just fixes both to 320px). Re-run the
+  // equalizer on resize/orientation-change so the pair stays matched
+  // even if the browser is resized while the suggestion panel is open.
+  let alignResizeRaf = null;
+  window.addEventListener('resize', () => {
+    if (alignResizeRaf) return;
+    alignResizeRaf = requestAnimationFrame(() => {
+      alignResizeRaf = null;
+      alignHeroBoxHeights();
+    });
+  });
+}
+
+// Keeps the drop zone and the suggestion "speech bubble" panel the same
+// height once both are showing on mobile (see wireHeroDropZone's resize
+// listener and the end of renderHeroSuggestions). Desktop already fixes
+// both to 320px in CSS, so this only needs to do anything on narrow
+// screens where they're stacked and each sizes to its own content.
+function alignHeroBoxHeights() {
+  const dz = document.querySelector('#heroDropZone');
+  const panel = document.querySelector('#heroSuggestPanel');
+  if (!dz || !panel || !panel.classList.contains('visible')) return;
+  if (window.innerWidth > 860) {
+    dz.style.minHeight = '';
+    panel.style.minHeight = '';
+    return;
+  }
+  dz.style.minHeight = '';
+  panel.style.minHeight = '';
+  const target = Math.max(dz.offsetHeight, panel.offsetHeight);
+  dz.style.minHeight = `${target}px`;
+  panel.style.minHeight = `${target}px`;
 }
 
 async function routeHeroFiles(files) {
@@ -3186,8 +3221,8 @@ function resetHeroUploadFlow() {
   const dz = document.querySelector('#heroDropZone');
   const content = document.querySelector('#heroDropContent');
   const panel = document.querySelector('#heroSuggestPanel');
-  if (dz) dz.classList.remove('compact');
-  if (panel) { panel.classList.remove('visible'); panel.innerHTML = ''; }
+  if (dz) { dz.classList.remove('compact'); dz.style.minHeight = ''; }
+  if (panel) { panel.classList.remove('visible'); panel.innerHTML = ''; panel.style.minHeight = ''; }
   if (content) {
     content.innerHTML = `
       <div class="hero-drop-idle" id="heroDropIdle">
@@ -3308,6 +3343,7 @@ function renderHeroSuggestions() {
   });
 
   updateSuggestTailPosition();
+  alignHeroBoxHeights();
 }
 
 // ================= SUGGESTION-BUBBLE TAIL TRACKING =================

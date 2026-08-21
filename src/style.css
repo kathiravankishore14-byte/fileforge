@@ -974,27 +974,34 @@ body.tool-landing-page .site-global-faq {
 
 @media (max-width: 860px) {
   .hero-drop-row { flex-direction: column; }
-  /* The fixed height:320px from the base rule still applies here —
-     only the flex-basis needs resetting since flex-basis controls
-     height (not width) once the row is column-direction. */
-  .hero-drop-zone { flex: 0 0 auto; }
-  /* Same fixed height:320px from the base rule as the drop zone above
-     it once stacked — only the flex-basis needs resetting here too. */
-  .hero-suggest-panel.visible { flex: 0 0 auto; margin-top: 16px; }
-  /* Bottom-right tail (set in the base rule) still points at the
-     mascot's fixed corner here too, so no override needed. */
-  /* Smaller floating widget on narrow screens so he doesn't cover too
-     much content while still staying visible everywhere per spec. */
-  /* Mobile content stacks full-width (suggestion cards, tool grid, etc.),
-     so any fixed corner size big enough to be a "companion" ends up
-     sitting on top of real card text somewhere on a long page. Shrunk
-     down to a standard floating-action-button size instead — small
-     enough to stay out of the way of what you're tapping/reading, still
-     visibly present in the corner on every page. */
-  .ffh-widget { width: 60px; height: 78px; right: 8px; bottom: 8px; }
-  .ffh-hero-svg { width: 56px; }
-  .ffh-hero-wrap { bottom: 4%; }
-  .ffh-hint { display: none; }
+  /* Both boxes drop the desktop's fixed 320px height here and size to
+     their own content instead — on desktop that fixed height is what
+     keeps them a "matched pair" side by side, but stacked on mobile it
+     was clipping/overflowing the suggestion panel's text (title + up to
+     3 cards + the "see all" link easily runs past 320px) since
+     overflow:visible let content spill outside the box rather than
+     grow it. min-height keeps the idle drop zone from looking
+     collapsed/thin; the drop zone also switches to overflow:visible so
+     a long multi-file list can't get clipped the same way. Sized this
+     way, both boxes end up matching each other again — each just fits
+     what it actually contains. */
+  .hero-drop-zone { flex: 0 0 auto; height: auto; min-height: 260px; overflow: visible; }
+  /* .hero-drop-content and .hero-preview normally rely on the drop
+     zone's fixed height (height:100% / flex:1 1 auto against a
+     known-height ancestor) to fill it — with the drop zone now
+     auto-height above, that 100% would otherwise resolve to 0 and
+     collapse everything inside it. */
+  .hero-drop-content { height: auto; padding: 6px 0; }
+  .hero-suggest-panel.visible { flex: 0 0 auto; height: auto; margin-top: 16px; }
+  /* Mascot removed entirely on mobile — on a narrow screen he's a fixed
+     corner overlay competing with real content (tap targets, text) on
+     an already-long stacked page, without the room to be the fun
+     "companion" touch he is on desktop. */
+  .ffh-widget { display: none; }
+  /* The suggestion panel's tail (::before/::after) points at the
+     mascot's fixed corner — with him gone on mobile it would just be a
+     stray triangle pointing at nothing, so it's hidden too. */
+  .hero-suggest-panel::before, .hero-suggest-panel::after { display: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -1204,10 +1211,13 @@ body.tool-landing-page .site-global-faq {
 }
 
 @media (max-width: 420px) {
-  .tool-grid { grid-template-columns: repeat(3, 1fr); }
-  .tool-icon-badge img { width: 45px; height: 45px; }
-  .tool-icon-badge img:last-child:not(:only-child) { width: 48px; height: 48px; bottom: -12px; left: -12px; }
-  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 10px; }
+  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  /* Two columns leaves each card noticeably wider than the old 3-up
+     layout did — sized the icon back up a bit so it doesn't look small
+     and lost in the extra room. */
+  .tool-icon-badge img { width: 54px; height: 54px; }
+  .tool-icon-badge img:last-child:not(:only-child) { width: 58px; height: 58px; bottom: -14px; left: -14px; }
+  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 12px; }
 }
 
 .coming-soon-badge {
