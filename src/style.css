@@ -240,6 +240,16 @@ body.tool-landing-page .hero-drop-wrap {
   display: none;
 }
 
+/* Every dedicated tool landing page already has its own tool-specific FAQ
+   section (with matching FAQPage structured data) — the generic sitewide
+   one from partials/_footer.html would otherwise duplicate the "Frequently
+   Asked Questions" heading a second time right before the footer. Most
+   noticeable — and most costly — on mobile, where it roughly doubles an
+   already-long page. */
+body.tool-landing-page .site-global-faq {
+  display: none;
+}
+
 /* The mascot floats fixed in the bottom-right corner on every page. On
    a wide viewport with the suggestion panel open, that corner can be
    close enough to the hero row's own bottom-right to visually collide
@@ -294,6 +304,26 @@ body.tool-landing-page .hero-drop-wrap {
 .ffh-banner-slide:hover { background: var(--blue-light); }
 .ffh-banner-slide img { width: 26px; height: 26px; flex-shrink: 0; }
 .ffh-banner-slide .ffh-banner-sub { color: var(--text-muted); font-weight: 500; font-size: 1rem; }
+
+/* min-width:0 lets a flex child actually shrink below its content size —
+   without it, text-overflow:ellipsis below has no room to ever kick in. */
+.ffh-banner-text { min-width: 0; }
+
+/* Below ~640px the full "label: description" line no longer fits on the
+   banner's one fixed-height (52px) row — it used to wrap to a second
+   line and get clipped/overlapped by the dots. Truncate with an ellipsis
+   instead of wrapping, and drop the (redundant on a small screen)
+   description entirely so what's left is still meaningful on its own. */
+@media (max-width: 640px) {
+  .ffh-banner-slide { padding: 0 36px 0 14px; gap: 8px; font-size: 1.08rem; }
+  .ffh-banner-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ffh-banner-slide .ffh-banner-sub { display: none; }
+}
 
 .ffh-banner-dots {
   position: absolute;
@@ -379,7 +409,12 @@ body.tool-landing-page .hero-drop-wrap {
 
 .hero-drop-zone:hover, .hero-drop-zone.drag-active { background: var(--blue-light); border-color: var(--blue-dark); }
 
-.hero-drop-zone:not(.compact) { left: 88px; }
+/* Scoped to wider screens only — below 860px the row goes column-direction
+   and the box is naturally full-width/centered, so this offset would
+   otherwise push it half off-screen on phones. */
+@media (min-width: 861px) {
+  .hero-drop-zone:not(.compact) { left: 88px; }
+}
 
 .hero-drop-content {
   width: 100%;
@@ -1213,9 +1248,13 @@ body.tool-landing-page .hero-drop-wrap {
   display: none;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   gap: 4px;
-  width: 36px;
-  height: 36px;
+  /* 44x44 meets the standard minimum touch-target size — the three bars
+     stay visually the same (see span width below) so this only grows
+     the invisible hit area, not the icon itself. */
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -1223,6 +1262,10 @@ body.tool-landing-page .hero-drop-wrap {
 
 .hamburger-btn span {
   display: block;
+  /* Explicit width: now that the button itself is a larger 44px tap
+     target (align-items: center on the parent), the bars need a fixed
+     size instead of stretching to fill it. */
+  width: 22px;
   height: 2px;
   background: var(--ink);
   border-radius: 2px;
@@ -1814,7 +1857,10 @@ body.tool-landing-page .hero-drop-wrap {
   color: #C9CDD3;
   text-decoration: none;
   font-size: 1.235rem;
-  margin-bottom: 9px;
+  /* Padding (not just margin) so the clickable box itself is taller —
+     margin separates links visually but isn't part of the tap target. */
+  padding: 5px 0;
+  margin-bottom: 2px;
 }
 
 .footer-col a:hover { color: #fff; }

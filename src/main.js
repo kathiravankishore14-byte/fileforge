@@ -3767,7 +3767,7 @@ function wireFeaturedBanner() {
     return `
       <a class="ffh-banner-slide" href="${href}">
         ${renderIconBadge(meta.category, meta.iconTo, key)}
-        <span>✨ ${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
+        <span class="ffh-banner-text">✨ ${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
       </a>
     `;
   }).join('');
