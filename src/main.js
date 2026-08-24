@@ -1621,21 +1621,37 @@ function renderSingleFileConfig() {
   else if (currentToolKey === 'bgremove') {
     area.insertAdjacentHTML('beforeend', `
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads a full-precision AI model (larger download, better accuracy), just once, cached after. You'll get a chance to touch up the result before downloading.</p>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads an AI model, just once, cached after. You'll get a chance to touch up the result before downloading.</p>
     `);
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Downloading AI model...');
+      let cutoutBlob;
       try {
-        const cutoutBlob = await removeBackground(currentFile, {
-          model: 'isnet', // full precision — noticeably more accurate than the default fp16 model, especially on cluttered real-world backgrounds
-          progress: (key, current, total) => {
-            const pct = total ? Math.round((current / total) * 100) : 0;
-            const label = key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`;
-            updateProcessingProgress(pct, label);
-          },
+        // Primary: BiRefNet — more accurate on hard edges (hair, fur,
+        // busy backgrounds) than the fallback model below.
+        cutoutBlob = await removeBackgroundBiRefNet(currentFile, (pct) => {
+          updateProcessingProgress(pct, `Downloading AI model... ${pct}%`);
         });
-        showBgRemoveTouchUpState(cutoutBlob, currentFile);
-      } catch (err) { showErrorState(err.message); }
+      } catch (birefnetErr) {
+        // Fallback: the lighter isnet model. Covers devices that can't
+        // handle BiRefNet's memory footprint, or any other failure —
+        // this path is the one that was already shipping and working.
+        try {
+          showProcessingState('Trying a lighter AI model...');
+          cutoutBlob = await removeBackground(currentFile, {
+            model: 'isnet',
+            progress: (key, current, total) => {
+              const pct = total ? Math.round((current / total) * 100) : 0;
+              const label = key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`;
+              updateProcessingProgress(pct, label);
+            },
+          });
+        } catch (fallbackErr) {
+          showErrorState(fallbackErr.message);
+          return;
+        }
+      }
+      showBgRemoveTouchUpState(cutoutBlob, currentFile);
     });
   }
 
@@ -3067,6 +3083,31 @@ function renderHtmlToExcelTool() {
       showResultState(new Blob([wbout], { type: 'application/octet-stream' }), 'html-export.xlsx');
     } catch (err) { showErrorState(err.message); }
   });
+}
+
+// ================= BACKGROUND REMOVAL (BiRefNet, primary) =================
+// BiRefNet is a newer, more accurate segmentation model than the isnet
+// model @imgly/background-removal ships (better edges on hair, fur, and
+// cluttered real-world backgrounds) — but it's heavier, and transformer
+// -based models are known to occasionally exhaust WASM memory on
+// lower-end devices or very large images. Cached after first load, same
+// pattern as the summarizer pipeline below. The bgremove click handler
+// tries this first and falls back to the older, lighter isnet model
+// (via removeBackground()) if this throws for any reason, so a visitor
+// on a device that can't handle BiRefNet still gets a working result.
+let birefnetPipeline = null;
+async function removeBackgroundBiRefNet(file, onProgress) {
+  const { pipeline } = await import('@huggingface/transformers');
+  if (!birefnetPipeline) {
+    birefnetPipeline = await pipeline('background-removal', 'onnx-community/BiRefNet_lite-ONNX', {
+      dtype: 'fp16', // half precision — full fp32 is ~2x the download for a difference not worth it in-browser
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.progress != null) onProgress(Math.round(p.progress));
+      },
+    });
+  }
+  const result = await birefnetPipeline(file);
+  return result.toBlob('image/png');
 }
 
 // ================= AI SUMMARIZER =================
