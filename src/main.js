@@ -465,12 +465,21 @@ window.addEventListener('popstate', () => {
 });
 
 // ---------- Upload state (with idle bird) ----------
+// Once a file is picked, the modal becomes a two-pane workspace: the left
+// pane (#configPreview) is reserved purely for previewing/working on the
+// file, the right pane (#configArea) is a sidebar holding every control,
+// info line, and action/download button. See renderSingleFileConfig(),
+// renderMultiFileTool(), showResultState(), and showBgRemoveTouchUpState()
+// for how each screen fills those two panes.
 function renderModalShell() {
   modalBody.innerHTML = `
     <div class="upload-row">
       <video class="bird-video" src="/bird/bird-idle.mp4" autoplay loop muted playsinline></video>
     </div>
-    <div id="configArea"></div>
+    <div class="tp-workspace" id="tpWorkspace">
+      <div class="tp-preview-pane" id="configPreview"></div>
+      <aside class="tp-sidebar" id="configArea"></aside>
+    </div>
   `;
 }
 
@@ -530,14 +539,14 @@ function handleFiles(fileList) {
 }
 
 function showPreviewImage(file) {
-  const area = document.querySelector('#configArea');
-  const existingImg = area.querySelector('.preview-img');
+  const pane = document.querySelector('#configPreview') || document.querySelector('#configArea');
+  const existingImg = pane.querySelector('.preview-img');
   if (existingImg) existingImg.remove();
   const url = URL.createObjectURL(file);
   const img = document.createElement('img');
   img.src = url;
   img.className = 'preview-img';
-  area.prepend(img);
+  pane.prepend(img);
   currentImg = img;
 }
 
@@ -575,22 +584,49 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// ---------- Toast confirmations (post-upload workspace only) ----------
+// A brief, dismissable confirmation for an action that has no other visible
+// feedback (a download starting, a file leaving the grid). Stacks if more
+// than one fires in quick succession; each clears itself after ~2.6s.
+let toastHost = null;
+function showToast(message, icon) {
+  if (!toastHost) {
+    toastHost = document.createElement('div');
+    toastHost.className = 'tp-toast-host';
+    document.body.appendChild(toastHost);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'tp-toast';
+  toast.innerHTML = `<span class="tp-toast-icon">${icon || '✓'}</span><span>${message}</span>`;
+  toastHost.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('visible'));
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 250);
+  }, 2600);
+}
+
 // ---------- Result state ----------
 function showResultState(blob, filename, extraNote) {
   const url = URL.createObjectURL(blob);
   modalBody.innerHTML = `
-    <div class="result-box">
-      <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
-      ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
-      <div class="result-preview-wrap" id="resultPreviewWrap">
-        <p class="result-preview-caption">Loading preview…</p>
+    <div class="tp-workspace">
+      <div class="tp-preview-pane">
+        <div class="result-preview-wrap" id="resultPreviewWrap">
+          <p class="result-preview-caption">Loading preview…</p>
+        </div>
       </div>
-      <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
-      <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
-      <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+      <aside class="tp-sidebar">
+        <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
+        ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
+        <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
+        <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
+        <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+      </aside>
     </div>
   `;
   renderResultPreview(blob, url);
+  document.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '⬇'));
   document.querySelector('#resetToolBtn').addEventListener('click', () => {
     currentFile = null;
     closeToolModal(false);
@@ -706,38 +742,41 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
   const sourceUrl = URL.createObjectURL(sourceFile);
 
   modalBody.innerHTML = `
-    <div class="result-box">
-      <p class="result-preview-caption">Drag the slider to compare, pick a background below, then download.</p>
-
-      <div class="bgr-compare" id="bgrCompare">
-        <div class="bgr-compare-after bgremove-checkerboard" id="bgrAfterLayer">
-          <img class="bgr-compare-img" id="bgrAfterImg" alt="Result preview" />
+    <div class="tp-workspace">
+      <div class="tp-preview-pane">
+        <div class="bgr-compare" id="bgrCompare">
+          <div class="bgr-compare-after bgremove-checkerboard" id="bgrAfterLayer">
+            <img class="bgr-compare-img" id="bgrAfterImg" alt="Result preview" />
+          </div>
+          <div class="bgr-compare-before" id="bgrBeforeLayer">
+            <img class="bgr-compare-img" src="${sourceUrl}" alt="Original photo" />
+          </div>
+          <div class="bgr-compare-handle" id="bgrHandle" role="slider" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"><span class="bgr-compare-grip"></span></div>
+          <span class="bgr-compare-tag bgr-compare-tag-before">Before</span>
+          <span class="bgr-compare-tag bgr-compare-tag-after">After</span>
         </div>
-        <div class="bgr-compare-before" id="bgrBeforeLayer">
-          <img class="bgr-compare-img" src="${sourceUrl}" alt="Original photo" />
+      </div>
+      <aside class="tp-sidebar">
+        <p class="result-preview-caption">Drag the slider to compare, pick a background below, then download.</p>
+
+        <div class="bgr-bg-options" id="bgrBgOptions">
+          <span class="bgr-bg-label">Background</span>
+          <button type="button" class="bgr-swatch bgr-swatch-transparent active" data-bg-type="transparent" title="Transparent" aria-label="Transparent"></button>
+          <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#FFFFFF" style="background:#FFFFFF" title="White" aria-label="White"></button>
+          <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#000000" style="background:#000000" title="Black" aria-label="Black"></button>
+          <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#378ADD" style="background:#378ADD" title="Blue" aria-label="Blue"></button>
+          <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#EAF3DE" style="background:#EAF3DE" title="Light green" aria-label="Light green"></button>
+          <label class="bgr-swatch bgr-swatch-custom" title="Custom color" aria-label="Custom color">
+            🎨<input type="color" id="bgrCustomColor" value="#E24B4A" />
+          </label>
+          <label class="bgr-swatch bgr-swatch-upload" title="Upload a background photo" aria-label="Upload a background photo">
+            🖼️<input type="file" accept="image/*" id="bgrUploadInput" hidden />
+          </label>
         </div>
-        <div class="bgr-compare-handle" id="bgrHandle" role="slider" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"><span class="bgr-compare-grip"></span></div>
-        <span class="bgr-compare-tag bgr-compare-tag-before">Before</span>
-        <span class="bgr-compare-tag bgr-compare-tag-after">After</span>
-      </div>
 
-      <div class="bgr-bg-options" id="bgrBgOptions">
-        <span class="bgr-bg-label">Background</span>
-        <button type="button" class="bgr-swatch bgr-swatch-transparent active" data-bg-type="transparent" title="Transparent" aria-label="Transparent"></button>
-        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#FFFFFF" style="background:#FFFFFF" title="White" aria-label="White"></button>
-        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#000000" style="background:#000000" title="Black" aria-label="Black"></button>
-        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#378ADD" style="background:#378ADD" title="Blue" aria-label="Blue"></button>
-        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#EAF3DE" style="background:#EAF3DE" title="Light green" aria-label="Light green"></button>
-        <label class="bgr-swatch bgr-swatch-custom" title="Custom color" aria-label="Custom color">
-          🎨<input type="color" id="bgrCustomColor" value="#E24B4A" />
-        </label>
-        <label class="bgr-swatch bgr-swatch-upload" title="Upload a background photo" aria-label="Upload a background photo">
-          🖼️<input type="file" accept="image/*" id="bgrUploadInput" hidden />
-        </label>
-      </div>
-
-      <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download result</button>
-      <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+        <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download result</button>
+        <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+      </aside>
     </div>
   `;
 
@@ -839,6 +878,7 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      showToast(`Downloading ${filename}`, '⬇');
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (err) {
       showErrorState(err.message);
@@ -1235,15 +1275,20 @@ async function runUnzipFlow(file) {
   }
   await minWait(600);
   modalBody.innerHTML = `
-    <div class="result-box">
-      <p class="doc-label" style="margin-bottom:12px; color: var(--text);">Extracted ${extracted.length} file(s):</p>
-      <div class="file-list" style="text-align:left;">
-        ${extracted.map((f) => {
-          const url = URL.createObjectURL(f.blob);
-          return `<div class="file-row"><span class="file-name">${f.name}</span><a href="${url}" download="${f.name}" class="download-btn" style="padding:5px 12px; font-size:0.82rem;">Download</a></div>`;
-        }).join('')}
+    <div class="tp-workspace">
+      <div class="tp-preview-pane tp-preview-pane-list">
+        <div class="extracted-file-list">
+          ${extracted.map((f) => {
+            const url = URL.createObjectURL(f.blob);
+            return `<div class="extracted-file-row"><span class="extracted-file-name">📄 ${f.name}</span><a href="${url}" download="${f.name}" class="extracted-file-download">Download</a></div>`;
+          }).join('')}
+        </div>
       </div>
-      <button class="reset-btn" id="resetToolBtn" style="margin-top:14px;">Convert another file</button>
+      <aside class="tp-sidebar">
+        <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
+        <p class="result-stat-pill">Extracted ${extracted.length} file${extracted.length === 1 ? '' : 's'}</p>
+        <button class="reset-btn" id="resetToolBtn">Convert another file</button>
+      </aside>
     </div>
   `;
   document.querySelector('#resetToolBtn').addEventListener('click', () => {
@@ -1256,12 +1301,15 @@ async function runUnzipFlow(file) {
 function renderSingleFileConfig() {
   renderGeneration++;
   const myGeneration = renderGeneration;
-  const area = document.querySelector('#configArea');
+  const area = document.querySelector('#configArea'); // right sidebar: controls, info, action button
+  const previewPane = document.querySelector('#configPreview'); // left pane: preview/working area only
   area.innerHTML = '';
+  if (previewPane) previewPane.innerHTML = '';
+  const previewTarget = previewPane || area; // fall back gracefully if the shell markup is ever missing the pane
   if (currentFile.type.startsWith('image/')) {
     showPreviewImage(currentFile);
   } else if (currentFile.type === 'application/pdf' && currentToolKey !== 'pdfcompress' && currentToolKey !== 'pdfrotate') {
-    area.insertAdjacentHTML('beforeend', `<div id="genericPdfPreviewWrap" style="text-align:center; margin-top:10px;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>`);
+    previewTarget.insertAdjacentHTML('beforeend', `<div id="genericPdfPreviewWrap" style="text-align:center;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>`);
     (async () => {
       try {
         const pdfjsLib = await getPdfjsLib();
@@ -1286,7 +1334,7 @@ function renderSingleFileConfig() {
       }
     })();
   } else {
-    area.insertAdjacentHTML('beforeend', `<p style="font-size:0.92rem; color: var(--text-muted); margin-top:10px;">📄 ${currentFile.name}</p>`);
+    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);">📄 ${currentFile.name}</p>`);
   }
 
   if (currentToolKey === 'compress') {
@@ -1301,7 +1349,33 @@ function renderSingleFileConfig() {
         </label>
         <button class="config-action-btn" id="cfgApply">Compress</button>
       </div>
+      <p class="tp-live-hint" id="compressLiveHint">Estimating…</p>
     `);
+    const qualitySelect = document.querySelector('#cfgQuality');
+    const liveHint = document.querySelector('#compressLiveHint');
+    // Real, not simulated: actually compresses at the selected quality
+    // right now so the size estimate shown is the true output size, not
+    // a guess — just without committing to the full processing screen.
+    let livePreviewGeneration = 0;
+    const updateCompressLivePreview = () => {
+      if (!currentImg.naturalWidth) return; // preview image hasn't finished loading yet — the load handler below will retry
+      const myPreview = ++livePreviewGeneration;
+      const quality = parseFloat(qualitySelect.value);
+      const originalKB = currentFile.size / 1024;
+      const canvas = document.createElement('canvas');
+      canvas.width = currentImg.naturalWidth;
+      canvas.height = currentImg.naturalHeight;
+      canvas.getContext('2d').drawImage(currentImg, 0, 0);
+      canvas.toBlob((blob) => {
+        if (!blob || myPreview !== livePreviewGeneration) return; // a newer selection has since been made
+        const newKB = blob.size / 1024;
+        const pct = Math.round(100 - (newKB / originalKB) * 100);
+        liveHint.innerHTML = `Estimated size: <strong>${newKB.toFixed(0)}KB</strong>${pct > 0 ? ` <span class="tp-live-good">(${pct}% smaller)</span>` : ' (similar size)'}`;
+      }, 'image/jpeg', quality);
+    };
+    qualitySelect.addEventListener('change', updateCompressLivePreview);
+    if (currentImg.complete && currentImg.naturalWidth) updateCompressLivePreview();
+    else currentImg.addEventListener('load', updateCompressLivePreview, { once: true });
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       const quality = parseFloat(document.querySelector('#cfgQuality').value); // captured before the DOM gets wiped
       const originalKB = currentFile.size / 1024;
@@ -1327,11 +1401,37 @@ function renderSingleFileConfig() {
         <label>Height (px) <input type="number" id="cfgHeight" placeholder="600" /></label>
         <button class="config-action-btn" id="cfgApply">Resize</button>
       </div>
+      <p class="tp-live-hint" id="resizeLiveHint">Enter a width and height to preview the new size.</p>
     `);
+    const widthInput = document.querySelector('#cfgWidth');
+    const heightInput = document.querySelector('#cfgHeight');
+    const liveHint = document.querySelector('#resizeLiveHint');
+    const updateResizeLivePreview = () => {
+      const origW = currentImg.naturalWidth;
+      const origH = currentImg.naturalHeight;
+      const w = parseInt(widthInput.value);
+      const h = parseInt(heightInput.value);
+      if (!w || !h || !origW || !origH) {
+        liveHint.textContent = 'Enter a width and height to preview the new size.';
+        currentImg.style.transform = '';
+        return;
+      }
+      // Purely visual — scales the on-screen preview to suggest relative
+      // size. drawImage() at apply-time always uses the image's real
+      // pixel data, so this never affects the actual output.
+      const scale = Math.max(0.4, Math.min(1.5, Math.sqrt((w * h) / (origW * origH))));
+      currentImg.style.transform = `scale(${scale})`;
+      const stretched = Math.abs((origW / origH) - (w / h)) / (origW / origH) > 0.05;
+      liveHint.innerHTML = `New size: <strong>${w} × ${h}px</strong>${stretched ? ' <span class="tp-live-warn">⚠ different aspect ratio — image will stretch</span>' : ''}`;
+    };
+    widthInput.addEventListener('input', updateResizeLivePreview);
+    heightInput.addEventListener('input', updateResizeLivePreview);
+    if (!currentImg.complete || !currentImg.naturalWidth) currentImg.addEventListener('load', updateResizeLivePreview, { once: true });
     document.querySelector('#cfgApply').addEventListener('click', () => {
       const w = parseInt(document.querySelector('#cfgWidth').value);
       const h = parseInt(document.querySelector('#cfgHeight').value);
       if (!w || !h) return;
+      currentImg.style.transform = '';
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(currentImg, 0, 0, w, h);
@@ -2151,6 +2251,22 @@ function renderSingleFileConfig() {
         showResultState(blob, `compressed-${currentFile.name}`, note);
       } catch (err) { showErrorState(err.message); }
     });
+  }
+
+  // A few tool branches (PDF rotate, Word/Excel previews) build their own
+  // preview wrapper inline rather than through the generic paths above —
+  // move those into the left pane too, so every tool's preview ends up on
+  // the left and every control/button ends up in the sidebar, regardless
+  // of which branch built it.
+  if (previewPane) {
+    ['#pdfPreviewWrap', '#docPreviewWrap', '#sheetPreviewWrap', '.tp-generic-file-line'].forEach((sel) => {
+      area.querySelectorAll(sel).forEach((el) => previewPane.appendChild(el));
+    });
+    // Nothing had a visual preview for this tool (e.g. Compress PDF) — show
+    // a plain file icon so the left pane isn't left empty.
+    if (!previewPane.children.length) {
+      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon">📄</span><span>${currentFile.name}</span></div>`;
+    }
   }
 }
 
@@ -3106,14 +3222,18 @@ function renderMultiFileTool(initialFiles) {
   const showReorder = currentToolKey === 'pdfmerge';
   const actionLabel = currentToolKey === 'pdfmerge' ? 'Merge PDF' : currentToolKey === 'zipfiles' ? 'Create ZIP' : currentToolKey === 'collagemaker' ? 'Create Collage' : currentToolKey === 'imagetoppt' ? 'Create Slides' : 'Continue';
   modalBody.innerHTML = `
-    <div class="multi-file-toolbar">
-      <p class="multi-file-summary" id="multiFileSummary"></p>
-      <button type="button" class="multi-add-btn" id="addMoreBtn">+ Add files</button>
+    <div class="tp-workspace">
+      <div class="tp-preview-pane tp-preview-pane-grid">
+        <div class="file-grid" id="multiFileList"></div>
+      </div>
+      <aside class="tp-sidebar">
+        <p class="multi-file-summary" id="multiFileSummary"></p>
+        <button type="button" class="multi-add-btn" id="addMoreBtn">+ Add files</button>
+        ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder — files combine in this order.</p>' : ''}
+        <div id="multiWarning" class="batch-warning" style="display:none;"></div>
+        <button class="multi-cta-btn" id="multiApply" disabled>${actionLabel}</button>
+      </aside>
     </div>
-    ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder — files combine in this order.</p>' : ''}
-    <div id="multiWarning" class="batch-warning" style="display:none;"></div>
-    <div class="file-grid" id="multiFileList"></div>
-    <button class="multi-cta-btn" id="multiApply" disabled>${actionLabel}</button>
   `;
   const listEl = document.querySelector('#multiFileList');
   const warnEl = document.querySelector('#multiWarning');
@@ -3159,7 +3279,11 @@ function renderMultiFileTool(initialFiles) {
       </div>
     `).join('');
 
-    listEl.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { files.splice(+b.dataset.rm, 1); renderList(); }));
+    listEl.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => {
+      const [removed] = files.splice(+b.dataset.rm, 1);
+      renderList();
+      if (removed) showToast(`Removed ${removed.name}`, '✕');
+    }));
     listEl.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.up; [files[i - 1], files[i]] = [files[i], files[i - 1]]; renderList(); }));
     listEl.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.down; [files[i + 1], files[i]] = [files[i], files[i + 1]]; renderList(); }));
 
