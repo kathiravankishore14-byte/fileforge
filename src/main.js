@@ -121,7 +121,7 @@ const toolMeta = {
     // brush + background swap, both free) called out explicitly.
     heroCopy: {
       h1: 'Remove Image Background — Free & Automatic',
-      intro: 'One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds — then swap in a new background color or image, and brush-touch the edges yourself, all before you download. Nothing leaves your browser.',
+      intro: 'One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds, then compare it against the original with a slider and swap in a new background color or image before you download. Nothing leaves your browser.',
     },
     useCases: [
       { icon: '🧑', label: 'Headshots' },
@@ -567,16 +567,26 @@ function updateProcessingProgress(percent, text) {
   if (text) updateProcessingCaption(text);
 }
 
+// Human-readable file size, e.g. 482 -> "482 B", 15400 -> "15 KB", 3200000 -> "3.2 MB".
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 // ---------- Result state ----------
 function showResultState(blob, filename, extraNote) {
   const url = URL.createObjectURL(blob);
   modalBody.innerHTML = `
     <div class="result-box">
-      ${extraNote ? `<p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">${extraNote}</p>` : ''}
+      <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
+      ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
       <div class="result-preview-wrap" id="resultPreviewWrap">
         <p class="result-preview-caption">Loading preview…</p>
       </div>
-      <a href="${url}" download="${filename}" class="download-btn">Download ${filename}</a>
+      <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
+      <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
       <button class="reset-btn" id="resetToolBtn">Convert another file</button>
     </div>
   `;
@@ -669,14 +679,10 @@ function renderBgLayer(bgChoice, w, h) {
   return canvas;
 }
 
-// Combines the AI cutout with the chosen background and the user's
-// keep/erase marks: the cutout is drawn over the background layer (so
-// transparent AI pixels reveal it automatically via normal alpha
-// compositing); green marks then force those pixels back to fully
-// opaque + original photo color, red marks force those pixels to
-// reveal the background layer — everything unmarked keeps the AI's
-// decision composited over the chosen background as-is.
-async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice) {
+// Combines the AI cutout with the chosen background: the cutout is drawn
+// over the background layer, so transparent AI pixels reveal the chosen
+// background automatically via normal alpha compositing.
+async function composeBgRemoveResult(cutoutBlob, bgChoice) {
   const cutoutImg = await loadImageFromBlob(cutoutBlob);
   const w = cutoutImg.naturalWidth;
   const h = cutoutImg.naturalHeight;
@@ -689,55 +695,19 @@ async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice
   octx.drawImage(bgCanvas, 0, 0);
   octx.drawImage(cutoutImg, 0, 0, w, h);
 
-  const hasMarks = markCanvas && markCanvas.width > 0 && markCanvas.height > 0;
-  if (hasMarks) {
-    const origCanvas = document.createElement('canvas');
-    origCanvas.width = w; origCanvas.height = h;
-    origCanvas.getContext('2d').drawImage(sourceImg, 0, 0, w, h);
-    const origData = origCanvas.getContext('2d').getImageData(0, 0, w, h).data;
-
-    const bgData = bgCanvas.getContext('2d').getImageData(0, 0, w, h).data;
-
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = w; maskCanvas.height = h;
-    maskCanvas.getContext('2d').drawImage(markCanvas, 0, 0, w, h);
-    const maskData = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
-
-    const outData = octx.getImageData(0, 0, w, h);
-    const od = outData.data;
-    for (let i = 0; i < od.length; i += 4) {
-      const markAlpha = maskData[i + 3];
-      if (markAlpha <= 10) continue; // unmarked — leave the composited result as-is
-      const r = maskData[i], g = maskData[i + 1];
-      if (r > g) {
-        // erase mark — reveal whatever the chosen background shows here
-        od[i] = bgData[i]; od[i + 1] = bgData[i + 1]; od[i + 2] = bgData[i + 2]; od[i + 3] = bgData[i + 3];
-      } else if (g > r) {
-        od[i] = origData[i]; od[i + 1] = origData[i + 1]; od[i + 2] = origData[i + 2]; od[i + 3] = 255; // keep mark
-      }
-    }
-    octx.putImageData(outData, 0, 0);
-  }
-
   return new Promise((resolve) => out.toBlob(resolve, 'image/png'));
 }
 
 // ---------- Remove Background: touch-up screen (shown after the AI runs) ----------
-// Marking happens AFTER you see the actual result, not before: the AI cutout
-// is shown over a checkerboard so transparency is visible, and you paint
-// green (keep) / red (erase) directly on top of it. Nothing is baked in
-// until you click Download, so marks can be adjusted freely beforehand.
+// A single before/after slider is the whole review step: drag to compare,
+// pick a background swatch, download. No manual brush/marking step —
+// the AI cutout (already edge-feathered) is trusted as the result.
 async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
-  const cutoutUrl = URL.createObjectURL(cutoutBlob);
   const sourceUrl = URL.createObjectURL(sourceFile);
-
-  // Loaded up front (not lazily on download) — the compare slider's
-  // "before" side and every live preview recompose need it right away.
-  const sourceImg = await loadImageFromBlob(sourceFile);
 
   modalBody.innerHTML = `
     <div class="result-box">
-      <p class="result-preview-caption">Drag the slider to compare. Pick a background below, and paint green/red on the cutout if any edges need fixing — then download.</p>
+      <p class="result-preview-caption">Drag the slider to compare, pick a background below, then download.</p>
 
       <div class="bgr-compare" id="bgrCompare">
         <div class="bgr-compare-after bgremove-checkerboard" id="bgrAfterLayer">
@@ -766,45 +736,21 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
         </label>
       </div>
 
-      <div class="mark-toolbar">
-        <button type="button" class="mark-mode-btn" data-mode="keep">🟢 Mark to keep</button>
-        <button type="button" class="mark-mode-btn" data-mode="erase">🔴 Mark to erase</button>
-        <label class="mark-brush-label">Brush size <input type="range" id="markBrushSize" min="8" max="70" value="28" /></label>
-        <button type="button" class="mark-clear-btn" id="markClearBtn">Clear marks</button>
-      </div>
-      <div class="bgremove-canvas-wrap bgremove-checkerboard" id="bgResultWrap">
-        <img src="${cutoutUrl}" class="preview-img" id="bgResultImg" alt="Background-removed result" />
-        <canvas class="bgremove-mark-canvas" id="bgResultMarkCanvas"></canvas>
-      </div>
-
       <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download result</button>
       <button class="reset-btn" id="resetToolBtn">Convert another file</button>
     </div>
   `;
 
-  const resultImg = document.querySelector('#bgResultImg');
-  const markCanvas = document.querySelector('#bgResultMarkCanvas');
-  const mctx = markCanvas.getContext('2d');
   const afterImg = document.querySelector('#bgrAfterImg');
   const afterLayer = document.querySelector('#bgrAfterLayer');
 
   let bgChoice = { type: 'transparent' };
   let currentAfterUrl = null;
 
-  const sizeMarkCanvas = () => {
-    markCanvas.width = resultImg.naturalWidth || 800;
-    markCanvas.height = resultImg.naturalHeight || 600;
-  };
-  if (resultImg.complete && resultImg.naturalWidth) sizeMarkCanvas();
-  else resultImg.addEventListener('load', sizeMarkCanvas, { once: true });
-
-  // Re-renders the compare slider's "after" side from the current
-  // cutout + marks + background choice. Called on init, after each
-  // background change, and once per brush stroke (on release, not on
-  // every pointermove — recompositing the full image is too slow to
-  // run continuously while dragging).
+  // Re-renders the compare slider's "after" side from the current cutout +
+  // background choice. Called on init and after each background change.
   async function renderComparePreview() {
-    const blob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice);
+    const blob = await composeBgRemoveResult(cutoutBlob, bgChoice);
     const url = URL.createObjectURL(blob);
     afterImg.src = url;
     if (currentAfterUrl) URL.revokeObjectURL(currentAfterUrl);
@@ -876,70 +822,13 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
     renderComparePreview();
   });
 
-  // ---- Keep/erase touch-up brush (paints directly on the cutout above) ----
-  let markMode = null; // 'keep' | 'erase' | null
-  let isDrawing = false;
-  let brushSize = 28;
-
-  const modeButtons = document.querySelectorAll('.mark-mode-btn');
-  modeButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const clickedMode = btn.dataset.mode;
-      markMode = markMode === clickedMode ? null : clickedMode;
-      modeButtons.forEach((b) => b.classList.toggle('active', b.dataset.mode === markMode));
-      markCanvas.style.cursor = markMode ? 'crosshair' : 'default';
-    });
-  });
-
-  document.querySelector('#markBrushSize').addEventListener('input', (e) => {
-    brushSize = Number(e.target.value);
-  });
-
-  document.querySelector('#markClearBtn').addEventListener('click', () => {
-    mctx.clearRect(0, 0, markCanvas.width, markCanvas.height);
-    renderComparePreview();
-  });
-
-  const pointToCanvas = (e) => {
-    const rect = markCanvas.getBoundingClientRect();
-    const scaleX = markCanvas.width / rect.width;
-    const scaleY = markCanvas.height / rect.height;
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
-  };
-
-  const drawDot = (x, y) => {
-    mctx.fillStyle = markMode === 'erase' ? 'rgba(231,76,60,0.55)' : 'rgba(46,204,113,0.55)';
-    mctx.beginPath();
-    mctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    mctx.fill();
-  };
-
-  markCanvas.addEventListener('pointerdown', (e) => {
-    if (!markMode) return;
-    isDrawing = true;
-    markCanvas.setPointerCapture(e.pointerId);
-    const p = pointToCanvas(e);
-    drawDot(p.x, p.y);
-  });
-  markCanvas.addEventListener('pointermove', (e) => {
-    if (!isDrawing || !markMode) return;
-    const p = pointToCanvas(e);
-    drawDot(p.x, p.y);
-  });
-  ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
-    markCanvas.addEventListener(evt, () => {
-      if (isDrawing) renderComparePreview(); // recompose once per stroke, not per move
-      isDrawing = false;
-    });
-  });
-
   document.querySelector('#bgDownloadBtn').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     const originalLabel = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Preparing…';
     try {
-      const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice);
+      const finalBlob = await composeBgRemoveResult(cutoutBlob, bgChoice);
       const filename = bgChoice.type === 'transparent'
         ? `no-bg-${sourceFile.name.split('.')[0]}.png`
         : `new-bg-${sourceFile.name.split('.')[0]}.png`;
@@ -1621,7 +1510,7 @@ function renderSingleFileConfig() {
   else if (currentToolKey === 'bgremove') {
     area.insertAdjacentHTML('beforeend', `
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Remove Background</button></div>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads an AI model, just once, cached after. You'll get a chance to touch up the result before downloading.</p>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">First use downloads an AI model, just once, cached after. You'll get a before/after slider to check the result before downloading.</p>
     `);
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Downloading AI model...');
@@ -3215,15 +3104,21 @@ function renderMultiFileTool(initialFiles) {
   let files = [...initialFiles];
   const meta = toolMeta[currentToolKey];
   const showReorder = currentToolKey === 'pdfmerge';
+  const actionLabel = currentToolKey === 'pdfmerge' ? 'Merge PDF' : currentToolKey === 'zipfiles' ? 'Create ZIP' : currentToolKey === 'collagemaker' ? 'Create Collage' : currentToolKey === 'imagetoppt' ? 'Create Slides' : 'Continue';
   modalBody.innerHTML = `
-    <div class="config-panel"><button type="button" id="addMoreBtn">+ Add another file</button></div>
+    <div class="multi-file-toolbar">
+      <p class="multi-file-summary" id="multiFileSummary"></p>
+      <button type="button" class="multi-add-btn" id="addMoreBtn">+ Add files</button>
+    </div>
+    ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder — files combine in this order.</p>' : ''}
     <div id="multiWarning" class="batch-warning" style="display:none;"></div>
-    <div class="file-list" id="multiFileList"></div>
-    <div class="config-panel"><button class="config-action-btn" id="multiApply" disabled>Continue</button></div>
+    <div class="file-grid" id="multiFileList"></div>
+    <button class="multi-cta-btn" id="multiApply" disabled>${actionLabel}</button>
   `;
   const listEl = document.querySelector('#multiFileList');
   const warnEl = document.querySelector('#multiWarning');
   const goBtn = document.querySelector('#multiApply');
+  const summaryEl = document.querySelector('#multiFileSummary');
 
   document.querySelector('#addMoreBtn').addEventListener('click', () => {
     closeToolModal(false);
@@ -3234,20 +3129,70 @@ function renderMultiFileTool(initialFiles) {
     if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
+  const fileIconFor = (f) => {
+    const name = f.name.toLowerCase();
+    if (name.endsWith('.pdf')) return '📄';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return '📝';
+    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return '📊';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return '📽️';
+    return '📁';
+  };
+
+  let dragFromIndex = null;
+
   function renderList() {
     listEl.innerHTML = files.map((f, i) => `
-      <div class="file-row">
-        <img class="file-thumb" src="${f.type.startsWith('image/') ? URL.createObjectURL(f) : ''}" onerror="this.style.display='none'" />
-        <span class="file-name">${f.name}</span>
-        ${showReorder ? `<button type="button" data-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button><button type="button" data-down="${i}" ${i === files.length - 1 ? 'disabled' : ''}>↓</button>` : ''}
-        <button type="button" data-rm="${i}">✕</button>
+      <div class="file-card" data-idx="${i}" ${showReorder ? 'draggable="true"' : ''}>
+        ${showReorder ? `<span class="file-card-order">${i + 1}</span>` : ''}
+        <button type="button" class="file-card-remove" data-rm="${i}" aria-label="Remove ${f.name}">✕</button>
+        <div class="file-card-thumb">
+          ${f.type.startsWith('image/')
+            ? `<img src="${URL.createObjectURL(f)}" alt="" onerror="this.parentElement.textContent='${fileIconFor(f)}'" />`
+            : `<span class="file-card-icon">${fileIconFor(f)}</span>`}
+        </div>
+        <span class="file-card-name" title="${f.name}">${f.name}</span>
+        <span class="file-card-size">${formatBytes(f.size)}</span>
+        ${showReorder ? `<div class="file-card-reorder-btns">
+          <button type="button" data-up="${i}" ${i === 0 ? 'disabled' : ''} aria-label="Move earlier">↑</button>
+          <button type="button" data-down="${i}" ${i === files.length - 1 ? 'disabled' : ''} aria-label="Move later">↓</button>
+        </div>` : ''}
       </div>
     `).join('');
+
     listEl.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => { files.splice(+b.dataset.rm, 1); renderList(); }));
     listEl.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.up; [files[i - 1], files[i]] = [files[i], files[i - 1]]; renderList(); }));
     listEl.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.down; [files[i + 1], files[i]] = [files[i], files[i + 1]]; renderList(); }));
+
+    if (showReorder) {
+      const cards = listEl.querySelectorAll('.file-card');
+      cards.forEach((card) => {
+        card.addEventListener('dragstart', () => {
+          dragFromIndex = +card.dataset.idx;
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          card.classList.remove('drag-over');
+          const dropIndex = +card.dataset.idx;
+          if (dragFromIndex === null || dragFromIndex === dropIndex) return;
+          const [moved] = files.splice(dragFromIndex, 1);
+          files.splice(dropIndex, 0, moved);
+          dragFromIndex = null;
+          renderList();
+        });
+      });
+    }
+
     warnEl.style.display = files.length > 22 ? 'block' : 'none';
     if (files.length > 22) warnEl.textContent = `⚠ ${files.length} files, large batches may use a lot of memory.`;
+    const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
+    summaryEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'} · ${formatBytes(totalBytes)} total`;
     goBtn.disabled = currentToolKey === 'pdfmerge' ? files.length < 2 : files.length < 1;
   }
   renderList();
