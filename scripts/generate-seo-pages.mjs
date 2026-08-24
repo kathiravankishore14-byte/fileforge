@@ -74,11 +74,15 @@ function deriveSeo(key, meta) {
   const privacyClause = 'Free, private, and runs right in your browser — no upload, no signup.';
   let description = `${meta.desc} ${privacyClause}`;
   if (description.length > 158) description = `${meta.desc} No upload, no signup — runs in your browser.`;
-  const h1 = `${meta.label} Online`;
+  // A tool can supply its own hand-written hero copy (see toolMeta in
+  // main.js) when the generic auto-derived phrasing undersells it —
+  // used for Remove Background, which leads with real use cases rather
+  // than the generic "drop or select your file" pattern.
+  const h1 = meta.heroCopy?.h1 || `${meta.label} Online`;
   const actionHint = meta.noFile
     ? 'fill in the details below'
     : (meta.multiFile ? 'drop or select your files' : 'drop or select your file');
-  const intro = `${meta.desc} Everything happens locally in your browser, so your files are never uploaded to a server — ${actionHint}, and get your result in seconds.`;
+  const intro = meta.heroCopy?.intro || `${meta.desc} Everything happens locally in your browser, so your files are never uploaded to a server — ${actionHint}, and get your result in seconds.`;
 
   const faq = [];
   faq.push({
@@ -143,6 +147,20 @@ function toolIconBadgeHtml(key, meta) {
   if (!toCategory || toCategory === meta.category) return `<img src="${fromIcon}" alt="" />`;
   const toIcon = categoryIcons[toCategory] || '/icons/icon-utilities.svg';
   return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />`;
+}
+
+// Optional row of use-case icons under the hero (e.g. Headshots,
+// E-commerce, Marketing) — only rendered when a tool's toolMeta entry
+// supplies a `useCases` array. Mirrors the pattern remove.bg and
+// similar tools use to frame a single feature around who it's for.
+function useCasesHtml(meta) {
+  if (!meta.useCases || !meta.useCases.length) return '';
+  const items = meta.useCases.map((u) => `
+    <div class="tp-usecase">
+      <span class="tp-usecase-icon" aria-hidden="true">${u.icon}</span>
+      <span class="tp-usecase-label">${esc(u.label)}</span>
+    </div>`).join('');
+  return `<div class="tp-usecases">${items}</div>`;
 }
 
 function relatedToolsHtml(key, meta) {
@@ -274,6 +292,7 @@ function buildPage(key) {
         <span class="tp-trust-badge">🌐 Works in any browser</span>
       </div>
       <button type="button" class="config-action-btn tp-open-btn" id="tpOpenToolBtn">Open ${esc(meta.label)} →</button>
+      ${useCasesHtml(meta)}
     </section>
 
     ${dropZoneHtml(key, meta)}

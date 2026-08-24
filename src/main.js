@@ -111,7 +111,27 @@ const toolMeta = {
   convertformat: { label: 'Convert Image Format', desc: 'Switch between JPG, PNG, and WebP.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   rotateflip: { label: 'Rotate / Flip Image', desc: 'Fix orientation or mirror a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   watermarkimage: { label: 'Watermark Image', desc: 'Stamp text across a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
-  bgremove: { label: 'Remove Background', desc: 'AI cutout, no green screen needed.', needsConfig: true, accept: 'image/jpeg,image/png,image/webp', category: 'image', iconTo: 'image' },
+  bgremove: {
+    label: 'Remove Background', desc: 'AI cutout, no green screen needed.', needsConfig: true,
+    accept: 'image/jpeg,image/png,image/webp', category: 'image', iconTo: 'image',
+    // Custom landing-page hero copy (overrides the auto-generated one in
+    // generate-seo-pages.mjs) — leads with real use cases the way the
+    // established background-removal tools in this space do, in our own
+    // words, with our own product's actual differentiator (touch-up
+    // brush + background swap, both free) called out explicitly.
+    heroCopy: {
+      h1: 'Remove Image Background — Free & Automatic',
+      intro: 'One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds — then swap in a new background color or image, and brush-touch the edges yourself, all before you download. Nothing leaves your browser.',
+    },
+    useCases: [
+      { icon: '🧑', label: 'Headshots' },
+      { icon: '🛍️', label: 'E-commerce' },
+      { icon: '📸', label: 'Photographers' },
+      { icon: '📣', label: 'Marketing' },
+      { icon: '💻', label: 'Developers' },
+      { icon: '🎨', label: 'Graphic design' },
+    ],
+  },
   colorpalette: { label: 'Color Palette Extractor', desc: 'Pull the dominant colors from a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   socialresize: { label: 'Social Media Resize', desc: 'Preset sizes for Instagram, YouTube, and more.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   grayscale: { label: 'Grayscale Converter', desc: 'Convert a photo to black and white.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
@@ -620,17 +640,53 @@ function loadImageFromBlob(blob) {
   });
 }
 
-// Combines the AI cutout with the user's keep/erase marks: green marks force
-// those pixels back to fully opaque + original color, red marks force those
-// pixels to fully transparent — everything unmarked keeps the AI's decision.
-async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
+// Draws `img` into `ctx` at size (w,h) using cover-fit (fills the whole
+// area, cropping overflow) — used for a user-supplied background photo,
+// same fit behavior as CSS `background-size: cover`.
+function drawImageCover(ctx, img, w, h) {
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const scale = Math.max(w / iw, h / ih);
+  const dw = iw * scale, dh = ih * scale;
+  ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+}
+
+// Renders the chosen background (transparent / solid color / uploaded
+// photo) alone onto its own canvas, sized to (w,h). Kept separate from
+// the composited result so an erase mark can reveal exactly the right
+// replacement pixel for whatever background is currently selected,
+// instead of just punching a transparent hole regardless of background.
+function renderBgLayer(bgChoice, w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (bgChoice && bgChoice.type === 'color') {
+    ctx.fillStyle = bgChoice.value;
+    ctx.fillRect(0, 0, w, h);
+  } else if (bgChoice && bgChoice.type === 'image' && bgChoice.img) {
+    drawImageCover(ctx, bgChoice.img, w, h);
+  }
+  // type === 'transparent' (or no choice yet): leave fully transparent.
+  return canvas;
+}
+
+// Combines the AI cutout with the chosen background and the user's
+// keep/erase marks: the cutout is drawn over the background layer (so
+// transparent AI pixels reveal it automatically via normal alpha
+// compositing); green marks then force those pixels back to fully
+// opaque + original photo color, red marks force those pixels to
+// reveal the background layer — everything unmarked keeps the AI's
+// decision composited over the chosen background as-is.
+async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice) {
   const cutoutImg = await loadImageFromBlob(cutoutBlob);
   const w = cutoutImg.naturalWidth;
   const h = cutoutImg.naturalHeight;
 
+  const bgCanvas = renderBgLayer(bgChoice, w, h);
+
   const out = document.createElement('canvas');
   out.width = w; out.height = h;
   const octx = out.getContext('2d');
+  octx.drawImage(bgCanvas, 0, 0);
   octx.drawImage(cutoutImg, 0, 0, w, h);
 
   const hasMarks = markCanvas && markCanvas.width > 0 && markCanvas.height > 0;
@@ -639,6 +695,8 @@ async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
     origCanvas.width = w; origCanvas.height = h;
     origCanvas.getContext('2d').drawImage(sourceImg, 0, 0, w, h);
     const origData = origCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+
+    const bgData = bgCanvas.getContext('2d').getImageData(0, 0, w, h).data;
 
     const maskCanvas = document.createElement('canvas');
     maskCanvas.width = w; maskCanvas.height = h;
@@ -649,10 +707,11 @@ async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
     const od = outData.data;
     for (let i = 0; i < od.length; i += 4) {
       const markAlpha = maskData[i + 3];
-      if (markAlpha <= 10) continue; // unmarked — leave the AI's decision as-is
+      if (markAlpha <= 10) continue; // unmarked — leave the composited result as-is
       const r = maskData[i], g = maskData[i + 1];
       if (r > g) {
-        od[i + 3] = 0; // erase mark
+        // erase mark — reveal whatever the chosen background shows here
+        od[i] = bgData[i]; od[i + 1] = bgData[i + 1]; od[i + 2] = bgData[i + 2]; od[i + 3] = bgData[i + 3];
       } else if (g > r) {
         od[i] = origData[i]; od[i + 1] = origData[i + 1]; od[i + 2] = origData[i + 2]; od[i + 3] = 255; // keep mark
       }
@@ -668,13 +727,45 @@ async function composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg) {
 // is shown over a checkerboard so transparency is visible, and you paint
 // green (keep) / red (erase) directly on top of it. Nothing is baked in
 // until you click Download, so marks can be adjusted freely beforehand.
-function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
+async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
   const cutoutUrl = URL.createObjectURL(cutoutBlob);
-  const filename = `no-bg-${sourceFile.name.split('.')[0]}.png`;
+  const sourceUrl = URL.createObjectURL(sourceFile);
+
+  // Loaded up front (not lazily on download) — the compare slider's
+  // "before" side and every live preview recompose need it right away.
+  const sourceImg = await loadImageFromBlob(sourceFile);
 
   modalBody.innerHTML = `
     <div class="result-box">
-      <p class="result-preview-caption">Optional: paint green over anything to keep, or red over anything to erase, then download.</p>
+      <p class="result-preview-caption">Drag the slider to compare. Pick a background below, and paint green/red on the cutout if any edges need fixing — then download.</p>
+
+      <div class="bgr-compare" id="bgrCompare">
+        <div class="bgr-compare-after bgremove-checkerboard" id="bgrAfterLayer">
+          <img class="bgr-compare-img" id="bgrAfterImg" alt="Result preview" />
+        </div>
+        <div class="bgr-compare-before" id="bgrBeforeLayer">
+          <img class="bgr-compare-img" src="${sourceUrl}" alt="Original photo" />
+        </div>
+        <div class="bgr-compare-handle" id="bgrHandle" role="slider" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"><span class="bgr-compare-grip"></span></div>
+        <span class="bgr-compare-tag bgr-compare-tag-before">Before</span>
+        <span class="bgr-compare-tag bgr-compare-tag-after">After</span>
+      </div>
+
+      <div class="bgr-bg-options" id="bgrBgOptions">
+        <span class="bgr-bg-label">Background</span>
+        <button type="button" class="bgr-swatch bgr-swatch-transparent active" data-bg-type="transparent" title="Transparent" aria-label="Transparent"></button>
+        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#FFFFFF" style="background:#FFFFFF" title="White" aria-label="White"></button>
+        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#000000" style="background:#000000" title="Black" aria-label="Black"></button>
+        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#378ADD" style="background:#378ADD" title="Blue" aria-label="Blue"></button>
+        <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#EAF3DE" style="background:#EAF3DE" title="Light green" aria-label="Light green"></button>
+        <label class="bgr-swatch bgr-swatch-custom" title="Custom color" aria-label="Custom color">
+          🎨<input type="color" id="bgrCustomColor" value="#E24B4A" />
+        </label>
+        <label class="bgr-swatch bgr-swatch-upload" title="Upload a background photo" aria-label="Upload a background photo">
+          🖼️<input type="file" accept="image/*" id="bgrUploadInput" hidden />
+        </label>
+      </div>
+
       <div class="mark-toolbar">
         <button type="button" class="mark-mode-btn" data-mode="keep">🟢 Mark to keep</button>
         <button type="button" class="mark-mode-btn" data-mode="erase">🔴 Mark to erase</button>
@@ -685,7 +776,8 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
         <img src="${cutoutUrl}" class="preview-img" id="bgResultImg" alt="Background-removed result" />
         <canvas class="bgremove-mark-canvas" id="bgResultMarkCanvas"></canvas>
       </div>
-      <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download ${filename}</button>
+
+      <button type="button" class="download-btn" id="bgDownloadBtn" style="border:none; cursor:pointer;">Download result</button>
       <button class="reset-btn" id="resetToolBtn">Convert another file</button>
     </div>
   `;
@@ -693,6 +785,11 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
   const resultImg = document.querySelector('#bgResultImg');
   const markCanvas = document.querySelector('#bgResultMarkCanvas');
   const mctx = markCanvas.getContext('2d');
+  const afterImg = document.querySelector('#bgrAfterImg');
+  const afterLayer = document.querySelector('#bgrAfterLayer');
+
+  let bgChoice = { type: 'transparent' };
+  let currentAfterUrl = null;
 
   const sizeMarkCanvas = () => {
     markCanvas.width = resultImg.naturalWidth || 800;
@@ -701,6 +798,85 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
   if (resultImg.complete && resultImg.naturalWidth) sizeMarkCanvas();
   else resultImg.addEventListener('load', sizeMarkCanvas, { once: true });
 
+  // Re-renders the compare slider's "after" side from the current
+  // cutout + marks + background choice. Called on init, after each
+  // background change, and once per brush stroke (on release, not on
+  // every pointermove — recompositing the full image is too slow to
+  // run continuously while dragging).
+  async function renderComparePreview() {
+    const blob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice);
+    const url = URL.createObjectURL(blob);
+    afterImg.src = url;
+    if (currentAfterUrl) URL.revokeObjectURL(currentAfterUrl);
+    currentAfterUrl = url;
+    afterLayer.classList.toggle('bgremove-checkerboard', bgChoice.type === 'transparent');
+  }
+  renderComparePreview();
+
+  // ---- Compare slider drag ----
+  const compareEl = document.querySelector('#bgrCompare');
+  const beforeLayer = document.querySelector('#bgrBeforeLayer');
+  const handle = document.querySelector('#bgrHandle');
+  let sliderDragging = false;
+
+  const setSlider = (pct) => {
+    const clamped = Math.max(0, Math.min(100, pct));
+    beforeLayer.style.clipPath = `inset(0 ${100 - clamped}% 0 0)`;
+    handle.style.left = `${clamped}%`;
+    handle.setAttribute('aria-valuenow', String(Math.round(clamped)));
+  };
+  setSlider(50);
+
+  const pctFromEvent = (e) => {
+    const rect = compareEl.getBoundingClientRect();
+    return ((e.clientX - rect.left) / rect.width) * 100;
+  };
+  handle.addEventListener('pointerdown', (e) => {
+    sliderDragging = true;
+    handle.setPointerCapture(e.pointerId);
+  });
+  compareEl.addEventListener('pointermove', (e) => {
+    if (!sliderDragging) return;
+    setSlider(pctFromEvent(e));
+  });
+  ['pointerup', 'pointercancel'].forEach((evt) => {
+    handle.addEventListener(evt, () => { sliderDragging = false; });
+  });
+  handle.addEventListener('keydown', (e) => {
+    const current = Number(handle.getAttribute('aria-valuenow')) || 50;
+    if (e.key === 'ArrowLeft') setSlider(current - 5);
+    else if (e.key === 'ArrowRight') setSlider(current + 5);
+  });
+
+  // ---- Background swatches ----
+  const swatches = document.querySelectorAll('.bgr-swatch[data-bg-type]');
+  const setActiveSwatch = (el) => {
+    swatches.forEach((s) => s.classList.remove('active'));
+    if (el) el.classList.add('active');
+  };
+  swatches.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.bgType;
+      bgChoice = type === 'color' ? { type: 'color', value: btn.dataset.bgValue } : { type: 'transparent' };
+      setActiveSwatch(btn);
+      renderComparePreview();
+    });
+  });
+  document.querySelector('#bgrCustomColor').addEventListener('input', (e) => {
+    bgChoice = { type: 'color', value: e.target.value };
+    setActiveSwatch(document.querySelector('.bgr-swatch-custom'));
+    renderComparePreview();
+  });
+  document.querySelector('#bgrUploadInput').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const img = await loadImageFromBlob(file);
+    bgChoice = { type: 'image', img };
+    setActiveSwatch(document.querySelector('.bgr-swatch-upload'));
+    renderComparePreview();
+  });
+
+  // ---- Keep/erase touch-up brush (paints directly on the cutout above) ----
   let markMode = null; // 'keep' | 'erase' | null
   let isDrawing = false;
   let brushSize = 28;
@@ -721,6 +897,7 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
 
   document.querySelector('#markClearBtn').addEventListener('click', () => {
     mctx.clearRect(0, 0, markCanvas.width, markCanvas.height);
+    renderComparePreview();
   });
 
   const pointToCanvas = (e) => {
@@ -750,7 +927,10 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
     drawDot(p.x, p.y);
   });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach((evt) => {
-    markCanvas.addEventListener(evt, () => { isDrawing = false; });
+    markCanvas.addEventListener(evt, () => {
+      if (isDrawing) renderComparePreview(); // recompose once per stroke, not per move
+      isDrawing = false;
+    });
   });
 
   document.querySelector('#bgDownloadBtn').addEventListener('click', async (e) => {
@@ -759,8 +939,10 @@ function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
     btn.disabled = true;
     btn.textContent = 'Preparing…';
     try {
-      const sourceImg = await loadImageFromBlob(sourceFile);
-      const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg);
+      const finalBlob = await composeBgRemoveResult(cutoutBlob, markCanvas, sourceImg, bgChoice);
+      const filename = bgChoice.type === 'transparent'
+        ? `no-bg-${sourceFile.name.split('.')[0]}.png`
+        : `new-bg-${sourceFile.name.split('.')[0]}.png`;
       const url = URL.createObjectURL(finalBlob);
       const a = document.createElement('a');
       a.href = url;

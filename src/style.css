@@ -1019,10 +1019,15 @@ body.tool-landing-page .site-global-faq {
 
 .hero h1 {
   font-family: var(--font-display);
-  font-size: 3.9rem;
+  /* Fluid instead of a fixed 3.9rem: the homepage's short "Work with
+     files." never revealed it, but a longer tool-page headline (e.g.
+     Remove Background's custom heroCopy) can overflow a narrow phone
+     width at a fixed size — this scales down smoothly instead. */
+  font-size: clamp(2rem, 7.5vw, 3.9rem);
   margin: 0 0 16px;
   color: var(--text);
   line-height: 1.1;
+  overflow-wrap: break-word;
 }
 
 .hero p {
@@ -1659,6 +1664,139 @@ body.tool-landing-page .site-global-faq {
   cursor: default;
 }
 
+/* ---------- Remove Background: before/after compare slider ---------- */
+.bgr-compare {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 4 / 3;
+  margin: 14px auto 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--gray-light);
+  user-select: none;
+  touch-action: pan-y;
+}
+
+.bgr-compare-after, .bgr-compare-before {
+  position: absolute;
+  inset: 0;
+}
+
+.bgr-compare-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.bgr-compare-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  border-left: 3px solid #fff;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.bgr-compare-grip {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bgr-compare-grip::before {
+  content: '\21D4';
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.bgr-compare-tag {
+  position: absolute;
+  top: 10px;
+  background: rgba(27, 36, 48, 0.65);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.bgr-compare-tag-before { left: 10px; }
+.bgr-compare-tag-after { right: 10px; }
+
+/* ---------- Remove Background: background swap swatches ---------- */
+.bgr-bg-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.bgr-bg-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.bgr-swatch {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #fff;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  overflow: hidden;
+}
+
+.bgr-swatch.active {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px var(--red-light);
+}
+
+.bgr-swatch-transparent {
+  background-image:
+    linear-gradient(45deg, #d9d9d9 25%, transparent 25%),
+    linear-gradient(-45deg, #d9d9d9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d9d9d9 75%),
+    linear-gradient(-45deg, transparent 75%, #d9d9d9 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+  background-color: #f3f3f1;
+}
+
+.bgr-swatch-custom input[type="color"],
+.bgr-swatch-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
 .mark-toolbar {
   display: flex;
   gap: 10px;
@@ -1926,6 +2064,32 @@ body.tool-landing-page .site-global-faq {
   padding: 13px 28px;
   border-radius: 10px;
 }
+
+/* Optional per-tool "who it's for" icon row under the hero (currently
+   used by Remove Background). Pure CSS, no icon assets needed. */
+.tp-usecases {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 640px;
+  margin: 26px auto 4px;
+}
+
+.tp-usecase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 92px;
+  padding: 12px 8px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.tp-usecase-icon { font-size: 1.6rem; line-height: 1; }
+.tp-usecase-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-align: center; }
 
 .tp-dropzone {
   position: relative;
