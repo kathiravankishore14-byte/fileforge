@@ -70,7 +70,7 @@ function relatedKeysFor(key, meta) {
 // ---------- per-tool SEO content derivation ----------
 function deriveSeo(key, meta) {
   const slug = TOOL_SLUGS[key];
-  const title = `${meta.label} Online Free | FileForge`;
+  const title = `${meta.label} Online Free | OnlineToolsWeb`;
   const privacyClause = 'Free, private, and runs right in your browser — no upload, no signup.';
   let description = `${meta.desc} ${privacyClause}`;
   if (description.length > 158) description = `${meta.desc} No upload, no signup — runs in your browser.`;
@@ -83,7 +83,7 @@ function deriveSeo(key, meta) {
   const faq = [];
   faq.push({
     q: `Is ${meta.label} free to use?`,
-    a: `Yes — core FileForge tools are free to use, including ${meta.label}. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free.`,
+    a: `Yes — core OnlineToolsWeb tools are free to use, including ${meta.label}. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free.`,
   });
   faq.push({
     q: `Do I need to install anything to use ${meta.label}?`,
@@ -198,7 +198,7 @@ function jsonLd(key, meta, seo, categoryUrl) {
   const app = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: `${meta.label} — FileForge`,
+    name: `${meta.label} — OnlineToolsWeb`,
     url: `${SITE_ORIGIN}/${seo.slug}`,
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Any (runs in browser)',
@@ -250,7 +250,7 @@ function buildPage(key) {
     <meta property="og:title" content="${esc(seo.title)}" />
     <meta property="og:description" content="${esc(seo.description)}" />
     <meta property="og:url" content="${canonical}" />
-    <meta property="og:site_name" content="FileForge" />
+    <meta property="og:site_name" content="OnlineToolsWeb" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="${esc(seo.title)}" />
     <meta name="twitter:description" content="${esc(seo.description)}" />

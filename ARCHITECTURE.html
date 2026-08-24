@@ -1,0 +1,494 @@
+<title>FileForge Architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #171b21;
+    --ink-soft: #4b5259;
+    --paper: #f4f5f7;
+    --surface: #ffffff;
+    --line: #d9dce1;
+    --red: #e24b4a;
+    --red-soft: #fbe7e6;
+    --slate: #52627a;
+    --slate-soft: #e7ebf1;
+    --moss: #4f7d5e;
+    --moss-soft: #e5efe8;
+    --shadow: 0 1px 2px rgba(23,27,33,0.06), 0 8px 24px -12px rgba(23,27,33,0.12);
+    --font-display: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+    --font-body: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #e8eaed;
+      --ink-soft: #a3aab3;
+      --paper: #14161a;
+      --surface: #1b1e24;
+      --line: #2c3038;
+      --red: #ff6b68;
+      --red-soft: #3a2223;
+      --slate: #8fa3c2;
+      --slate-soft: #202631;
+      --moss: #7fb891;
+      --moss-soft: #1c2a20;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.55);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ink: #e8eaed;
+    --ink-soft: #a3aab3;
+    --paper: #14161a;
+    --surface: #1b1e24;
+    --line: #2c3038;
+    --red: #ff6b68;
+    --red-soft: #3a2223;
+    --slate: #8fa3c2;
+    --slate-soft: #202631;
+    --moss: #7fb891;
+    --moss-soft: #1c2a20;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+  .mark svg { width: 18px; height: 18px; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 10px 0 6px;
+  }
+
+  .lede {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 40px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.35rem;
+    letter-spacing: -0.005em;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  h2 .num {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  .section {
+    margin-top: 56px;
+    padding-top: 40px;
+    border-top: 1px solid var(--line);
+  }
+
+  .section:first-of-type { margin-top: 0; }
+
+  .section-intro {
+    color: var(--ink-soft);
+    max-width: 66ch;
+    margin: 0 0 26px;
+  }
+
+  .section-intro code, p code, li code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--slate-soft);
+    color: var(--slate);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+  }
+
+  figure {
+    margin: 0;
+    padding: 22px 22px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  .diagram-scroll {
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  figure svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-width: 640px;
+    font-family: var(--font-body);
+  }
+
+  figcaption {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin: 16px 0 24px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
+
+  .stage-list {
+    margin: 30px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 14px;
+  }
+  .stage-list li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .stage-list .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 7px;
+  }
+  .stage-list strong {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  .stage-list .meta {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+  }
+
+  .callout {
+    margin-top: 40px;
+    padding: 20px 22px;
+    border-radius: 12px;
+    background: var(--moss-soft);
+    border: 1px solid color-mix(in srgb, var(--moss) 30%, transparent);
+  }
+  .callout h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    margin: 0 0 6px;
+    color: var(--moss);
+  }
+  .callout p { margin: 0; color: var(--ink); font-size: 0.96rem; }
+
+  table.facts {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 18px;
+    font-size: 0.92rem;
+  }
+  table.facts th, table.facts td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.facts th {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    color: var(--ink-soft);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  table.facts td.mono { font-family: var(--font-mono); font-size: 0.86rem; color: var(--slate); }
+
+  .table-wrap { overflow-x: auto; }
+
+  footer.page-footer {
+    margin-top: 64px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+</style>
+
+<div class="page">
+
+  <header class="top">
+    <span class="mark" aria-hidden="true">
+      <svg viewBox="0 0 100 100"><path d="M57 16 L28 56 H45 L40 84 L74 40 H55 Z" fill="#fff"/></svg>
+    </span>
+    <span class="eyebrow">FileForge — internal reference</span>
+  </header>
+
+  <h1>How FileForge actually works</h1>
+  <p class="lede">A plain-English map of the two things happening behind the site: how the 63 tool pages get built and deployed, and what happens on a visitor's screen between landing on the page and downloading their file — without a server ever seeing it.</p>
+
+  <section class="section" aria-labelledby="h-arch">
+    <h2 id="h-arch"><span class="num">01</span> The build &amp; hosting pipeline</h2>
+    <p class="section-intro">
+      FileForge has no backend, no database, and no API server. Everything the browser ever receives is a plain HTML/CSS/JS file that was generated <em>before</em> anyone visits — the diagram splits at the point where that stops being true.
+    </p>
+
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--slate)"></i>Build time — runs once, on your machine, before you deploy</span>
+      <span><i class="swatch" style="background:var(--moss)"></i>Every visit — runs fresh, inside the visitor's browser</span>
+    </div>
+
+    <div class="diagram-scroll">
+      <figure>
+        <svg viewBox="0 0 780 620" role="img" aria-label="Diagram: source files are combined by a build-time generator into static HTML pages, output to a dist folder, deployed to Cloudflare Workers as static assets; on each visit, the browser downloads those static files and runs all file-processing libraries locally, never sending the file anywhere.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arrowRed" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--red)"/>
+            </marker>
+          </defs>
+
+          <!-- Zone backgrounds -->
+          <rect x="16" y="16" width="748" height="330" rx="14" fill="var(--slate-soft)" opacity="0.6"/>
+          <rect x="16" y="366" width="748" height="238" rx="14" fill="var(--moss-soft)" opacity="0.6"/>
+          <text x="36" y="42" font-family="var(--font-mono)" font-size="12" letter-spacing="0.06em" fill="var(--slate)">BUILD TIME</text>
+          <text x="36" y="392" font-family="var(--font-mono)" font-size="12" letter-spacing="0.06em" fill="var(--moss)">EVERY VISIT — IN THE BROWSER</text>
+
+          <!-- 1. Source files -->
+          <rect x="40" y="58" width="230" height="92" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="58" y="82" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Source files</text>
+          <text x="58" y="102" font-family="var(--font-mono)" font-size="11" fill="var(--ink-soft)">partials/_header.html</text>
+          <text x="58" y="118" font-family="var(--font-mono)" font-size="11" fill="var(--ink-soft)">src/style.css · src/main.js</text>
+          <text x="58" y="134" font-family="var(--font-mono)" font-size="11" fill="var(--ink-soft)">63 tools' metadata</text>
+
+          <!-- 2. Generator -->
+          <rect x="300" y="58" width="240" height="92" rx="10" fill="var(--surface)" stroke="var(--slate)" stroke-width="1.4"/>
+          <text x="318" y="82" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Page generator</text>
+          <text x="318" y="102" font-family="var(--font-mono)" font-size="11" fill="var(--slate)">generate-seo-pages.mjs</text>
+          <text x="318" y="120" font-size="11.5" fill="var(--ink-soft)">writes 63 tool pages +</text>
+          <text x="318" y="134" font-size="11.5" fill="var(--ink-soft)">sitemap.xml + robots.txt</text>
+
+          <!-- 3. Vite build -->
+          <rect x="570" y="58" width="184" height="92" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="588" y="82" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Vite build</text>
+          <text x="588" y="102" font-size="11.5" fill="var(--ink-soft)">htmlPartials plugin</text>
+          <text x="588" y="118" font-size="11.5" fill="var(--ink-soft)">stitches header/footer</text>
+          <text x="588" y="134" font-size="11.5" fill="var(--ink-soft)">into every page</text>
+
+          <!-- arrows row 1 -->
+          <line x1="270" y1="104" x2="296" y2="104" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <line x1="540" y1="104" x2="566" y2="104" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <text x="278" y="96" font-family="var(--font-mono)" font-size="9.5" fill="var(--ink-soft)">reads</text>
+          <text x="548" y="96" font-family="var(--font-mono)" font-size="9.5" fill="var(--ink-soft)">bundles</text>
+
+          <!-- 4. dist/ output -->
+          <rect x="300" y="196" width="240" height="66" rx="10" fill="var(--surface)" stroke="var(--line)"/>
+          <text x="318" y="222" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Static output</text>
+          <text x="318" y="240" font-family="var(--font-mono)" font-size="11" fill="var(--ink-soft)">dist/ — plain html · css · js</text>
+
+          <line x1="420" y1="150" x2="420" y2="192" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <text x="428" y="176" font-family="var(--font-mono)" font-size="9.5" fill="var(--ink-soft)">vite build</text>
+
+          <!-- 5. Cloudflare -->
+          <rect x="300" y="292" width="240" height="66" rx="10" fill="var(--surface)" stroke="var(--slate)" stroke-width="1.4"/>
+          <text x="318" y="318" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Cloudflare Workers</text>
+          <text x="318" y="336" font-size="11.5" fill="var(--ink-soft)">serves dist/ as static assets</text>
+
+          <line x1="420" y1="262" x2="420" y2="288" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <text x="428" y="280" font-family="var(--font-mono)" font-size="9.5" fill="var(--ink-soft)">deploy</text>
+
+          <!-- crosses zone boundary -->
+          <line x1="420" y1="358" x2="420" y2="404" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+          <text x="432" y="386" font-family="var(--font-mono)" font-size="9.5" fill="var(--ink-soft)">HTTP request for a page</text>
+
+          <!-- 6. Browser downloads -->
+          <rect x="260" y="410" width="260" height="66" rx="10" fill="var(--surface)" stroke="var(--moss)" stroke-width="1.4"/>
+          <text x="278" y="436" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Visitor's browser</text>
+          <text x="278" y="454" font-size="11.5" fill="var(--ink-soft)">downloads the static page</text>
+
+          <line x1="390" y1="476" x2="390" y2="502" stroke="currentColor" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+          <!-- 7. drop file + libs -->
+          <rect x="150" y="508" width="480" height="88" rx="10" fill="var(--surface)" stroke="var(--moss)" stroke-width="1.4"/>
+          <text x="168" y="534" font-family="var(--font-display)" font-weight="600" font-size="14" fill="var(--ink)">Visitor drops a file — a JS library runs it, in place</text>
+          <text x="168" y="556" font-family="var(--font-mono)" font-size="10.5" fill="var(--ink-soft)">pdf-lib · jspdf · xlsx · mammoth · tesseract.js · heic2any</text>
+          <text x="168" y="572" font-size="11" fill="var(--moss)">→ result is written straight back to the visitor's disk</text>
+
+          <!-- struck-through server, showing the absent path -->
+          <rect x="628" y="440" width="118" height="56" rx="8" fill="none" stroke="var(--red)" stroke-dasharray="3 4" stroke-width="1.4"/>
+          <text x="687" y="464" text-anchor="middle" font-family="var(--font-display)" font-size="12" fill="var(--red)">a server</text>
+          <text x="687" y="480" text-anchor="middle" font-size="10" fill="var(--red)">(never involved)</text>
+          <line x1="638" y1="450" x2="736" y2="486" stroke="var(--red)" stroke-width="1.4"/>
+          <line x1="520" y1="452" x2="622" y2="465" stroke="var(--red)" stroke-width="1.3" stroke-dasharray="2 4" marker-end="url(#arrowRed)"/>
+          <text x="524" y="446" font-family="var(--font-mono)" font-size="9.5" fill="var(--red)">the file — never sent</text>
+        </svg>
+      </figure>
+      <figcaption>The top zone happens once, when you run the generator and deploy. The bottom zone happens fresh for every visitor, entirely inside their browser — the file being edited never crosses into the top zone, which is why there's no upload step to secure or pay for.</figcaption>
+    </div>
+
+    <ul class="stage-list">
+      <li><span class="dot" style="background:var(--slate)"></span><div><strong>Page generator</strong><div class="meta"><code>scripts/generate-seo-pages.mjs</code> reads the tool list once and writes out a dedicated HTML file per tool (63 of them), plus <code>sitemap.xml</code>, <code>robots.txt</code>, and the JSON-LD structured data each page carries for search engines.</div></div></li>
+      <li><span class="dot" style="background:var(--slate)"></span><div><strong>Vite build</strong><div class="meta">Every <code>.html</code> file in the project root is auto-discovered as its own build entry. A small custom plugin (<code>htmlPartials</code>) stitches the shared header and footer into each one at build time, so there's one source of truth for nav and footer instead of 63 copies.</div></div></li>
+      <li><span class="dot" style="background:var(--slate)"></span><div><strong>Cloudflare Workers</strong><div class="meta">The build's output folder is deployed as static assets — no server-side code runs after deploy. Cloudflare treats the extensionless URL as canonical and redirects <code>.html</code> links to it.</div></div></li>
+      <li><span class="dot" style="background:var(--moss)"></span><div><strong>In the browser</strong><div class="meta">The page you shipped is just HTML/CSS/JS, so once it's downloaded, the file-processing libraries (PDF, image, Excel, OCR — whichever the tool needs) run using the visitor's own CPU. That's the entire "no upload" promise, made structural rather than just promised in the copy.</div></div></li>
+    </ul>
+  </section>
+
+  <section class="section" aria-labelledby="h-flow">
+    <h2 id="h-flow"><span class="num">02</span> What a visitor actually does</h2>
+    <p class="section-intro">
+      The same "nothing leaves the browser" shape holds from the visitor's side, too — this is the path from first landing to walking away with a finished file.
+    </p>
+
+    <div class="diagram-scroll">
+      <figure>
+        <svg viewBox="0 0 900 240" role="img" aria-label="Diagram: a visitor lands via search or the homepage, browses or searches 63 tools, selects or drops a file onto the chosen tool, the file is processed locally by a JS library in their browser, and the result downloads directly to their device — with no upload step anywhere in the path.">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <!-- baseline -->
+          <line x1="70" y1="120" x2="830" y2="120" stroke="var(--line)" stroke-width="1"/>
+
+          <!-- node template: circle + label above + meta below -->
+          <!-- 1 -->
+          <circle cx="90" cy="120" r="7" fill="var(--red)"/>
+          <text x="90" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--ink)">Lands on a page</text>
+          <text x="90" y="144" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">search result or</text>
+          <text x="90" y="158" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">the homepage</text>
+
+          <line x1="102" y1="120" x2="240" y2="120" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <!-- 2 -->
+          <circle cx="255" cy="120" r="7" fill="var(--red)"/>
+          <text x="255" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--ink)">Finds the tool</text>
+          <text x="255" y="144" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">grid + filters, or the</text>
+          <text x="255" y="158" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">Ctrl+K search box</text>
+
+          <line x1="267" y1="120" x2="420" y2="120" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <!-- 3 -->
+          <circle cx="435" cy="120" r="7" fill="var(--red)"/>
+          <text x="435" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--ink)">Drops in a file</text>
+          <text x="435" y="144" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">onto the drop zone,</text>
+          <text x="435" y="158" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">or via the tool modal</text>
+
+          <line x1="447" y1="120" x2="610" y2="120" stroke="var(--moss)" stroke-width="1.5" marker-end="url(#arrow2)"/>
+          <text x="528" y="112" text-anchor="middle" font-family="var(--font-mono)" font-size="9.5" fill="var(--moss)">stays on-device</text>
+
+          <!-- 4 -->
+          <circle cx="625" cy="120" r="7" fill="var(--moss)"/>
+          <text x="625" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--ink)">Processed locally</text>
+          <text x="625" y="144" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">the matching JS library</text>
+          <text x="625" y="158" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">runs in this browser tab</text>
+
+          <line x1="637" y1="120" x2="800" y2="120" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+          <!-- 5 -->
+          <circle cx="815" cy="120" r="7" fill="var(--red)"/>
+          <text x="815" y="94" text-anchor="middle" font-family="var(--font-display)" font-weight="600" font-size="13" fill="var(--ink)">Downloads result</text>
+          <text x="815" y="144" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">saved straight to</text>
+          <text x="815" y="158" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">their own device</text>
+
+          <!-- bracket under 3-4-5 marking the private span -->
+          <path d="M435 190 L435 200 L815 200 L815 190" fill="none" stroke="var(--moss)" stroke-width="1.2"/>
+          <text x="625" y="216" text-anchor="middle" font-family="var(--font-mono)" font-size="10.5" fill="var(--moss)">the file only ever exists in this tab — never on a server</text>
+        </svg>
+      </figure>
+      <figcaption>Five stages, one continuous browser tab. The moment a file is dropped in, everything downstream — the transform and the download — is local; there's no point in this path where the file is transmitted anywhere.</figcaption>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-facts">
+    <h2 id="h-facts"><span class="num">03</span> The stack, for reference</h2>
+    <div class="table-wrap">
+      <table class="facts">
+        <thead>
+          <tr><th>Layer</th><th>What it is</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Framework</td><td class="mono">Vite — multi-page static build, no framework runtime</td></tr>
+          <tr><td>Pages</td><td>6 category pages + 63 generated tool pages + 2 legacy redirect stubs</td></tr>
+          <tr><td>Page generation</td><td class="mono">scripts/generate-seo-pages.mjs</td></tr>
+          <tr><td>Shared chrome</td><td class="mono">partials/_header.html · partials/_footer.html, injected by the htmlPartials Vite plugin</td></tr>
+          <tr><td>Hosting</td><td class="mono">Cloudflare Workers (static assets, no server code)</td></tr>
+          <tr><td>File processing</td><td class="mono">pdf-lib, jspdf, xlsx, mammoth, tesseract.js, heic2any, qrcode, docx, pptxgenjs, jszip — all run client-side</td></tr>
+          <tr><td>SEO layer</td><td>Unique title/description per page, canonical URLs, sitemap.xml, robots.txt, BreadcrumbList / WebApplication / FAQPage JSON-LD</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="callout">
+    <h3>Why the split matters</h3>
+    <p>Because processing happens in zone two, FileForge can run without user accounts, storage costs, or a privacy policy about file retention — there's nothing retained to write a policy about. The build/hosting side (zone one) only ever handles page markup, never a visitor's actual file.</p>
+  </div>
+
+  <footer class="page-footer">
+    Reference diagram for the FileForge project — reflects the codebase as of August 2026.
+  </footer>
+
+</div>

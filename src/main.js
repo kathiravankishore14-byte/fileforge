@@ -1352,7 +1352,7 @@ function renderSingleFileConfig() {
       </div>
     `);
     document.querySelector('#cfgApply').addEventListener('click', () => {
-      const text = document.querySelector('#cfgWmText').value.trim() || 'FileForge';
+      const text = document.querySelector('#cfgWmText').value.trim() || 'OnlineToolsWeb';
       const canvas = document.createElement('canvas');
       canvas.width = currentImg.naturalWidth; canvas.height = currentImg.naturalHeight;
       const ctx = canvas.getContext('2d');
@@ -1683,7 +1683,7 @@ function renderSingleFileConfig() {
       </div>
     `);
     document.querySelector('#cfgApply').addEventListener('click', async () => {
-      const text = document.querySelector('#cfgWmText').value.trim() || 'FileForge';
+      const text = document.querySelector('#cfgWmText').value.trim() || 'OnlineToolsWeb';
       showProcessingState('Applying watermark...');
       try {
         const bytes = await currentFile.arrayBuffer();
