@@ -3601,6 +3601,11 @@ function wireHeroDropZone() {
   // idle/analyzing/preview states, so this listener never needs rewiring.
   dz.addEventListener('click', (e) => {
     if (e.target === input) return;
+    // The Browse button is deliberately part of the same click-to-open
+    // area (not a separate handler) — it re-renders on every reset, so
+    // delegating through the drop zone's own stable listener means it
+    // never needs to be individually re-wired.
+    if (e.target.closest('#heroBrowseBtn')) { input.click(); return; }
     if (e.target.closest('button, a')) return;
     input.click();
   });
@@ -3763,8 +3768,10 @@ function resetHeroUploadFlow() {
   if (content) {
     content.innerHTML = `
       <div class="hero-drop-idle" id="heroDropIdle">
-        <p class="hero-drop-text">Drag your file or browse</p>
-        <p class="hero-drop-subtext">Accepts PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
+        <span class="hero-drop-icon" aria-hidden="true">📤</span>
+        <p class="hero-drop-text">Drag your file here</p>
+        <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
+        <p class="hero-drop-subtext">PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
       </div>
     `;
   }
@@ -3975,11 +3982,33 @@ function wireSearch(inputId, resultsId) {
   if (!input || !resultsEl) return;
   const index = buildSearchIndex();
   let debounceTimer;
+  let activeIndex = -1;
+
+  const activateItem = (key, cat) => {
+    resultsEl.classList.remove('visible');
+    input.value = '';
+    if (window.location.pathname.endsWith(pageUrlMap[cat])) {
+      openToolModal(key);
+    } else {
+      window.location.href = toolUrl(key) || `${pageUrlMap[cat]}?tool=${key}`;
+    }
+  };
+
+  const setActive = (i) => {
+    const items = resultsEl.querySelectorAll('.search-result-item');
+    items.forEach((el) => el.classList.remove('active'));
+    if (i < 0 || i >= items.length) { activeIndex = -1; input.removeAttribute('aria-activedescendant'); return; }
+    activeIndex = i;
+    items[i].classList.add('active');
+    items[i].scrollIntoView({ block: 'nearest' });
+    input.setAttribute('aria-activedescendant', items[i].id);
+  };
 
   input.addEventListener('input', () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       const q = input.value.trim().toLowerCase();
+      activeIndex = -1;
       if (!q) { resultsEl.classList.remove('visible'); resultsEl.innerHTML = ''; return; }
 
       const matches = index.filter((t) => {
@@ -3989,8 +4018,8 @@ function wireSearch(inputId, resultsId) {
       if (!matches.length) {
         resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
       } else {
-        resultsEl.innerHTML = matches.slice(0, 8).map((t) => `
-          <div class="search-result-item" data-key="${t.key}" data-cat="${t.category}">
+        resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
+          <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" data-key="${t.key}" data-cat="${t.category}">
             <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" />
             <span>${t.label}</span>
           </div>
@@ -3999,19 +4028,25 @@ function wireSearch(inputId, resultsId) {
       resultsEl.classList.add('visible');
 
       resultsEl.querySelectorAll('.search-result-item').forEach((item) => {
-        item.addEventListener('click', () => {
-          const key = item.dataset.key;
-          const cat = item.dataset.cat;
-          resultsEl.classList.remove('visible');
-          input.value = '';
-          if (window.location.pathname.endsWith(pageUrlMap[cat])) {
-            openToolModal(key);
-          } else {
-            window.location.href = toolUrl(key) || `${pageUrlMap[cat]}?tool=${key}`;
-          }
-        });
+        item.addEventListener('click', () => activateItem(item.dataset.key, item.dataset.cat));
       });
     }, 180);
+  });
+
+  // Arrow-key navigation through the results, Enter to open the
+  // highlighted (or first) match, Escape to dismiss the panel.
+  input.addEventListener('keydown', (e) => {
+    const items = resultsEl.querySelectorAll('.search-result-item');
+    if (!items.length || !resultsEl.classList.contains('visible')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIndex + 1 >= items.length ? 0 : activeIndex + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIndex <= 0 ? items.length - 1 : activeIndex - 1); }
+    else if (e.key === 'Enter') {
+      const target = items[activeIndex >= 0 ? activeIndex : 0];
+      if (target) { e.preventDefault(); activateItem(target.dataset.key, target.dataset.cat); }
+    } else if (e.key === 'Escape') {
+      resultsEl.classList.remove('visible');
+      setActive(-1);
+    }
   });
 
   document.addEventListener('click', (e) => {
@@ -4049,9 +4084,27 @@ function wireHamburger() {
   const menuClose = document.querySelector('#mobileMenuClose');
   if (!btn || !menuBackdrop) return;
 
-  btn.addEventListener('click', () => menuBackdrop.classList.remove('hidden'));
-  menuClose.addEventListener('click', () => menuBackdrop.classList.add('hidden'));
-  menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) menuBackdrop.classList.add('hidden'); });
+  const openMenu = () => {
+    menuBackdrop.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+    btn.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-label', 'Close menu');
+  };
+  const closeMenu = () => {
+    menuBackdrop.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Open menu');
+  };
+
+  btn.addEventListener('click', openMenu);
+  menuClose.addEventListener('click', closeMenu);
+  menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) closeMenu(); });
+  // Obvious, standard close behavior: Esc closes the drawer from anywhere,
+  // matching every other dismissible panel/modal on the site.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menuBackdrop.classList.contains('hidden')) closeMenu();
+  });
 }
 
 // ================= HERO MASCOT WIDGET =================

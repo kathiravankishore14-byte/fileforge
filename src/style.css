@@ -217,8 +217,14 @@ a { color: inherit; }
 .mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .mega-menu-icons .arrow { font-size: 0.91rem; color: var(--text-muted); }
 
-@media (max-width: 1000px) {
+@media (max-width: 1180px) {
   .main-nav { display: none; }
+  /* Compact sticky header on mobile/tablet — the desktop nav is gone
+     (replaced by the hamburger), so there's no reason to keep the
+     desktop's taller padding and larger logo taking up scroll space. */
+  .site-header { padding: 14px 0; }
+  .header-inner { padding: 0 20px; }
+  .logo { font-size: 1.55rem; }
 }
 
 /* ---------- Hero drop zone ---------- */
@@ -226,6 +232,12 @@ a { color: inherit; }
   max-width: none;
   margin: 0 auto;
   padding: 32px 32px 0;
+}
+
+@media (max-width: 480px) {
+  .hero-drop-wrap { padding: 20px 20px 0; }
+  .hero-drop-zone { min-height: 200px; gap: 12px; }
+  .hero-drop-browse-btn { width: 100%; max-width: 280px; }
 }
 
 /* The shared "drop any file here, we'll find the right tool" box (plus
@@ -323,6 +335,16 @@ body.tool-landing-page .site-global-faq {
     text-overflow: ellipsis;
   }
   .ffh-banner-slide .ffh-banner-sub { display: none; }
+}
+
+/* .ffh-banner's edge-to-edge bleed above is hardcoded to offset the
+   desktop/tablet 32px .hero-drop-wrap padding — recalculated here to
+   match the 20px padding set at this same breakpoint, otherwise it
+   overshoots the viewport by 12px on each side and causes horizontal
+   scroll on phones. (Placed after the base .ffh-banner rule so it
+   actually wins the cascade at equal specificity.) */
+@media (max-width: 480px) {
+  .ffh-banner { width: calc(100% + 40px); margin: -20px -20px 12px; }
 }
 
 .ffh-banner-dots {
@@ -430,8 +452,30 @@ body.tool-landing-page .site-global-faq {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
+
+.hero-drop-icon { font-size: 2rem; line-height: 1; }
+
+/* Touch users don't drag-and-drop — this is the dominant, unmissable
+   action; the box itself stays clickable/droppable too (desktop, and
+   any touch device that does support drag). */
+.hero-drop-browse-btn {
+  padding: 13px 30px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-height: 46px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.hero-drop-browse-btn:hover { background: var(--red-dark); }
+.hero-drop-browse-btn:active { background: var(--red-dark); }
 
 /* ---------- Analyzing state (shown briefly right after a drop) ---------- */
 .hero-analyzing {
@@ -751,6 +795,11 @@ body.tool-landing-page .site-global-faq {
   font-size: 2.08rem;
   margin: 0;
   pointer-events: none;
+  text-wrap: balance;
+}
+
+@media (max-width: 480px) {
+  .hero-drop-text { font-size: 1.3rem; }
 }
 
 .hero-drop-subtext {
@@ -985,7 +1034,7 @@ body.tool-landing-page .site-global-faq {
      a long multi-file list can't get clipped the same way. Sized this
      way, both boxes end up matching each other again — each just fits
      what it actually contains. */
-  .hero-drop-zone { flex: 0 0 auto; height: auto; min-height: 260px; overflow: visible; }
+  .hero-drop-zone { flex: 0 0 auto; height: auto; min-height: 220px; overflow: visible; padding: 24px 20px; }
   /* .hero-drop-content and .hero-preview normally rely on the drop
      zone's fixed height (height:100% / flex:1 1 auto against a
      known-height ancestor) to fill it — with the drop zone now
@@ -1028,6 +1077,9 @@ body.tool-landing-page .site-global-faq {
   color: var(--text);
   line-height: 1.1;
   overflow-wrap: break-word;
+  /* Balances the last line instead of leaving a single stray word on
+     its own — no-op in browsers that don't support it yet. */
+  text-wrap: balance;
 }
 
 .hero p {
@@ -1035,6 +1087,30 @@ body.tool-landing-page .site-global-faq {
   font-size: 1.625rem;
   margin: 0;
   line-height: 1.5;
+}
+
+/* ---------- Mobile hero (375-430px phones) ---------- */
+@media (max-width: 480px) {
+  .hero { padding: 28px 20px 12px; }
+  .hero h1 {
+    /* 36-42px, tightened line-height so the headline reads as one
+       compact block instead of a desktop headline just shrunk down. */
+    font-size: clamp(2.25rem, 8.5vw, 2.625rem);
+    line-height: 1.08;
+    margin: 0 0 12px;
+  }
+  .hero p {
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    max-width: 36ch;
+    margin: 0 auto;
+  }
+}
+
+/* ---------- Tablet hero (~601-860px) ---------- */
+@media (min-width: 481px) and (max-width: 860px) {
+  .hero { padding: 32px 24px 14px; }
+  .hero h1 { font-size: clamp(2.75rem, 5.5vw, 3rem); line-height: 1.1; }
 }
 
 .home-search-wrap {
@@ -1068,6 +1144,24 @@ body.tool-landing-page .site-global-faq {
   white-space: nowrap;
 }
 
+/* Four items squeezed into one wrapping row read as clutter on a
+   phone — a fixed 2x2 grid keeps them tidy and predictable instead of
+   wrapping unevenly (e.g. 3-then-1) depending on label length. */
+@media (max-width: 480px) {
+  .home-search-wrap { margin-top: 18px; }
+  .hero-trust-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .hero-trust-item {
+    white-space: normal;
+    text-align: center;
+    padding: 8px 10px;
+  }
+}
+
 /* ---------- Filter tabs ---------- */
 .filter-tabs {
   display: flex;
@@ -1091,7 +1185,32 @@ body.tool-landing-page .site-global-faq {
 }
 
 .filter-tab:hover { border-color: var(--red); color: var(--red); }
+.filter-tab:active { border-color: var(--red); color: var(--red); }
 .filter-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+/* Below ~700px, 7 pills no longer fit in one row without wrapping into
+   a messy 2-3 row block — scroll them horizontally instead, one clean
+   row, native momentum scrolling, no visible scrollbar. */
+@media (max-width: 700px) {
+  .filter-tabs {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    margin: 20px auto 0;
+    padding: 2px 20px 6px;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    padding: 10px 18px;
+    font-size: 1.15rem;
+  }
+}
 
 /* ---------- Tool grid ---------- */
 /* Fixed 6 columns (3 rows show by default = 18 cards; see
@@ -1124,9 +1243,19 @@ body.tool-landing-page .site-global-faq {
   transition: box-shadow 0.15s ease, transform 0.1s ease, background 0.15s ease;
 }
 
-.tool-card:hover {
-  box-shadow: 0 4px 16px rgba(27, 36, 48, 0.08);
-  transform: translateY(-2px);
+/* Real pointers only — on touch, :hover can stick after a tap and
+   leave a card looking permanently "lifted"; a quick press state
+   (below) is the touch-appropriate equivalent instead. */
+@media (hover: hover) and (pointer: fine) {
+  .tool-card:hover {
+    box-shadow: 0 4px 16px rgba(27, 36, 48, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+.tool-card:active {
+  box-shadow: 0 2px 8px rgba(27, 36, 48, 0.1);
+  transform: scale(0.98);
 }
 
 /* Soft per-category tint, a shade of that category's own brand color —
@@ -1206,23 +1335,28 @@ body.tool-landing-page .site-global-faq {
   transition: color 0.15s ease;
 }
 
-/* Fewer columns (and a smaller icon) on narrower screens so cards
-   don't get squeezed thinner than the icon badge itself. */
-@media (max-width: 700px) {
-  .tool-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 16px; }
-  .tool-icon-badge img { width: 51px; height: 51px; }
-  .tool-icon-badge img:last-child:not(:only-child) { width: 54px; height: 54px; bottom: -12px; left: -12px; }
-  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 10px; }
+/* Fewer columns (and a proportionally sized icon) on narrower screens
+   so cards don't get squeezed thinner than the icon badge itself.
+   Tiers: desktop 6-up, tablet (~768px) 3-up, phones 2-up — a real
+   responsive redesign of the grid rather than the same 6-up cards just
+   shrunk down. */
+@media (max-width: 860px) {
+  .tool-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px; }
+  .tool-icon-badge img { width: 54px; height: 54px; }
+  .tool-icon-badge img:last-child:not(:only-child) { width: 57px; height: 57px; bottom: -13px; left: -13px; }
+  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 11px; }
 }
 
-@media (max-width: 420px) {
-  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  /* Two columns leaves each card noticeably wider than the old 3-up
-     layout did — sized the icon back up a bit so it doesn't look small
-     and lost in the extra room. */
+@media (max-width: 600px) {
+  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px; }
+  /* Two columns leaves each card noticeably wider than the 3-up tablet
+     layout — sized the icon back up a bit so it doesn't look small and
+     lost in the extra room. */
   .tool-icon-badge img { width: 54px; height: 54px; }
   .tool-icon-badge img:last-child:not(:only-child) { width: 58px; height: 58px; bottom: -14px; left: -14px; }
   .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 12px; }
+  .tool-card { padding: 18px 10px; }
+  .tool-card h3 { font-size: 0.98rem; }
 }
 
 .coming-soon-badge {
@@ -1286,7 +1420,7 @@ body.tool-landing-page .site-global-faq {
   border-radius: 2px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1180px) {
   .hamburger-btn { display: flex; }
 }
 
@@ -1345,6 +1479,26 @@ body.tool-landing-page .site-global-faq {
 
 .mobile-nav-links a:hover { background: var(--gray-light); }
 
+/* Touch feedback for devices with no hover at all (most phones) —
+   :active gives an immediate pressed state instead of nothing. */
+.mobile-nav-links a:active { background: var(--gray-light); }
+
+.mobile-nav-label {
+  margin: 18px 0 4px;
+  padding: 0 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mobile-nav-links-secondary a {
+  font-size: 1.08rem;
+  font-weight: 500;
+  padding: 10px;
+}
+
 /* ---------- Search ---------- */
 .site-search-wrap, .mobile-search-wrap {
   position: relative;
@@ -1353,16 +1507,25 @@ body.tool-landing-page .site-global-faq {
 
 .site-search-input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 14px 16px 14px 44px;
   border: 1px solid var(--border);
   border-radius: 10px;
   font-size: 1.404rem;
   font-family: var(--font-body);
+  /* Inline SVG icon — no extra request, no icon-font dependency. */
+  background-repeat: no-repeat;
+  background-position: 16px center;
+  background-size: 18px 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
 }
 
 .site-search-input:focus {
   outline: none;
   border-color: var(--red);
+  /* Outline removed above, but a visible ring still needs to replace
+     it — a border-color change alone is too subtle to count as a
+     focus indicator on its own. */
+  box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.18);
 }
 
 .search-results-list {
@@ -1391,8 +1554,13 @@ body.tool-landing-page .site-global-faq {
   font-size: 1.17rem;
 }
 
-.search-result-item:hover { background: var(--gray-light); }
-.search-result-item img { width: 20px; height: 24px; }
+.search-result-item:hover,
+.search-result-item.active { background: var(--gray-light); }
+.search-result-item:active { background: var(--gray-light); }
+.search-result-item img { width: 20px; height: 24px; flex-shrink: 0; }
+/* Long tool names wrap safely instead of forcing the row (and the
+   panel around it) wider than the viewport. */
+.search-result-item span { min-width: 0; overflow-wrap: break-word; }
 
 .search-no-results {
   padding: 16px;
@@ -1640,7 +1808,8 @@ body.tool-result-active .hero,
 body.tool-result-active .hero-drop-wrap,
 body.tool-result-active .hero-suggest-panel,
 body.tool-result-active .awaiting-tool-hint,
-body.tool-result-active #tpDropZone {
+body.tool-result-active #tpDropZone,
+body.tool-result-active #ffhWidget {
   display: none !important;
 }
 
@@ -1903,9 +2072,16 @@ body.tool-result-active #tpDropZone {
   .tp-sidebar .multi-add-btn,
   .tp-sidebar .bgr-swatch,
   .file-card,
-  .tp-toast {
+  .tp-toast,
+  .tool-card,
+  .filter-tab,
+  .hero-drop-browse-btn,
+  .tp-dropzone-browse-btn,
+  .faq-question::after {
     transition: none !important;
   }
+  .tool-card:active { transform: none; }
+  * { scroll-behavior: auto !important; }
 }
 
 /* ---------- Processing state ---------- */
@@ -2045,12 +2221,23 @@ body.tool-result-active #tpDropZone {
   border-radius: 6px;
   font-family: var(--font-body);
   font-size: 1.3rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+  /* Below ~480px even a "2 columns" pair (e.g. Width | Height) gets
+     visually cramped — stack every control full-width instead. */
+  .config-panel { flex-direction: column; align-items: stretch; }
+  .config-panel label { width: 100%; }
+  .config-panel input, .config-panel select { width: 100%; }
 }
 
 .config-panel textarea { width: 100%; }
 
 .config-action-btn {
   padding: 10px 20px;
+  min-height: 44px;
   background: var(--red);
   color: #fff;
   border: none;
@@ -2059,7 +2246,26 @@ body.tool-result-active #tpDropZone {
   cursor: pointer;
 }
 
-.config-action-btn:hover { background: var(--red-dark); }
+.config-action-btn:hover,
+.config-action-btn:active { background: var(--red-dark); }
+
+/* ---------- Mobile button system ---------- */
+/* One consistent floor across every primary action button on the
+   site, instead of each control's own historical padding deciding
+   its tap height. Applied narrow-only so desktop's existing sizing
+   is untouched. */
+@media (max-width: 600px) {
+  .config-action-btn,
+  .multi-add-btn,
+  .multi-cta-btn,
+  .tp-open-btn {
+    min-height: 46px;
+  }
+  /* A lone primary action reads better full-width on a phone than
+     sized to its own text — .tp-sidebar's buttons already do this via
+     their own rules; this covers the plainer config-panel context. */
+  .config-panel .config-action-btn { width: 100%; }
+}
 
 .preview-img {
   max-width: 100%;
@@ -2250,7 +2456,8 @@ body.tool-result-active #tpDropZone {
   cursor: pointer;
 }
 
-.multi-add-btn:hover { border-color: var(--red); color: var(--red); }
+.multi-add-btn:hover,
+.multi-add-btn:active { border-color: var(--red); color: var(--red); }
 
 .multi-file-hint {
   font-size: 0.82rem;
@@ -2548,31 +2755,76 @@ body.tool-result-active #tpDropZone {
   color: var(--text);
 }
 
+@media (max-width: 600px) {
+  .faq-section { margin-top: 48px; padding: 0 20px; }
+  .faq-section h2 { font-size: 1.55rem; margin-bottom: 16px; }
+  .faq-question { padding: 15px 44px 15px 18px; font-size: 1.05rem; }
+  .faq-answer { padding: 0 18px 16px; font-size: 1rem; }
+}
+
 .faq-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.faq-list li {
-  position: relative;
-  padding: 14px 20px;
+.faq-item {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
-  font-size: 1.144rem;
-  color: var(--text-muted);
-  line-height: 1.55;
+  /* Content reflow while the answer shows/hides shouldn't nudge
+     everything below it around abruptly. */
+  overflow: hidden;
 }
 
-.faq-list li strong {
-  display: block;
+.faq-question {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 48px 16px 20px;
   color: var(--text);
   font-weight: 700;
-  margin-bottom: 3px;
+  font-size: 1.144rem;
+  line-height: 1.4;
+  cursor: pointer;
+  list-style: none;
+  /* Comfortably exceeds the 44px minimum touch target on its own. */
+  min-height: 24px;
+}
+
+.faq-question::-webkit-details-marker { display: none; }
+
+.faq-question::after {
+  content: '+';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.4rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.faq-item[open] .faq-question::after { content: '+'; transform: translateY(-50%) rotate(45deg); }
+
+.faq-question:hover { color: var(--red); }
+.faq-question:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
+
+.faq-answer {
+  margin: 0;
+  padding: 0 20px 18px;
+  color: var(--text-muted);
+  font-size: 1.09rem;
+  line-height: 1.6;
+  animation: faqAnswerIn 0.18s ease;
+}
+
+@keyframes faqAnswerIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- Footer ---------- */
@@ -2672,6 +2924,18 @@ body.tool-result-active #tpDropZone {
   transition: color 0.15s ease;
 }
 
+/* Stacked sections instead of the desktop's multi-column layout
+   squeezed narrower — each group gets its own full-width block with
+   consistent spacing, no cramped 2-up wrapping. */
+@media (max-width: 700px) {
+  .site-footer { padding: 36px 20px 20px; margin-top: 48px; }
+  .footer-inner { flex-direction: column; gap: 28px; padding-bottom: 28px; }
+  .footer-brand-col { max-width: none; }
+  .footer-col { flex: 1 1 auto; }
+  .footer-col a { padding: 8px 0; font-size: 1.15rem; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
 /* ---------- Dedicated tool landing pages (/resize-image etc.) ---------- */
 .tp-hero { padding-bottom: 8px; }
 
@@ -2753,8 +3017,33 @@ body.tool-result-active #tpDropZone {
   cursor: pointer;
 }
 
+.tp-dropzone-icon { display: block; font-size: 2rem; line-height: 1; margin-bottom: 10px; }
 .tp-dropzone-text { font-size: 1.235rem; font-weight: 700; color: var(--text); margin: 0; }
 .tp-dropzone-formats { font-size: 1rem; color: var(--text-muted); margin: 8px 0 0; }
+
+/* The dropzone's own click-to-browse handler fires for any click inside
+   it (see wireToolPageDropZone), so this button needs no extra JS — it's
+   the same tap target, just visually the dominant, unmissable action for
+   touch users who don't drag-and-drop. */
+.tp-dropzone-browse-btn {
+  position: relative;
+  z-index: 1;
+  margin-top: 14px;
+  padding: 13px 30px;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1.05rem;
+  min-height: 46px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tp-dropzone-browse-btn:hover,
+.tp-dropzone-browse-btn:active { background: var(--red-dark); }
 
 .tp-section {
   max-width: 900px;
@@ -2787,7 +3076,12 @@ body.tool-result-active #tpDropZone {
 
 @media (max-width: 700px) {
   .tp-related-grid { grid-template-columns: repeat(2, 1fr); }
-  .tp-dropzone { padding: 28px 18px; }
+  .tp-dropzone { padding: 28px 18px; margin-bottom: 32px; }
+}
+
+@media (max-width: 480px) {
+  .tp-dropzone { padding: 24px 18px; margin: 0 auto 28px; }
+  .tp-dropzone-browse-btn { width: 100%; max-width: 280px; }
 }
 
 .footer-social a:hover { color: var(--red); }

@@ -23,22 +23,23 @@
       <a href="/ppt" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PPT</a>
       <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Other Tools</a>
     </nav>
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenuPanel">
       <span></span><span></span><span></span>
     </button>
   </div>
 </header>
 
 <div class="mobile-menu-backdrop hidden" id="mobileMenuBackdrop">
-  <div class="mobile-menu-panel" id="mobileMenuPanel">
+  <div class="mobile-menu-panel" id="mobileMenuPanel" role="dialog" aria-modal="true" aria-label="Site menu">
     <div class="mobile-menu-header">
       <span class="logo"><span class="logo-mark">⌁</span> OnlineToolsWeb</span>
       <button class="modal-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
     </div>
     <div class="mobile-search-wrap">
-      <input type="text" id="mobileSearchInput" class="site-search-input" placeholder="Search all tools..." />
-      <div id="mobileSearchResults" class="search-results-list"></div>
+      <input type="text" id="mobileSearchInput" class="site-search-input" placeholder="Search all tools..." role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mobileSearchResults" />
+      <div id="mobileSearchResults" class="search-results-list" role="listbox"></div>
     </div>
+    <p class="mobile-nav-label">Tools</p>
     <nav class="mobile-nav-links">
       <a href="/pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="22" height="22" alt="" /> PDF</a>
       <a href="/image"><img src="/icons/icon-image.svg" class="nav-icon" width="22" height="22" alt="" /> Image</a>
@@ -46,6 +47,13 @@
       <a href="/word"><img src="/icons/icon-word.svg" class="nav-icon" width="22" height="22" alt="" /> Word</a>
       <a href="/ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PPT</a>
       <a href="/other-tools"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Other Tools</a>
+    </nav>
+    <p class="mobile-nav-label">Company</p>
+    <nav class="mobile-nav-links mobile-nav-links-secondary">
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy-policy">Privacy Policy</a>
+      <a href="/terms-of-service">Terms of Service</a>
     </nav>
   </div>
 </div>
@@ -130,8 +138,10 @@
            put the whole time so its listeners never need rewiring. -->
       <div class="hero-drop-content" id="heroDropContent">
         <div class="hero-drop-idle" id="heroDropIdle">
-          <p class="hero-drop-text">Drag your file or browse</p>
-          <p class="hero-drop-subtext">Accepts PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
+          <span class="hero-drop-icon" aria-hidden="true">📤</span>
+          <p class="hero-drop-text">Drag your file here</p>
+          <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
+          <p class="hero-drop-subtext">PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
         </div>
       </div>
     </div>

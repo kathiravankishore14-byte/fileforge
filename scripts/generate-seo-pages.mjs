@@ -193,12 +193,20 @@ function relatedToolsHtml(key, meta) {
 }
 
 function faqHtml(faq) {
-  const items = faq.map((f) => `<li><strong>${esc(f.q)}</strong> ${esc(f.a)}</li>`).join('');
+  // <details>/<summary> — native expand/collapse, full keyboard support,
+  // and no ARIA to hand-maintain. The answer text is still plain DOM
+  // content either way, so search engines index it exactly as before;
+  // only the default-collapsed *presentation* changes.
+  const items = faq.map((f) => `
+        <details class="faq-item">
+          <summary class="faq-question">${esc(f.q)}</summary>
+          <p class="faq-answer">${esc(f.a)}</p>
+        </details>`).join('');
   return `
     <section class="tp-section faq-section" id="faq">
       <div class="faq-inner">
         <h2>Frequently Asked Questions</h2>
-        <ul class="faq-list">${items}</ul>
+        <div class="faq-list">${items}</div>
       </div>
     </section>`;
 }
@@ -252,7 +260,9 @@ function dropZoneHtml(key, meta) {
   return `
     <div class="tp-dropzone" id="tpDropZone">
       <input type="file" id="tpFileInput"${meta.multiFile ? ' multiple' : ''}${acceptAttr} />
-      <p class="tp-dropzone-text">Drop your ${meta.multiFile ? 'files' : 'file'} here, or click to browse</p>
+      <span class="tp-dropzone-icon" aria-hidden="true">📤</span>
+      <p class="tp-dropzone-text">Drop your ${meta.multiFile ? 'files' : 'file'} here</p>
+      <button type="button" class="tp-dropzone-browse-btn">Browse files</button>
       ${formatLabel ? `<p class="tp-dropzone-formats">Accepts: ${esc(formatLabel)}</p>` : ''}
     </div>`;
 }
@@ -300,7 +310,7 @@ function buildPage(key) {
         <span class="tp-trust-badge">⚡ No sign-up</span>
         <span class="tp-trust-badge">🌐 Works in any browser</span>
       </div>
-      <button type="button" class="config-action-btn tp-open-btn" id="tpOpenToolBtn">Open ${esc(meta.label)} →</button>
+      ${(meta.noFile || key === 'pdfcompare') ? `<button type="button" class="config-action-btn tp-open-btn" id="tpOpenToolBtn">Open ${esc(meta.label)} →</button>` : ''}
       ${useCasesHtml(meta)}
     </section>
 
