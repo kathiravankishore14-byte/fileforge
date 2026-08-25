@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Tesseract from 'tesseract.js';
 import { removeBackground } from '@imgly/background-removal';
-import { PDFDocument, degrees, PDFName, PDFRawStream } from 'pdf-lib';
+import { PDFDocument, degrees, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } from 'pdf-lib';
 import { TOOL_SLUGS, toolUrl } from './toolSlugs.js';
 import './style.css';
 
@@ -155,7 +155,7 @@ const toolMeta = {
   pdfdelete: { label: 'Delete Pages', desc: 'Remove specific pages from a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfwatermark: { label: 'Watermark PDF', desc: 'Stamp text across every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfsplit: { label: 'Split PDF', desc: 'Break a PDF into separate files by page range.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
-  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by flattening pages to compressed images.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by recompressing images and trimming unused data — text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdftoword: { label: 'PDF to Word', desc: 'Extract text into an editable Word document.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'word' },
   pdftoexcel: { label: 'PDF to Excel', desc: 'Pull tabular data into a spreadsheet.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'excel' },
   pdftojpg: { label: 'PDF to JPG', desc: 'Export every page as an image.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'image' },
@@ -307,6 +307,7 @@ function renderToolGrid(containerEl, toolKeys) {
 function handleToolCardClick(toolKey, card) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
+  clearResultPage(); // starting a new tool from anywhere restores the hero/dropzone if a result page was showing
 
   // noFile tools and Compare PDF (needs two distinct named slots) still open their own modal directly
   if (meta.noFile || toolKey === 'pdfcompare') {
@@ -371,6 +372,7 @@ const modalBox = document.querySelector('.modal-box');
 function openToolModal(toolKey, triggerEl, initialMultiFiles) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
+  clearResultPage(); // starting a new tool from anywhere restores the hero/dropzone if a result page was showing
 
   // Decide BEFORE opening anything: if this tool needs a file and none is ready, redirect to the
   // big blue drop zone instead of opening a modal with its own separate upload box.
@@ -607,29 +609,95 @@ function showToast(message, icon) {
 }
 
 // ---------- Result state ----------
+// Shown as a normal section of the page — not inside the modal — so the
+// site header/nav and footer stay visible around it, the way a dedicated
+// result page would on its own URL. closeToolModal() below is what makes
+// that possible; everything else just builds a page section and swaps it
+// in where the hero/upload UI was.
+const RESULT_RING_RADIUS = 52;
+const RESULT_RING_CIRCUMFERENCE = 2 * Math.PI * RESULT_RING_RADIUS;
+
+function clearResultPage() {
+  const page = document.querySelector('#toolResultPage');
+  if (page) page.remove();
+  document.body.classList.remove('tool-result-active');
+}
+
 function showResultState(blob, filename, extraNote) {
+  closeToolModal(false);
   const url = URL.createObjectURL(blob);
-  modalBody.innerHTML = `
-    <div class="tp-workspace">
-      <div class="tp-preview-pane">
-        <div class="result-preview-wrap" id="resultPreviewWrap">
-          <p class="result-preview-caption">Loading preview…</p>
-        </div>
+  const meta = toolMeta[currentToolKey];
+
+  // Most tools don't have a meaningful "% smaller" — the ring only shows
+  // up for the ones that do (compress-pdf, compress-image, ...), parsed
+  // straight out of the same note text the stat pill already shows.
+  const percentMatch = extraNote && extraNote.match(/(\d+)%\s*smaller/i);
+  const percent = percentMatch ? Math.max(0, Math.min(100, parseInt(percentMatch[1], 10))) : null;
+  const ringOffset = percent === null ? RESULT_RING_CIRCUMFERENCE : RESULT_RING_CIRCUMFERENCE * (1 - percent / 100);
+  const ringHtml = percent === null ? '' : `
+    <div class="result-ring-wrap">
+      <svg class="result-ring" viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="result-ring-track" cx="60" cy="60" r="${RESULT_RING_RADIUS}" />
+        <circle class="result-ring-progress" cx="60" cy="60" r="${RESULT_RING_RADIUS}"
+          style="stroke-dasharray:${RESULT_RING_CIRCUMFERENCE}; stroke-dashoffset:${ringOffset};" />
+      </svg>
+      <div class="result-ring-label">
+        <span class="result-ring-percent">${percent}%</span>
+        <span class="result-ring-caption">smaller</span>
       </div>
-      <aside class="tp-sidebar">
-        <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
-        ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
-        <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
-        <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
-        <button class="reset-btn" id="resetToolBtn">Convert another file</button>
-      </aside>
     </div>
   `;
+
+  // Up to 6 other tools from the same category — "Continue to…", same as
+  // the rest of the site's tool grids (reuses .tool-grid, already a
+  // 6-column layout, so these look identical to every other tool grid).
+  const continueKeys = meta ? (categoryTools[meta.category] || []).filter((k) => k !== currentToolKey).slice(0, 6) : [];
+  const continueHtml = continueKeys.length ? `
+    <div class="tp-result-continue">
+      <h2>Continue to&hellip;</h2>
+      <div class="tool-grid tp-result-continue-grid">
+        ${continueKeys.map((k) => toolCardHtml(k, false)).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  const page = document.createElement('section');
+  page.className = 'tp-result-page';
+  page.id = 'toolResultPage';
+  page.innerHTML = `
+    <div class="tp-result-inner">
+      <h1 class="tp-result-heading">${meta ? meta.label : 'Your file'} is ready!</h1>
+      <div class="tp-workspace tp-result-main${percent === null ? ' no-ring' : ''}">
+        <div class="tp-preview-pane">
+          <div class="result-preview-wrap" id="resultPreviewWrap">
+            <p class="result-preview-caption">Loading preview…</p>
+          </div>
+        </div>
+        <aside class="tp-sidebar">
+          ${ringHtml}
+          <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
+          <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
+          ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
+          <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
+          <button class="reset-btn" id="resetToolBtn">Process another file</button>
+        </aside>
+      </div>
+      ${continueHtml}
+    </div>
+  `;
+
+  clearResultPage(); // in case one was already showing (shouldn't normally happen, but stay safe)
+  const heroEl = document.querySelector('.hero');
+  if (heroEl) heroEl.insertAdjacentElement('afterend', page);
+  else document.body.appendChild(page);
+  document.body.classList.add('tool-result-active');
+  page.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
   renderResultPreview(blob, url);
-  document.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '⬇'));
-  document.querySelector('#resetToolBtn').addEventListener('click', () => {
+  page.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '⬇'));
+  page.querySelector('#resetToolBtn').addEventListener('click', () => {
     currentFile = null;
-    closeToolModal(false);
+    clearResultPage();
     handleToolCardClick(currentToolKey, lastFocusedElement);
   });
 }
@@ -2126,7 +2194,7 @@ function renderSingleFileConfig() {
 
   else if (currentToolKey === 'pdfcompress') {
     area.insertAdjacentHTML('beforeend', `
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images inside the PDF. All text and vector content stays exactly as-is, fully selectable and sharp. Images stored in other formats are left untouched.</p>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images and trims unused data and metadata. All text and vector content stays exactly as-is, fully selectable and sharp.</p>
       <div class="config-panel">
         <label>Image quality
           <select id="cfgQuality">
@@ -2144,109 +2212,203 @@ function renderSingleFileConfig() {
       showProcessingState('Scanning embedded images...');
       try {
         const bytes = await currentFile.arrayBuffer();
-        const doc = await PDFDocument.load(bytes);
+        const originalPageCount = (await PDFDocument.load(bytes)).getPageCount();
 
-        function decodeAscii85(input) {
-          // Strip optional <~ ~> delimiters and whitespace
-          let str = new TextDecoder('latin1').decode(input).replace(/^<~/, '').replace(/~>$/, '').replace(/\s/g, '');
-          const out = [];
-          let tuple = [];
-          for (let i = 0; i < str.length; i++) {
-            const c = str[i];
-            if (c === 'z' && tuple.length === 0) {
-              out.push(0, 0, 0, 0);
-              continue;
+        // Runs the full compress pass — JPEG recompression, then (unless
+        // disabled) stripping tool-fingerprint metadata and dropping any
+        // object nobody in the document actually points to any more. That
+        // last part is what lets a text/vector-only PDF shrink at all:
+        // pdf-lib keeps every object it loaded, including leftovers from a
+        // prior editor's incremental saves, unless something removes them.
+        // `withGc: false` is the safety fallback if that pass ever produces
+        // a file that doesn't reopen cleanly — see the validation below.
+        async function runCompressPass({ withGc }) {
+          const doc = await PDFDocument.load(bytes);
+
+          function decodeAscii85(input) {
+            // Strip optional <~ ~> delimiters and whitespace
+            let str = new TextDecoder('latin1').decode(input).replace(/^<~/, '').replace(/~>$/, '').replace(/\s/g, '');
+            const out = [];
+            let tuple = [];
+            for (let i = 0; i < str.length; i++) {
+              const c = str[i];
+              if (c === 'z' && tuple.length === 0) {
+                out.push(0, 0, 0, 0);
+                continue;
+              }
+              tuple.push(str.charCodeAt(i) - 33);
+              if (tuple.length === 5) {
+                let n = 0;
+                for (const t of tuple) n = n * 85 + t;
+                out.push((n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff);
+                tuple = [];
+              }
             }
-            tuple.push(str.charCodeAt(i) - 33);
-            if (tuple.length === 5) {
+            if (tuple.length > 0) {
+              const count = tuple.length;
+              while (tuple.length < 5) tuple.push(84);
               let n = 0;
               for (const t of tuple) n = n * 85 + t;
-              out.push((n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff);
-              tuple = [];
+              const bytes4 = [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
+              out.push(...bytes4.slice(0, count - 1));
+            }
+            return new Uint8Array(out);
+          }
+
+          const recompressJpeg = (jpegBytes) => new Promise((resolve, reject) => {
+            const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth;
+              canvas.height = img.naturalHeight;
+              canvas.getContext('2d').drawImage(img, 0, 0);
+              canvas.toBlob((newBlob) => {
+                URL.revokeObjectURL(url);
+                if (!newBlob) { reject(new Error('Could not re-encode image')); return; }
+                newBlob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
+              }, 'image/jpeg', quality);
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode embedded image')); };
+            img.src = url;
+          });
+
+          let recompressedCount = 0;
+          let imagesFound = 0;
+          const entries = Array.from(doc.context.enumerateIndirectObjects());
+          console.log(`[Compress PDF] Scanning ${entries.length} objects...`);
+          for (let i = 0; i < entries.length; i++) {
+            const [ref, obj] = entries[i];
+            if (!obj || typeof obj.dict === 'undefined') continue;
+            const subtype = obj.dict.get(PDFName.of('Subtype'));
+            if (!subtype || subtype.toString() !== '/Image') continue;
+            imagesFound++;
+            let filterObj = obj.dict.get(PDFName.of('Filter'));
+            const filterChain = filterObj && filterObj.array ? filterObj.array.map((f) => f.toString()) : filterObj ? [filterObj.toString()] : [];
+            console.log(`[Compress PDF] Image #${imagesFound} filter chain:`, filterChain);
+            if (!filterChain.length || filterChain[filterChain.length - 1] !== '/DCTDecode') {
+              console.log(`[Compress PDF] Skipping — last filter isn't DCTDecode`);
+              continue;
+            }
+            const hasAscii85 = filterChain.includes('/ASCII85Decode');
+
+            updateProcessingCaption(`Recompressing image ${recompressedCount + 1}...`);
+            try {
+              const originalBytes = obj.contents;
+              console.log(`[Compress PDF] originalBytes length: ${originalBytes.length}, hasAscii85: ${hasAscii85}, first bytes:`, Array.from(originalBytes.slice(0, 10)));
+              const actualJpegBytes = hasAscii85 ? decodeAscii85(originalBytes) : originalBytes;
+              console.log(`[Compress PDF] decoded JPEG bytes length: ${actualJpegBytes.length}, starts with FFD8:`, actualJpegBytes[0] === 0xFF && actualJpegBytes[1] === 0xD8);
+              const newBytes = await recompressJpeg(actualJpegBytes);
+              console.log(`[Compress PDF] recompressed bytes length: ${newBytes.length} (vs original ${originalBytes.length})`);
+              if (newBytes.length < originalBytes.length) {
+                const newDict = obj.dict.clone(doc.context);
+                newDict.set(PDFName.of('Length'), doc.context.obj(newBytes.length));
+                // New bytes are plain JPEG — filter chain must drop ASCII85Decode now that we're not re-encoding to it
+                newDict.set(PDFName.of('Filter'), PDFName.of('DCTDecode'));
+                const newStream = PDFRawStream.of(newDict, newBytes);
+                doc.context.assign(ref, newStream);
+                recompressedCount++;
+              } else {
+                console.log(`[Compress PDF] Skipped — new bytes (${newBytes.length}) not smaller than original (${originalBytes.length})`);
+              }
+            } catch (imgErr) {
+              console.log(`[Compress PDF] Image #${imagesFound} failed:`, imgErr.message);
             }
           }
-          if (tuple.length > 0) {
-            const count = tuple.length;
-            while (tuple.length < 5) tuple.push(84);
-            let n = 0;
-            for (const t of tuple) n = n * 85 + t;
-            const bytes4 = [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff];
-            out.push(...bytes4.slice(0, count - 1));
-          }
-          return new Uint8Array(out);
-        }
+          console.log(`[Compress PDF] Done. Found ${imagesFound} image(s), recompressed ${recompressedCount}.`);
 
-        const recompressJpeg = (jpegBytes) => new Promise((resolve, reject) => {
-          const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
-          const url = URL.createObjectURL(blob);
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            canvas.toBlob((newBlob) => {
-              URL.revokeObjectURL(url);
-              if (!newBlob) { reject(new Error('Could not re-encode image')); return; }
-              newBlob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
-            }, 'image/jpeg', quality);
-          };
-          img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode embedded image')); };
-          img.src = url;
-        });
-
-        let recompressedCount = 0;
-        let imagesFound = 0;
-        const entries = Array.from(doc.context.enumerateIndirectObjects());
-        console.log(`[Compress PDF] Scanning ${entries.length} objects...`);
-        for (let i = 0; i < entries.length; i++) {
-          const [ref, obj] = entries[i];
-          if (!obj || typeof obj.dict === 'undefined') continue;
-          const subtype = obj.dict.get(PDFName.of('Subtype'));
-          if (!subtype || subtype.toString() !== '/Image') continue;
-          imagesFound++;
-          let filterObj = obj.dict.get(PDFName.of('Filter'));
-          const filterChain = filterObj && filterObj.array ? filterObj.array.map((f) => f.toString()) : filterObj ? [filterObj.toString()] : [];
-          console.log(`[Compress PDF] Image #${imagesFound} filter chain:`, filterChain);
-          if (!filterChain.length || filterChain[filterChain.length - 1] !== '/DCTDecode') {
-            console.log(`[Compress PDF] Skipping — last filter isn't DCTDecode`);
-            continue;
-          }
-          const hasAscii85 = filterChain.includes('/ASCII85Decode');
-
-          updateProcessingCaption(`Recompressing image ${recompressedCount + 1}...`);
+          // Tool-fingerprint metadata (Producer/Creator + the XMP packet) is
+          // pure bloat from whatever software last wrote the file — never
+          // content the person who has the PDF actually cares about — so
+          // it's safe to drop regardless of withGc. Title/Author/Subject/
+          // Keywords are left untouched since those ARE user-set content.
+          let metadataTrimmed = false;
           try {
-            const originalBytes = obj.contents;
-            console.log(`[Compress PDF] originalBytes length: ${originalBytes.length}, hasAscii85: ${hasAscii85}, first bytes:`, Array.from(originalBytes.slice(0, 10)));
-            const actualJpegBytes = hasAscii85 ? decodeAscii85(originalBytes) : originalBytes;
-            console.log(`[Compress PDF] decoded JPEG bytes length: ${actualJpegBytes.length}, starts with FFD8:`, actualJpegBytes[0] === 0xFF && actualJpegBytes[1] === 0xD8);
-            const newBytes = await recompressJpeg(actualJpegBytes);
-            console.log(`[Compress PDF] recompressed bytes length: ${newBytes.length} (vs original ${originalBytes.length})`);
-            if (newBytes.length < originalBytes.length) {
-              const newDict = obj.dict.clone(doc.context);
-              newDict.set(PDFName.of('Length'), doc.context.obj(newBytes.length));
-              // New bytes are plain JPEG — filter chain must drop ASCII85Decode now that we're not re-encoding to it
-              newDict.set(PDFName.of('Filter'), PDFName.of('DCTDecode'));
-              const newStream = PDFRawStream.of(newDict, newBytes);
-              doc.context.assign(ref, newStream);
-              recompressedCount++;
-            } else {
-              console.log(`[Compress PDF] Skipped — new bytes (${newBytes.length}) not smaller than original (${originalBytes.length})`);
+            const info = doc.getInfoDict();
+            if (info.has(PDFName.of('Producer'))) { info.delete(PDFName.of('Producer')); metadataTrimmed = true; }
+            if (info.has(PDFName.of('Creator'))) { info.delete(PDFName.of('Creator')); metadataTrimmed = true; }
+            if (doc.catalog.has(PDFName.of('Metadata'))) { doc.catalog.delete(PDFName.of('Metadata')); metadataTrimmed = true; }
+          } catch (metaErr) {
+            console.log('[Compress PDF] Metadata cleanup skipped:', metaErr.message);
+          }
+
+          // Drop objects nothing in the document points to any more — most
+          // commonly leftover page/font/image versions from a prior editor's
+          // incremental saves. pdf-lib keeps everything it loaded unless we
+          // remove it ourselves; this is a plain mark-and-sweep from the
+          // document catalog (the same root the actual PDF renderer uses).
+          let orphansRemoved = 0;
+          if (withGc) {
+            try {
+              const visited = new Set();
+              // Seed with the trailer's own refs (not the resolved dicts) so
+              // the Catalog's — and Info dict's — object numbers themselves
+              // land in `visited` too. Missing this was the bug caught by
+              // the verification step below: the catalog object was reachable
+              // in spirit but its own ref never got marked, so the sweep
+              // deleted the catalog itself.
+              const stack = [];
+              if (doc.context.trailerInfo.Root) stack.push(doc.context.trailerInfo.Root);
+              if (doc.context.trailerInfo.Info) stack.push(doc.context.trailerInfo.Info);
+              const visit = (val) => {
+                if (val instanceof PDFRef) {
+                  if (visited.has(val)) return;
+                  visited.add(val);
+                  const resolved = doc.context.lookup(val);
+                  if (resolved) stack.push(resolved);
+                } else if (val instanceof PDFStream) {
+                  stack.push(val.dict);
+                } else if (val instanceof PDFDict) {
+                  for (const v of val.values()) stack.push(v);
+                } else if (val instanceof PDFArray) {
+                  for (const v of val.asArray()) stack.push(v);
+                }
+              };
+              while (stack.length) visit(stack.pop());
+
+              for (const [ref] of doc.context.enumerateIndirectObjects()) {
+                if (!visited.has(ref)) { doc.context.delete(ref); orphansRemoved++; }
+              }
+              console.log(`[Compress PDF] GC removed ${orphansRemoved} unreferenced object(s).`);
+            } catch (gcErr) {
+              console.log('[Compress PDF] GC pass skipped:', gcErr.message);
             }
-          } catch (imgErr) {
-            console.log(`[Compress PDF] Image #${imagesFound} failed:`, imgErr.message);
+          }
+
+          updateProcessingCaption('Saving your PDF...');
+          const outBytes = await doc.save();
+          return { outBytes, recompressedCount, imagesFound, metadataTrimmed, orphansRemoved };
+        }
+
+        let result = await runCompressPass({ withGc: true });
+        // Safety net: confirm the GC'd file still opens and has every page
+        // before trusting it. If a document has some non-standard reference
+        // our mark-and-sweep didn't know to follow, fall back to the same
+        // pass without object removal rather than risk handing back a file
+        // that's smaller but broken.
+        if (result.orphansRemoved > 0) {
+          try {
+            const check = await PDFDocument.load(result.outBytes);
+            if (check.getPageCount() !== originalPageCount) throw new Error('page count mismatch');
+          } catch (verifyErr) {
+            console.log('[Compress PDF] GC output failed verification, redoing without it:', verifyErr.message);
+            result = await runCompressPass({ withGc: false });
           }
         }
 
-        console.log(`[Compress PDF] Done. Found ${imagesFound} image(s), recompressed ${recompressedCount}.`);
-        updateProcessingCaption('Saving your PDF...');
-        const outBytes = await doc.save();
+        const { outBytes, recompressedCount, metadataTrimmed, orphansRemoved } = result;
         const blob = new Blob([outBytes], { type: 'application/pdf' });
         const newKB = blob.size / 1024;
         const pct = Math.round(100 - (newKB / originalKB) * 100);
-        const note = recompressedCount === 0
-          ? 'No JPEG images found to recompress. This PDF may be mostly text/vector already, or uses image formats this tool doesn\'t touch.'
-          : `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'}); ${recompressedCount} image(s) recompressed, text untouched.`;
+        const savedSomething = pct > 0;
+        const extras = [];
+        if (recompressedCount > 0) extras.push(`${recompressedCount} image(s) recompressed`);
+        if (orphansRemoved > 0) extras.push('unused data removed');
+        if (metadataTrimmed) extras.push('metadata cleaned');
+        const note = savedSomething
+          ? `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller); ${extras.length ? extras.join(', ') + ', ' : ''}text untouched.`
+          : 'This PDF is already about as small as it gets — no embedded JPEGs to recompress and no extra data to trim without changing its content.';
         await minWait(300);
         showResultState(blob, `compressed-${currentFile.name}`, note);
       } catch (err) { showErrorState(err.message); }
@@ -2750,11 +2912,24 @@ function renderResumeBuilderTool() {
 }
 
 // ================= PDF.JS SHARED HELPER =================
+// The worker used to be pointed at unpkg.com and fetched over the network
+// on every first PDF preview. Any interruption there — an ad blocker,
+// a corporate proxy, unpkg being slow/down, even a flaky connection —
+// left the worker unable to load, which pdf.js surfaces by falling back
+// to a dynamic import() of the same broken URL. Vite's preload-error
+// handler (below, "STALE DEPLOY RECOVERY") treats that failure as a stale
+// deploy and silently reloads the whole page, wiping out whatever the
+// visitor was doing — including, e.g., a compress/rotate/split result
+// that had already finished. Bundling the worker locally (so it ships
+// from our own domain with every other asset) removes that entire
+// external dependency.
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
 let pdfjsLibCache = null;
 async function getPdfjsLib() {
   if (pdfjsLibCache) return pdfjsLibCache;
   const pdfjsLib = await import('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
   pdfjsLibCache = pdfjsLib;
   return pdfjsLib;
 }
@@ -3229,6 +3404,7 @@ function renderMultiFileTool(initialFiles) {
       <aside class="tp-sidebar">
         <p class="multi-file-summary" id="multiFileSummary"></p>
         <button type="button" class="multi-add-btn" id="addMoreBtn">+ Add files</button>
+        <input type="file" id="multiAddInput" multiple accept="${meta.accept || ''}" style="display:none" />
         ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder — files combine in this order.</p>' : ''}
         <div id="multiWarning" class="batch-warning" style="display:none;"></div>
         <button class="multi-cta-btn" id="multiApply" disabled>${actionLabel}</button>
@@ -3240,13 +3416,27 @@ function renderMultiFileTool(initialFiles) {
   const goBtn = document.querySelector('#multiApply');
   const summaryEl = document.querySelector('#multiFileSummary');
 
-  document.querySelector('#addMoreBtn').addEventListener('click', () => {
-    closeToolModal(false);
-    awaitingToolKey = currentToolKey;
-    awaitingExistingFiles = [...files];
-    updateHeroDropZoneLabel();
-    const dropWrap = document.querySelector('#heroDropZone');
-    if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Add more files without ever closing this modal. This used to close the
+  // modal and redirect to the homepage's #heroDropZone, but that element
+  // only exists on index.html/category pages — on the dedicated per-tool
+  // SEO landing pages (e.g. /merge-pdf, which use #tpDropZone instead) the
+  // modal just closed with nowhere to land, and any file picked afterward
+  // started a brand-new batch instead of appending to this one. A plain
+  // hidden file input scoped to this modal works identically everywhere.
+  const addInput = document.querySelector('#multiAddInput');
+  document.querySelector('#addMoreBtn').addEventListener('click', () => addInput.click());
+  addInput.addEventListener('change', () => {
+    const picked = Array.from(addInput.files || []);
+    addInput.value = '';
+    if (!picked.length) return;
+    const valid = picked.filter((f) => {
+      if (!validateFileType(f, meta.accept)) { showTypeRejection(meta.label, meta.accept); return false; }
+      return true;
+    });
+    if (!valid.length) return;
+    files.push(...valid);
+    renderList();
+    showToast(`Added ${valid.length} file${valid.length === 1 ? '' : 's'}`, '+');
   });
 
   const fileIconFor = (f) => {
@@ -4299,10 +4489,10 @@ export function initToolLandingPage(toolKey) {
 
   wireHamburger();
   wireHeroMascot();
-  wireNavDropdowns();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   wireSearchShortcut();
   renderCategoryNav(meta.category);
+  wireNavDropdowns();
 
   const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
   if (needsFile) wireToolPageDropZone(toolKey, meta);

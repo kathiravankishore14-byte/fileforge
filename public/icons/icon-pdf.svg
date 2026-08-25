@@ -7,5 +7,9 @@
   </defs>
   <rect width="100" height="100" rx="28" fill="#D63A2E"/>
   <rect width="100" height="100" rx="28" fill="url(#sheen-pdf)"/>
-  <text x="50" y="53" font-family="Arial, sans-serif" font-weight="800" font-size="50" text-anchor="middle" dominant-baseline="central" fill="#FFFFFF">P</text>
+  <!-- white document page, folded top-left corner -->
+  <path d="M40 18 H70 V82 H30 V28 Z" fill="#FFFFFF"/>
+  <path d="M30 28 L40 18 V28 Z" fill="#FFFFFF" opacity="0.55"/>
+  <!-- "PDF" written directly on the page -->
+  <text x="50" y="56" font-family="Arial, sans-serif" font-weight="800" font-size="16" text-anchor="middle" dominant-baseline="central" fill="#D63A2E" letter-spacing="0.5">PDF</text>
 </svg>

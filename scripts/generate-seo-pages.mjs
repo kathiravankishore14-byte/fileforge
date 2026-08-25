@@ -71,9 +71,11 @@ function relatedKeysFor(key, meta) {
 function deriveSeo(key, meta) {
   const slug = TOOL_SLUGS[key];
   const title = `${meta.label} Online Free | OnlineToolsWeb`;
-  const privacyClause = 'Free, private, and runs right in your browser — no upload, no signup.';
+  const privacyClause = meta.usesServer
+    ? 'Free, fast AI processing — no signup, nothing stored.'
+    : 'Free, private, and runs right in your browser — no upload, no signup.';
   let description = `${meta.desc} ${privacyClause}`;
-  if (description.length > 158) description = `${meta.desc} No upload, no signup — runs in your browser.`;
+  if (description.length > 158) description = meta.usesServer ? `${meta.desc} No signup — nothing stored.` : `${meta.desc} No upload, no signup — runs in your browser.`;
   // A tool can supply its own hand-written hero copy (see toolMeta in
   // main.js) when the generic auto-derived phrasing undersells it —
   // used for Remove Background, which leads with real use cases rather
@@ -97,6 +99,11 @@ function deriveSeo(key, meta) {
     faq.push({
       q: `Does ${meta.label} store or send what I enter?`,
       a: `No. ${meta.label} runs entirely in your browser — nothing you type or generate here is uploaded or saved on a server.`,
+    });
+  } else if (meta.usesServer) {
+    faq.push({
+      q: `Is my file safe when I use ${meta.label}?`,
+      a: `Your photo is sent securely to our server, which uses remove.bg to process the cutout — the photo is auto-deleted from their servers afterward. See our Privacy Policy for the full details. If our server is ever unavailable, ${meta.label} automatically falls back to an AI model that runs right in your browser instead, so nothing leaves your device at all.`,
     });
   } else {
     faq.push({
@@ -122,7 +129,9 @@ function deriveSeo(key, meta) {
     : [
         `Open ${meta.label} and drop your ${meta.multiFile ? 'files' : 'file'}, or click to browse.`,
         'Adjust the available settings if needed.',
-        'Run the tool — everything processes right in your browser, nothing is uploaded.',
+        meta.usesServer
+          ? 'Run the tool — your photo is sent to our server for AI processing, with an automatic in-browser fallback if it’s unavailable.'
+          : 'Run the tool — everything processes right in your browser, nothing is uploaded.',
         'Download your result, or process another file.',
       ];
 

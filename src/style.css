@@ -1632,6 +1632,148 @@ body.tool-landing-page .site-global-faq {
   .tp-preview-pane { min-height: 260px; padding: 18px; }
 }
 
+/* ---------- Result page (separate from the modal) ----------
+   showResultState() closes the modal and inserts a real page section in
+   place of the hero/upload UI, so the header nav and footer stay visible
+   around it instead of everything living behind a dimmed overlay. */
+body.tool-result-active .hero,
+body.tool-result-active .hero-drop-wrap,
+body.tool-result-active .hero-suggest-panel,
+body.tool-result-active .awaiting-tool-hint,
+body.tool-result-active #tpDropZone {
+  display: none !important;
+}
+
+.tp-result-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 56px 24px 0;
+}
+
+.tp-result-heading {
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1.15;
+  color: var(--text);
+  margin: 0 0 24px;
+}
+
+.tp-result-main.no-ring .tp-sidebar { align-items: center; text-align: center; }
+.tp-result-main.no-ring .result-filename { text-align: center; }
+
+/* Preview (left) and the result card (right) are matched in height —
+   `stretch` makes the shorter of the two grow to fill the row instead
+   of leaving the taller one towering over it — and the card's own
+   content is kept compact and vertically centered so it reads as one
+   deliberate block, not a tall list. */
+.tp-result-main {
+  align-items: stretch;
+}
+
+.tp-result-main .tp-preview-pane {
+  min-height: 300px;
+}
+
+.tp-result-main .tp-preview-pane .preview-img,
+.tp-result-main .tp-preview-pane .result-preview-img {
+  max-height: 340px;
+}
+
+.tp-result-main .tp-sidebar {
+  position: static;
+  justify-content: center;
+  padding: 32px;
+  gap: 14px;
+}
+
+.tp-result-main .result-filename { margin: 0; }
+
+.result-ring-wrap {
+  position: relative;
+  width: 116px;
+  height: 116px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.result-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+.result-ring-track { fill: none; stroke: var(--gray-light); stroke-width: 10; }
+.result-ring-progress {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.7s cubic-bezier(.34, 1.2, .64, 1);
+}
+.result-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.result-ring-percent { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.result-ring-caption { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.tp-result-continue {
+  margin: 40px 0 60px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px;
+}
+
+.tp-result-continue h2 {
+  margin: 0 0 20px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.tp-result-continue-grid { margin: 0; padding: 0; }
+
+@media (max-width: 980px) {
+  /* Below the two-column breakpoint the workspace stacks to a single
+     column — put the result card (ring + download button) first so
+     the one thing every visitor came for is reachable right after the
+     heading, with the preview following right after it. */
+  .tp-result-main .tp-sidebar { order: 1; }
+  .tp-result-main .tp-preview-pane { order: 2; margin-top: 20px; }
+}
+
+@media (max-width: 600px) {
+  .tp-result-main .tp-sidebar { padding: 26px 24px; }
+}
+
+@media (max-width: 720px) {
+  .tp-result-page { padding: 32px 16px 0; }
+  .tp-result-continue { padding: 22px; }
+}
+
+/* Always keep at least 3 of the 6 "Continue to..." tools in the first
+   row, however narrow the screen, so they're reachable without
+   scrolling all the way to the page's bottom — overrides .tool-grid's
+   general 4-col/2-col narrow-screen breakpoints for this grid only. */
+@media (max-width: 700px) {
+  .tp-result-continue-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+}
+
+@media (max-width: 420px) {
+  .tp-result-continue-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tp-result-continue { padding: 16px; }
+}
+
+/* On short phone screens, tighten the stack above the download button
+   (ring, badge, stat pill) further so the button itself lands in the
+   first screenful without needing even a short scroll. */
+@media (max-width: 480px) {
+  .tp-result-heading { margin: 0 0 14px; font-size: clamp(1.3rem, 6vw, 1.6rem); }
+  .tp-result-main .result-ring-wrap { width: 92px; height: 92px; }
+  .tp-result-main .tp-sidebar { gap: 12px; padding: 20px; }
+  .tp-result-main .result-stat-pill { font-size: 1.05rem; padding: 10px 16px; }
+}
+
 /* ---------- Motion & interactivity (post-upload workspace only) ---------- */
 @keyframes tpFadeInUp {
   from { opacity: 0; transform: translateY(10px); }
