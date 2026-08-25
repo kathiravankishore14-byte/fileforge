@@ -22,19 +22,84 @@
     <!--HEADER-->
 
     <section class="hero">
-      <h1>Work with files.</h1>
-      <p>Free PDF, image, document, and everyday tools that run directly in your browser.</p>
+      <p class="hero-eyebrow"><span class="icon icon-shield-check" aria-hidden="true"></span> 63+ Private Browser Tools</p>
+      <h1>Your files stay yours.</h1>
+      <p>Work with PDFs, images and documents directly in your browser — no uploads required.</p>
 
       <div class="home-search-wrap site-search-wrap">
-        <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search 63+ tools... (Ctrl+K)" aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search 63+ tools..." aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <kbd class="search-kbd-hint" aria-hidden="true">Ctrl K</kbd>
         <div id="homeSearchResults" class="search-results-list" role="listbox"></div>
       </div>
 
       <div class="hero-trust-row">
-        <span class="hero-trust-item">🔒 Private processing</span>
-        <span class="hero-trust-item">⚡ No sign-up</span>
-        <span class="hero-trust-item">🚀 Fast</span>
-        <span class="hero-trust-item">💚 Free core tools</span>
+        <span class="hero-trust-item"><span class="icon icon-shield-check" aria-hidden="true"></span> Private processing</span>
+        <span class="hero-trust-item"><span class="icon icon-user-x" aria-hidden="true"></span> No sign-up</span>
+        <span class="hero-trust-item"><span class="icon icon-zap" aria-hidden="true"></span> Fast</span>
+        <span class="hero-trust-item"><span class="icon icon-badge-check" aria-hidden="true"></span> Free core tools</span>
+      </div>
+    </section>
+
+    <section class="popular-tools-section" aria-labelledby="popularToolsHeading">
+      <div class="popular-tools-inner">
+        <h2 id="popularToolsHeading">Popular tools</h2>
+        <p class="popular-tools-sub">Quick access to the tools people use most.</p>
+        <div class="popular-tools-grid">
+          <a class="popular-tool-card" href="/resize-image">
+            <div class="popular-tool-icon"><img src="/icons/icon-tool-resize.svg" alt="" width="28" height="28" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">Image</span>
+              <h3>Resize Image</h3>
+              <p>Resize JPG, PNG and WebP images quickly.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+          <a class="popular-tool-card" href="/merge-pdf">
+            <div class="popular-tool-icon"><img src="/icons/icon-tool-pdfmerge.svg" alt="" width="28" height="28" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">PDF</span>
+              <h3>Merge PDF</h3>
+              <p>Combine multiple PDF files into one document.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+          <a class="popular-tool-card" href="/pdf-to-word">
+            <div class="popular-tool-icon"><img src="/icons/icon-pdf.svg" alt="" width="20" height="20" /><span class="arrow">→</span><img src="/icons/icon-word.svg" alt="" width="20" height="20" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">PDF</span>
+              <h3>PDF to Word</h3>
+              <p>Convert PDF content into an editable Word file.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+          <a class="popular-tool-card" href="/compress-image">
+            <div class="popular-tool-icon"><img src="/icons/icon-tool-compress.svg" alt="" width="28" height="28" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">Image</span>
+              <h3>Compress Image</h3>
+              <p>Reduce image file size while preserving useful quality.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+          <a class="popular-tool-card" href="/qr-code-generator">
+            <div class="popular-tool-icon"><img src="/icons/icon-tool-qrcode.svg" alt="" width="28" height="28" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">Utilities</span>
+              <h3>QR Code Generator</h3>
+              <p>Create QR codes instantly in your browser.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+          <a class="popular-tool-card" href="/excel-to-pdf">
+            <div class="popular-tool-icon"><img src="/icons/icon-excel.svg" alt="" width="20" height="20" /><span class="arrow">→</span><img src="/icons/icon-pdf.svg" alt="" width="20" height="20" /></div>
+            <div class="popular-tool-body">
+              <span class="popular-tool-cat">Excel</span>
+              <h3>Excel to PDF</h3>
+              <p>Convert spreadsheets into PDF files.</p>
+            </div>
+            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
+          </a>
+        </div>
       </div>
     </section>
 
@@ -44,11 +109,43 @@
       <button class="filter-tab" data-filter="image">Image</button>
       <button class="filter-tab" data-filter="excel">Excel</button>
       <button class="filter-tab" data-filter="word">Word</button>
-      <button class="filter-tab" data-filter="ppt">PPT</button>
-      <button class="filter-tab" data-filter="utilities">Other Tools</button>
+      <button class="filter-tab" data-filter="ppt">PowerPoint</button>
+      <button class="filter-tab" data-filter="utilities">Utilities</button>
     </div>
 
     <div class="tool-grid" id="toolGrid"></div>
+
+    <section class="privacy-diagram-section" aria-labelledby="privacyDiagramHeading">
+      <div class="privacy-diagram-inner">
+        <h2 id="privacyDiagramHeading">Your files never leave your device.</h2>
+        <p class="privacy-diagram-sub">Every tool on this site processes files directly in your browser, so your documents don't need to be uploaded to a remote server.</p>
+        <div class="privacy-diagram-flow">
+          <div class="privacy-diagram-step">
+            <span class="icon icon-file privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your File</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-browser privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your Browser</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-cpu privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Local Processing</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-download privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your Result</span>
+          </div>
+        </div>
+        <div class="privacy-diagram-no-server">
+          <span class="icon icon-cloud-off" aria-hidden="true"></span>
+          No unnecessary server upload
+        </div>
+      </div>
+    </section>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
       <div class="modal-box">

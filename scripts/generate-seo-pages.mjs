@@ -166,7 +166,7 @@ function useCasesHtml(meta) {
   if (!meta.useCases || !meta.useCases.length) return '';
   const items = meta.useCases.map((u) => `
     <div class="tp-usecase">
-      <span class="tp-usecase-icon" aria-hidden="true">${u.icon}</span>
+      <span class="icon icon-${esc(u.icon)} tp-usecase-icon" aria-hidden="true"></span>
       <span class="tp-usecase-label">${esc(u.label)}</span>
     </div>`).join('');
   return `<div class="tp-usecases">${items}</div>`;
@@ -257,11 +257,15 @@ function dropZoneHtml(key, meta) {
   if (!needsFile) return '';
   const formatLabel = acceptLabel(meta.accept);
   const acceptAttr = meta.accept && meta.accept !== '*/*' ? ` accept="${esc(meta.accept)}"` : '';
+  const noun = meta.multiFile ? 'files' : 'file';
   return `
     <div class="tp-dropzone" id="tpDropZone">
       <input type="file" id="tpFileInput"${meta.multiFile ? ' multiple' : ''}${acceptAttr} />
-      <span class="tp-dropzone-icon" aria-hidden="true">📤</span>
-      <p class="tp-dropzone-text">Drop your ${meta.multiFile ? 'files' : 'file'} here</p>
+      <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
+      <p class="tp-dropzone-text">
+        <span class="drop-text-desktop">Drop your ${noun} here</span>
+        <span class="drop-text-mobile">Choose a file</span>
+      </p>
       <button type="button" class="tp-dropzone-browse-btn">Browse files</button>
       ${formatLabel ? `<p class="tp-dropzone-formats">Accepts: ${esc(formatLabel)}</p>` : ''}
     </div>`;
@@ -306,9 +310,9 @@ function buildPage(key) {
       <h1>${esc(seo.h1)}</h1>
       <p>${esc(seo.intro)}</p>
       <div class="tp-trust">
-        <span class="tp-trust-badge">🔒 Private processing</span>
-        <span class="tp-trust-badge">⚡ No sign-up</span>
-        <span class="tp-trust-badge">🌐 Works in any browser</span>
+        <span class="tp-trust-badge"><span class="icon icon-shield-check" aria-hidden="true"></span> Private processing</span>
+        <span class="tp-trust-badge"><span class="icon icon-user-x" aria-hidden="true"></span> No sign-up</span>
+        <span class="tp-trust-badge"><span class="icon icon-globe" aria-hidden="true"></span> Works in any browser</span>
       </div>
       ${(meta.noFile || key === 'pdfcompare') ? `<button type="button" class="config-action-btn tp-open-btn" id="tpOpenToolBtn">Open ${esc(meta.label)} →</button>` : ''}
       ${useCasesHtml(meta)}

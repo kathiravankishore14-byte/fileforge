@@ -124,12 +124,12 @@ const toolMeta = {
       intro: 'One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds, then compare it against the original with a slider and swap in a new background color or image before you download. Nothing leaves your browser.',
     },
     useCases: [
-      { icon: '🧑', label: 'Headshots' },
-      { icon: '🛍️', label: 'E-commerce' },
-      { icon: '📸', label: 'Photographers' },
-      { icon: '📣', label: 'Marketing' },
-      { icon: '💻', label: 'Developers' },
-      { icon: '🎨', label: 'Graphic design' },
+      { icon: 'user', label: 'Headshots' },
+      { icon: 'shopping-bag', label: 'E-commerce' },
+      { icon: 'camera', label: 'Photographers' },
+      { icon: 'megaphone', label: 'Marketing' },
+      { icon: 'laptop', label: 'Developers' },
+      { icon: 'palette', label: 'Graphic design' },
     ],
   },
   colorpalette: { label: 'Color Palette Extractor', desc: 'Pull the dominant colors from a photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
@@ -675,7 +675,7 @@ function showResultState(blob, filename, extraNote) {
         </div>
         <aside class="tp-sidebar">
           ${ringHtml}
-          <a href="${url}" download="${filename}" class="download-btn">⬇ Download ${filename}</a>
+          <a href="${url}" download="${filename}" class="download-btn"><span class="icon icon-download" aria-hidden="true"></span> Download ${filename}</a>
           <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
           ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
           <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
@@ -694,7 +694,7 @@ function showResultState(blob, filename, extraNote) {
   page.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   renderResultPreview(blob, url);
-  page.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '⬇'));
+  page.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '<span class="icon icon-download" aria-hidden="true"></span>'));
   page.querySelector('#resetToolBtn').addEventListener('click', () => {
     currentFile = null;
     clearResultPage();
@@ -736,13 +736,13 @@ async function renderResultPreview(blob, url) {
       }
     } catch {
       const freshWrap = document.querySelector('#resultPreviewWrap');
-      if (freshWrap) freshWrap.innerHTML = `<p class="result-preview-caption">📄 Preview unavailable</p>`;
+      if (freshWrap) freshWrap.innerHTML = `<p class="result-preview-caption"><span class="icon icon-file" aria-hidden="true"></span> Preview unavailable</p>`;
     }
     return;
   }
 
   const kindLabel = type || 'File';
-  wrap.innerHTML = `<p class="result-preview-caption">📦 ${kindLabel} ready to download</p>`;
+  wrap.innerHTML = `<p class="result-preview-caption"><span class="icon icon-package" aria-hidden="true"></span> ${kindLabel} ready to download</p>`;
 }
 
 function loadImageFromBlob(blob) {
@@ -835,10 +835,10 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
           <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#378ADD" style="background:#378ADD" title="Blue" aria-label="Blue"></button>
           <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#EAF3DE" style="background:#EAF3DE" title="Light green" aria-label="Light green"></button>
           <label class="bgr-swatch bgr-swatch-custom" title="Custom color" aria-label="Custom color">
-            🎨<input type="color" id="bgrCustomColor" value="#E24B4A" />
+            <span class="icon icon-palette" aria-hidden="true"></span><input type="color" id="bgrCustomColor" value="#E24B4A" />
           </label>
           <label class="bgr-swatch bgr-swatch-upload" title="Upload a background photo" aria-label="Upload a background photo">
-            🖼️<input type="file" accept="image/*" id="bgrUploadInput" hidden />
+            <span class="icon icon-image" aria-hidden="true"></span><input type="file" accept="image/*" id="bgrUploadInput" hidden />
           </label>
         </div>
 
@@ -946,7 +946,7 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
       document.body.appendChild(a);
       a.click();
       a.remove();
-      showToast(`Downloading ${filename}`, '⬇');
+      showToast(`Downloading ${filename}`, '<span class="icon icon-download" aria-hidden="true"></span>');
       setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (err) {
       showErrorState(err.message);
@@ -1348,7 +1348,7 @@ async function runUnzipFlow(file) {
         <div class="extracted-file-list">
           ${extracted.map((f) => {
             const url = URL.createObjectURL(f.blob);
-            return `<div class="extracted-file-row"><span class="extracted-file-name">📄 ${f.name}</span><a href="${url}" download="${f.name}" class="extracted-file-download">Download</a></div>`;
+            return `<div class="extracted-file-row"><span class="extracted-file-name"><span class="icon icon-file" aria-hidden="true"></span> ${f.name}</span><a href="${url}" download="${f.name}" class="extracted-file-download">Download</a></div>`;
           }).join('')}
         </div>
       </div>
@@ -1398,11 +1398,11 @@ function renderSingleFileConfig() {
         }
       } catch {
         const wrap = document.querySelector('#genericPdfPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
   } else {
-    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);">📄 ${currentFile.name}</p>`);
+    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name}</p>`);
   }
 
   if (currentToolKey === 'compress') {
@@ -1490,7 +1490,7 @@ function renderSingleFileConfig() {
       const scale = Math.max(0.4, Math.min(1.5, Math.sqrt((w * h) / (origW * origH))));
       currentImg.style.transform = `scale(${scale})`;
       const stretched = Math.abs((origW / origH) - (w / h)) / (origW / origH) > 0.05;
-      liveHint.innerHTML = `New size: <strong>${w} × ${h}px</strong>${stretched ? ' <span class="tp-live-warn">⚠ different aspect ratio — image will stretch</span>' : ''}`;
+      liveHint.innerHTML = `New size: <strong>${w} × ${h}px</strong>${stretched ? ' <span class="tp-live-warn"><span class="icon icon-alert-triangle" aria-hidden="true"></span> different aspect ratio — image will stretch</span>' : ''}`;
     };
     widthInput.addEventListener('input', updateResizeLivePreview);
     heightInput.addEventListener('input', updateResizeLivePreview);
@@ -1850,7 +1850,7 @@ function renderSingleFileConfig() {
         wrap.innerHTML = '';
         wrap.appendChild(previewImg);
       } catch {
-        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
 
@@ -2107,7 +2107,7 @@ function renderSingleFileConfig() {
         }
       } catch {
         const wrap = document.querySelector('#docPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2143,7 +2143,7 @@ function renderSingleFileConfig() {
         }
       } catch {
         const wrap = document.querySelector('#sheetPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">📄 ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2427,7 +2427,7 @@ function renderSingleFileConfig() {
     // Nothing had a visual preview for this tool (e.g. Compress PDF) — show
     // a plain file icon so the left pane isn't left empty.
     if (!previewPane.children.length) {
-      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon">📄</span><span>${currentFile.name}</span></div>`;
+      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon"><span class="icon icon-file" aria-hidden="true"></span></span><span>${currentFile.name}</span></div>`;
     }
   }
 }
@@ -3105,7 +3105,7 @@ function renderScanToPdfTool() {
   modalBody.innerHTML = `
     <video id="scanVideo" autoplay playsinline style="width:100%; border-radius:10px; background:#000;"></video>
     <div class="config-panel">
-      <button type="button" class="config-action-btn" id="captureBtn">📷 Capture Page</button>
+      <button type="button" class="config-action-btn" id="captureBtn"><span class="icon icon-camera" aria-hidden="true"></span> Capture Page</button>
       <button class="config-action-btn" id="doneScanBtn" disabled>Create PDF (<span id="captureCount">0</span> pages)</button>
     </div>
     <div id="scanThumbs" class="file-list"></div>
@@ -3439,13 +3439,13 @@ function renderMultiFileTool(initialFiles) {
     showToast(`Added ${valid.length} file${valid.length === 1 ? '' : 's'}`, '+');
   });
 
-  const fileIconFor = (f) => {
+  const fileIconClassFor = (f) => {
     const name = f.name.toLowerCase();
-    if (name.endsWith('.pdf')) return '📄';
-    if (name.endsWith('.docx') || name.endsWith('.doc')) return '📝';
-    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return '📊';
-    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return '📽️';
-    return '📁';
+    if (name.endsWith('.pdf')) return 'icon-file';
+    if (name.endsWith('.docx') || name.endsWith('.doc')) return 'icon-file-text';
+    if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return 'icon-sheet';
+    if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'icon-presentation';
+    return 'icon-folder';
   };
 
   let dragFromIndex = null;
@@ -3457,8 +3457,8 @@ function renderMultiFileTool(initialFiles) {
         <button type="button" class="file-card-remove" data-rm="${i}" aria-label="Remove ${f.name}">✕</button>
         <div class="file-card-thumb">
           ${f.type.startsWith('image/')
-            ? `<img src="${URL.createObjectURL(f)}" alt="" onerror="this.parentElement.textContent='${fileIconFor(f)}'" />`
-            : `<span class="file-card-icon">${fileIconFor(f)}</span>`}
+            ? `<img src="${URL.createObjectURL(f)}" alt="" onerror="this.parentElement.classList.add('icon','${fileIconClassFor(f)}')" />`
+            : `<span class="file-card-icon"><span class="icon ${fileIconClassFor(f)}" aria-hidden="true"></span></span>`}
         </div>
         <span class="file-card-name" title="${f.name}">${f.name}</span>
         <span class="file-card-size">${formatBytes(f.size)}</span>
@@ -3504,7 +3504,7 @@ function renderMultiFileTool(initialFiles) {
     }
 
     warnEl.style.display = files.length > 22 ? 'block' : 'none';
-    if (files.length > 22) warnEl.textContent = `⚠ ${files.length} files, large batches may use a lot of memory.`;
+    if (files.length > 22) warnEl.innerHTML = `<span class="icon icon-alert-triangle" aria-hidden="true"></span> ${files.length} files, large batches may use a lot of memory.`;
     const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
     summaryEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'} · ${formatBytes(totalBytes)} total`;
     goBtn.disabled = currentToolKey === 'pdfmerge' ? files.length < 2 : files.length < 1;
@@ -3708,7 +3708,8 @@ async function routeHeroFiles(files) {
 // { file, category } — category comes from detectCategoryFromFile.
 let heroFiles = [];
 
-const HERO_CATEGORY_EMOJI = { pdf: '📕', word: '📄', excel: '📊', ppt: '📽️', image: '🖼️' };
+const HERO_CATEGORY_ICON_CLASS = { pdf: 'icon-file', word: 'icon-file-text', excel: 'icon-sheet', ppt: 'icon-presentation', image: 'icon-image' };
+const heroCategoryIconHtml = (category) => `<span class="icon ${HERO_CATEGORY_ICON_CLASS[category] || 'icon-folder'}" aria-hidden="true"></span>`;
 
 // Default 3 suggested tools per category, tuned separately for a single
 // file vs. several files of the same type (e.g. multiple PDFs bumps
@@ -3744,8 +3745,8 @@ function showHeroAnalyzing() {
   content.innerHTML = `
     <div class="hero-analyzing">
       <div class="hero-analyzing-icons">
-        <span class="hero-analyzing-doc">📄</span>
-        <span class="hero-analyzing-glass">🔍</span>
+        <span class="hero-analyzing-doc"><span class="icon icon-file" aria-hidden="true"></span></span>
+        <span class="hero-analyzing-glass"><span class="icon icon-search" aria-hidden="true"></span></span>
       </div>
       <p class="hero-analyzing-text">Analyzing file type…</p>
       <div class="progress-bar-track"><div class="progress-bar-fill" id="heroProgressFill"></div></div>
@@ -3768,10 +3769,13 @@ function resetHeroUploadFlow() {
   if (content) {
     content.innerHTML = `
       <div class="hero-drop-idle" id="heroDropIdle">
-        <span class="hero-drop-icon" aria-hidden="true">📤</span>
-        <p class="hero-drop-text">Drag your file here</p>
+        <span class="icon icon-upload hero-drop-icon" aria-hidden="true"></span>
+        <p class="hero-drop-text">
+          <span class="drop-text-desktop">Drag your file here</span>
+          <span class="drop-text-mobile">Choose a file</span>
+        </p>
         <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
-        <p class="hero-drop-subtext">PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
+        <p class="hero-drop-subtext">PDF · JPG · PNG · WEBP · DOCX · XLSX · PPTX</p>
       </div>
     `;
   }
@@ -3812,7 +3816,7 @@ function renderHeroSuggestions() {
     <div class="hero-file-list">
       ${heroFiles.map((f, i) => `
         <div class="hero-file-row">
-          <span class="hero-file-row-icon">${HERO_CATEGORY_EMOJI[f.category] || '📁'}</span>
+          <span class="hero-file-row-icon">${heroCategoryIconHtml(f.category)}</span>
           <span class="hero-file-row-name">${f.file.name}</span>
           <button type="button" class="hero-file-row-remove" data-remove-index="${i}" aria-label="Remove ${f.file.name}" title="Remove this file">✕</button>
         </div>
@@ -3823,9 +3827,9 @@ function renderHeroSuggestions() {
     <div class="hero-preview">
       ${latest.file.type.startsWith('image/')
         ? `<div class="hero-preview-thumb-wrap"><img class="hero-preview-thumb" src="${URL.createObjectURL(latest.file)}" />${badgeHtml}${removeBtnHtml}</div>`
-        : `<div class="hero-preview-icon">${HERO_CATEGORY_EMOJI[latest.category] || '📁'}${badgeHtml}${removeBtnHtml}</div>`}
+        : `<div class="hero-preview-icon">${heroCategoryIconHtml(latest.category)}${badgeHtml}${removeBtnHtml}</div>`}
       <p class="hero-preview-name">${heroFiles.length > 1 ? `${heroFiles.length} files selected` : latest.file.name}</p>
-      ${cats.length > 1 ? `<div class="batch-warning">⚠ These files span more than one category (${cats.map((c) => CATEGORY_LABELS[c] || c).join(', ')}); suggestions below are based on the most common type.</div>` : ''}
+      ${cats.length > 1 ? `<div class="batch-warning"><span class="icon icon-alert-triangle" aria-hidden="true"></span> These files span more than one category (${cats.map((c) => CATEGORY_LABELS[c] || c).join(', ')}); suggestions below are based on the most common type.</div>` : ''}
       ${fileListHtml}
       <button type="button" class="hero-add-more-btn" id="heroAddMoreFilesBtn">+ Add more files</button>
       <button type="button" class="hero-clear-btn" id="heroClearFilesBtn">Start over</button>
@@ -4252,12 +4256,12 @@ const CATEGORY_NAV_CONFIG = {
       // Text's 4 tools, folded in here now that Text is no longer its own category.
       { label: 'Text', tools: ['texttoppt', 'textopdf', 'wordcounter', 'caseconverter'] },
     ],
-    allLabel: 'All Other Tools',
+    allLabel: 'All Utilities',
     allLink: '/other-tools',
   },
 };
 
-const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PPT', utilities: 'Other Tools' };
+const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PowerPoint', utilities: 'Utilities' };
 
 // Home ("all") page nav: every top-level category gets its own hover
 // dropdown listing every tool in that category, same grid/mega-menu
@@ -4393,7 +4397,7 @@ function wireFeaturedBanner() {
     return `
       <a class="ffh-banner-slide" href="${href}">
         ${renderIconBadge(meta.category, meta.iconTo, key)}
-        <span class="ffh-banner-text">✨ ${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
+        <span class="ffh-banner-text">${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
       </a>
     `;
   }).join('');
@@ -4503,7 +4507,7 @@ export function initToolPage(pageCategory) {
 // Bootstraps a single-tool SEO landing page (e.g. /resize-image.html,
 // generated by scripts/generate-seo-pages.mjs). All the SEO content
 // (breadcrumb, H1, intro, related tools, FAQ) is already static HTML
-// on these pages — this only wires the shared nav/mascot/search chrome
+// on these pages — this only wires the shared nav/search chrome
 // and mounts the real, already-working tool UI (the same modal every
 // other page uses) as high on the page as possible.
 function wireToolPageDropZone(toolKey, meta) {
@@ -4541,7 +4545,6 @@ export function initToolLandingPage(toolKey) {
   if (!meta) return;
 
   wireHamburger();
-  wireHeroMascot();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   wireSearchShortcut();
   renderCategoryNav(meta.category);

@@ -17,7 +17,7 @@
     <meta name="twitter:description" content="Extract files from a zip archive. Free, private, and runs right in your browser — no upload, no signup." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://onlinetoolsweb.com/"},{"@type":"ListItem","position":2,"name":"Other Tools","item":"https://onlinetoolsweb.com/other-tools"},{"@type":"ListItem","position":3,"name":"Unzip Archive","item":"https://onlinetoolsweb.com/unzip-archive"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://onlinetoolsweb.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://onlinetoolsweb.com/other-tools"},{"@type":"ListItem","position":3,"name":"Unzip Archive","item":"https://onlinetoolsweb.com/unzip-archive"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unzip Archive — OnlineToolsWeb","url":"https://onlinetoolsweb.com/unzip-archive","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (runs in browser)","description":"Extract files from a zip archive. Free, private, and runs right in your browser — no upload, no signup.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Unzip Archive free to use?","acceptedAnswer":{"@type":"Answer","text":"Yes — core OnlineToolsWeb tools are free to use, including Unzip Archive. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free."}},{"@type":"Question","name":"Do I need to install anything to use Unzip Archive?","acceptedAnswer":{"@type":"Answer","text":"No installation needed. Unzip Archive runs directly in your browser on any modern desktop or mobile browser — just open this page and use it."}},{"@type":"Question","name":"Is my file safe when I use Unzip Archive?","acceptedAnswer":{"@type":"Answer","text":"Yes. Unzip Archive processes your file entirely on your own device. It's never uploaded anywhere, so no one else ever sees it."}},{"@type":"Question","name":"What file types does Unzip Archive support?","acceptedAnswer":{"@type":"Answer","text":"Unzip Archive works with ZIP archives."}}]}</script>
   </head>
@@ -32,9 +32,9 @@
       <h1>Unzip Archive Online</h1>
       <p>Extract files from a zip archive. Everything happens locally in your browser, so your files are never uploaded to a server — drop or select your file, and get your result in seconds.</p>
       <div class="tp-trust">
-        <span class="tp-trust-badge">🔒 Private processing</span>
-        <span class="tp-trust-badge">⚡ No sign-up</span>
-        <span class="tp-trust-badge">🌐 Works in any browser</span>
+        <span class="tp-trust-badge"><span class="icon icon-shield-check" aria-hidden="true"></span> Private processing</span>
+        <span class="tp-trust-badge"><span class="icon icon-user-x" aria-hidden="true"></span> No sign-up</span>
+        <span class="tp-trust-badge"><span class="icon icon-globe" aria-hidden="true"></span> Works in any browser</span>
       </div>
       
       
@@ -43,8 +43,11 @@
     
     <div class="tp-dropzone" id="tpDropZone">
       <input type="file" id="tpFileInput" accept=".zip" />
-      <span class="tp-dropzone-icon" aria-hidden="true">📤</span>
-      <p class="tp-dropzone-text">Drop your file here</p>
+      <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
+      <p class="tp-dropzone-text">
+        <span class="drop-text-desktop">Drop your file here</span>
+        <span class="drop-text-mobile">Choose a file</span>
+      </p>
       <button type="button" class="tp-dropzone-browse-btn">Browse files</button>
       <p class="tp-dropzone-formats">Accepts: ZIP archives</p>
     </div>

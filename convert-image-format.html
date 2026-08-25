@@ -32,9 +32,9 @@
       <h1>Convert Image Format Online</h1>
       <p>Switch between JPG, PNG, and WebP. Everything happens locally in your browser, so your files are never uploaded to a server — drop or select your file, and get your result in seconds.</p>
       <div class="tp-trust">
-        <span class="tp-trust-badge">🔒 Private processing</span>
-        <span class="tp-trust-badge">⚡ No sign-up</span>
-        <span class="tp-trust-badge">🌐 Works in any browser</span>
+        <span class="tp-trust-badge"><span class="icon icon-shield-check" aria-hidden="true"></span> Private processing</span>
+        <span class="tp-trust-badge"><span class="icon icon-user-x" aria-hidden="true"></span> No sign-up</span>
+        <span class="tp-trust-badge"><span class="icon icon-globe" aria-hidden="true"></span> Works in any browser</span>
       </div>
       
       
@@ -43,8 +43,11 @@
     
     <div class="tp-dropzone" id="tpDropZone">
       <input type="file" id="tpFileInput" accept="image/*" />
-      <span class="tp-dropzone-icon" aria-hidden="true">📤</span>
-      <p class="tp-dropzone-text">Drop your file here</p>
+      <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
+      <p class="tp-dropzone-text">
+        <span class="drop-text-desktop">Drop your file here</span>
+        <span class="drop-text-mobile">Choose a file</span>
+      </p>
       <button type="button" class="tp-dropzone-browse-btn">Browse files</button>
       <p class="tp-dropzone-formats">Accepts: JPG, PNG, WebP and other common image formats</p>
     </div>

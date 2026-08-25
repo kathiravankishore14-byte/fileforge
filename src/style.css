@@ -24,14 +24,183 @@
 
 * { box-sizing: border-box; }
 
+/* ---------- Icon system ----------
+   Consistent Lucide-style icon set, replacing all product-UI emoji.
+   Inline SVG masks (not <img> or an icon font) so every icon inherits
+   its context's text color via currentColor — one red icon in the hero
+   eyebrow, one muted-gray icon in a trust badge, one white icon on a
+   filled button — with zero extra HTTP requests and no new dependency.
+   Sizing is set per usage site (badges 16-20px, cards 20-24px) by
+   overriding width/height on the specific instance. */
+.icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.icon-shield-check {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+}
+
+.icon-user-x {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='8' r='4'/%3E%3Cpath d='M4 21c0-3.87 3.13-7 7-7 1.15 0 2.24.28 3.2.77'/%3E%3Cpath d='m17 14 4 4'/%3E%3Cpath d='m21 14-4 4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='8' r='4'/%3E%3Cpath d='M4 21c0-3.87 3.13-7 7-7 1.15 0 2.24.28 3.2.77'/%3E%3Cpath d='m17 14 4 4'/%3E%3Cpath d='m21 14-4 4'/%3E%3C/svg%3E");
+}
+
+.icon-zap {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 3 14h7l-1 8 11-14h-7l1-6Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2 3 14h7l-1 8 11-14h-7l1-6Z'/%3E%3C/svg%3E");
+}
+
+.icon-globe {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18'/%3E%3Cpath d='M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18'/%3E%3Cpath d='M12 3c2.5 2.5 4 6 4 9s-1.5 6.5-4 9c-2.5-2.5-4-6-4-9s1.5-6.5 4-9Z'/%3E%3C/svg%3E");
+}
+
+.icon-badge-check {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.75Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.75Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
+}
+
+.icon-arrow-right {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
+}
+
+.icon-upload {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m7 8 5-5 5 5'/%3E%3Cpath d='M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m7 8 5-5 5 5'/%3E%3Cpath d='M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4'/%3E%3C/svg%3E");
+}
+
+.icon-file {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3C/svg%3E");
+}
+
+.icon-browser {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M3 9h18'/%3E%3Cpath d='M7 6.5h.01M10 6.5h.01'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Cpath d='M3 9h18'/%3E%3Cpath d='M7 6.5h.01M10 6.5h.01'/%3E%3C/svg%3E");
+}
+
+.icon-cpu {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='5' width='14' height='14' rx='2'/%3E%3Crect x='9' y='9' width='6' height='6'/%3E%3Cpath d='M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='5' width='14' height='14' rx='2'/%3E%3Crect x='9' y='9' width='6' height='6'/%3E%3Cpath d='M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3'/%3E%3C/svg%3E");
+}
+
+.icon-download {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m7 11 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='m7 11 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E");
+}
+
+.icon-cloud-off {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 5.5A5 5 0 0 1 20 8a4.5 4.5 0 0 1-.5 9H7'/%3E%3Cpath d='M4.5 9.5A4.5 4.5 0 0 0 5 18h1'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9.5 5.5A5 5 0 0 1 20 8a4.5 4.5 0 0 1-.5 9H7'/%3E%3Cpath d='M4.5 9.5A4.5 4.5 0 0 0 5 18h1'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E");
+}
+
+.icon-image {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-5-5L5 21'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-5-5L5 21'/%3E%3C/svg%3E");
+}
+
+/* Remove Background's "who it's for" use-case row (image tool page only) */
+.icon-user {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-3.87 3.13-7 7-7h2c3.87 0 7 3.13 7 7'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-3.87 3.13-7 7-7h2c3.87 0 7 3.13 7 7'/%3E%3C/svg%3E");
+}
+
+.icon-shopping-bag {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M16 10a4 4 0 0 1-8 0'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z'/%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M16 10a4 4 0 0 1-8 0'/%3E%3C/svg%3E");
+}
+
+.icon-camera {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z'/%3E%3Ccircle cx='12' cy='13' r='4'/%3E%3C/svg%3E");
+}
+
+.icon-megaphone {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 11 18-6v14L3 13v-2Z'/%3E%3Cpath d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 11 18-6v14L3 13v-2Z'/%3E%3Cpath d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/%3E%3C/svg%3E");
+}
+
+.icon-laptop {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='4' width='16' height='11' rx='1'/%3E%3Cpath d='M2 19h20'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='4' width='16' height='11' rx='1'/%3E%3Cpath d='M2 19h20'/%3E%3C/svg%3E");
+}
+
+.icon-palette {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1a2 2 0 0 0 0 4Z'/%3E%3Ccircle cx='13.5' cy='6.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='17.5' cy='10.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='8.5' cy='7.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='6.5' cy='12.5' r='.6' fill='%23000' stroke='none'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22a10 10 0 1 1 0-20 8 8 0 0 1 0 16h-1a2 2 0 0 0 0 4Z'/%3E%3Ccircle cx='13.5' cy='6.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='17.5' cy='10.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='8.5' cy='7.5' r='.6' fill='%23000' stroke='none'/%3E%3Ccircle cx='6.5' cy='12.5' r='.6' fill='%23000' stroke='none'/%3E%3C/svg%3E");
+}
+
+/* File-type / status icons used in preview rows, warnings and result captions
+   (replacing raw emoji per launch-readiness polish pass). */
+.icon-file-text {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3Cpath d='M10 9H8'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3Cpath d='M10 9H8'/%3E%3C/svg%3E");
+}
+.icon-sheet {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 13h2'/%3E%3Cpath d='M14 13h2'/%3E%3Cpath d='M8 17h2'/%3E%3Cpath d='M14 17h2'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2Z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M8 13h2'/%3E%3Cpath d='M14 13h2'/%3E%3Cpath d='M8 17h2'/%3E%3Cpath d='M14 17h2'/%3E%3C/svg%3E");
+}
+.icon-presentation {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='14' x='2' y='3' rx='2'/%3E%3Cpath d='M8 21h8'/%3E%3Cpath d='M12 17v4'/%3E%3Cpath d='m10 8 4 2.5-4 2.5V8Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='14' x='2' y='3' rx='2'/%3E%3Cpath d='M8 21h8'/%3E%3Cpath d='M12 17v4'/%3E%3Cpath d='m10 8 4 2.5-4 2.5V8Z'/%3E%3C/svg%3E");
+}
+.icon-folder {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/%3E%3C/svg%3E");
+}
+.icon-alert-triangle {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z'/%3E%3Cpath d='M12 9v4'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E");
+}
+.icon-search {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+}
+.icon-package {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73Z'/%3E%3Cpath d='M12 22V12'/%3E%3Cpath d='M12 12 3.5 6.94'/%3E%3Cpath d='m12 12 8.5-5.06'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73Z'/%3E%3Cpath d='M12 22V12'/%3E%3Cpath d='M12 12 3.5 6.94'/%3E%3Cpath d='m12 12 8.5-5.06'/%3E%3C/svg%3E");
+}
+
+/* Sizing for the small inline file/status icons used in preview rows,
+   captions and warning lines (replacing the emoji they used to hold). */
+.tp-live-warn .icon,
+.batch-warning .icon,
+.result-preview-caption .icon,
+.extracted-file-name .icon,
+.tp-generic-file-line .icon,
+.hero-file-row-icon .icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 2px;
+}
+.config-action-btn .icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
 body {
   margin: 0;
   font-family: var(--font-body);
-  /* Sky gradient from the hero mascot widget, now the backdrop for the
-     whole site. Fixed px stops so it fades to a soft near-white blue
-     within the first ~900px and then holds that tone for the rest of
-     the page, however long — keeps every page's content readable no
-     matter how far you scroll. */
+  /* Sky-blue backdrop for the whole site. Fixed px stops so it fades to
+     a soft near-white blue within the first ~900px and then holds that
+     tone for the rest of the page, however long — keeps every page's
+     content readable no matter how far you scroll. */
   background: linear-gradient(
     180deg,
     #378ADD 0px,
@@ -262,19 +431,6 @@ body.tool-landing-page .site-global-faq {
   display: none;
 }
 
-/* The mascot floats fixed in the bottom-right corner on every page. On
-   a wide viewport with the suggestion panel open, that corner can be
-   close enough to the hero row's own bottom-right to visually collide
-   with it — this reserves a little clearance there so the two never
-   overlap in the one place it's actually distracting. Elsewhere on the
-   page (further down a long tool grid, the footer) an occasional light
-   overlap is an accepted trade-off of having him fixed everywhere.
-   Scoped to .hero-drop-row (not .hero-drop-wrap) so it doesn't affect
-   the banner above it, which needs the wrap's padding to stay constant
-   in order to stretch edge-to-edge. */
-@media (min-width: 1180px) {
-  .hero-drop-row { padding-right: 178px; }
-}
 
 /* ---------- Featured-tools banner (replaces the old search box) ---------- */
 .ffh-banner {
@@ -405,10 +561,6 @@ body.tool-landing-page .site-global-faq {
   position: relative;
   flex: 0 1 50%;
   min-width: 0;
-  /* Nudged slightly right of dead-center while idle — a purely visual
-     offset (doesn't affect layout/centering math for anything else).
-     Cleared the moment .compact is added (suggestion panel open), so
-     the post-drop left-shifted pairing is unaffected. */
   /* Fixed (not min-) height, plus overflow:hidden as a backstop — the
      box must never grow no matter what's inside it (single file, a
      multi-file list, a long filename, ...). The preview content below
@@ -431,13 +583,6 @@ body.tool-landing-page .site-global-faq {
 
 .hero-drop-zone:hover, .hero-drop-zone.drag-active { background: var(--blue-light); border-color: var(--blue-dark); }
 
-/* Scoped to wider screens only — below 860px the row goes column-direction
-   and the box is naturally full-width/centered, so this offset would
-   otherwise push it half off-screen on phones. */
-@media (min-width: 861px) {
-  .hero-drop-zone:not(.compact) { left: 88px; }
-}
-
 .hero-drop-content {
   width: 100%;
   height: 100%;
@@ -455,7 +600,7 @@ body.tool-landing-page .site-global-faq {
   gap: 14px;
 }
 
-.hero-drop-icon { font-size: 2rem; line-height: 1; }
+.hero-drop-icon { width: 34px; height: 34px; color: var(--blue); }
 
 /* Touch users don't drag-and-drop — this is the dominant, unmissable
    action; the box itself stays clickable/droppable too (desktop, and
@@ -493,15 +638,17 @@ body.tool-landing-page .site-global-faq {
   height: 64px;
 }
 
-.hero-analyzing-doc { font-size: 2.6rem; line-height: 1; display: block; }
+.hero-analyzing-doc { display: block; color: var(--blue); }
+.hero-analyzing-doc .icon { width: 42px; height: 42px; }
 
 .hero-analyzing-glass {
   position: absolute;
   top: -8px;
   left: -8px;
-  font-size: 1.7rem;
+  color: var(--text-muted);
   animation: heroScan 1.1s ease-in-out infinite;
 }
+.hero-analyzing-glass .icon { width: 27px; height: 27px; }
 
 @keyframes heroScan {
   0%, 100% { transform: translate(0, 0) rotate(-8deg); }
@@ -651,7 +798,11 @@ body.tool-landing-page .site-global-faq {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(2rem, 9vw, 7rem);
+}
+.hero-preview-icon > .icon {
+  width: clamp(32px, 9vw, 112px);
+  height: clamp(32px, 9vw, 112px);
+  color: var(--text-muted);
 }
 
 .hero-preview .batch-warning { width: 100%; box-sizing: border-box; }
@@ -693,8 +844,9 @@ body.tool-landing-page .site-global-faq {
 
 /* ---------- Suggestion panel beside the (now compact) drop zone ----------
    Styled as a speech bubble — the mascot "asking" which tool you want,
-   even though he stays put in his corner. A tail on the left edge
-   points back toward the drop zone/preview it's reacting to. */
+   even though he stays put in his corner. A tail on the right edge
+   points back toward him (only on pages where he's shown — see the
+   tool-landing-page override below). */
 .hero-suggest-panel {
   display: none;
   position: relative;
@@ -723,7 +875,9 @@ body.tool-landing-page .site-global-faq {
    set by updateSuggestTailPosition() in main.js so the tail tracks the
    mascot's actual screen position (which stays fixed) as the page
    scrolls, instead of sitting at one static height. 30px is just the
-   pre-JS fallback. */
+   pre-JS fallback. (This panel only ever renders on the homepage and
+   category pages anyway — the whole .hero-drop-wrap it lives in is
+   hidden on tool-landing pages — so no extra scoping is needed here.) */
 .hero-suggest-panel::before, .hero-suggest-panel::after {
   content: "";
   position: absolute;
@@ -798,8 +952,17 @@ body.tool-landing-page .site-global-faq {
   text-wrap: balance;
 }
 
-@media (max-width: 480px) {
+/* Desktop keeps the drag/drop instruction; touch/small screens show a
+   tap-oriented instruction instead — the Browse button below is the
+   actual primary action either way, this is just the wording above it.
+   Both variants live in the DOM and CSS toggles which is visible, so
+   there's no duplicated upload logic to keep in sync. */
+.drop-text-mobile { display: none; }
+
+@media (max-width: 640px) {
   .hero-drop-text { font-size: 1.3rem; }
+  .drop-text-desktop { display: none; }
+  .drop-text-mobile { display: inline; }
 }
 
 .hero-drop-subtext {
@@ -824,7 +987,9 @@ body.tool-landing-page .site-global-faq {
      with the rest of the content. Sits outside the hero-drop-wrap in
      the DOM for exactly this reason. A soft white halo (::before)
      keeps him readable whether he's floating over the sky, a tool
-     grid, or the dark footer. */
+     grid, or the dark footer. Shown only on the homepage and category
+     pages (see body.tool-landing-page override below) — individual
+     tool pages already have a lot going on without a corner overlay. */
   position: fixed;
   right: 18px;
   bottom: 18px;
@@ -859,6 +1024,12 @@ body.tool-landing-page .site-global-faq {
   z-index: 3;
   transition: opacity 0.2s ease;
 }
+
+/* Only the homepage and the 6 category pages carry the shared
+   hero-drop-wrap chrome (see body.tool-landing-page .hero-drop-wrap
+   above) — the mascot is scoped to match, since he's fixed-position
+   and otherwise wouldn't be caught by that rule at all. */
+body.tool-landing-page .ffh-widget { display: none; }
 
 /* Fixed sky layer: sits behind everything, in the viewport, on every
    page — this is what makes the clouds feel like part of the whole
@@ -1042,14 +1213,15 @@ body.tool-landing-page .site-global-faq {
      collapse everything inside it. */
   .hero-drop-content { height: auto; padding: 6px 0; }
   .hero-suggest-panel.visible { flex: 0 0 auto; height: auto; margin-top: 16px; }
-  /* Mascot removed entirely on mobile — on a narrow screen he's a fixed
-     corner overlay competing with real content (tap targets, text) on
-     an already-long stacked page, without the room to be the fun
-     "companion" touch he is on desktop. */
+  /* Mascot hidden on mobile — on a narrow screen he's a fixed corner
+     overlay competing with real content (tap targets, text) on an
+     already-long stacked page, without the room to be the fun
+     "companion" touch he is on desktop. (Also scoped off tool-landing
+     pages entirely, at any width — see body.tool-landing-page above.) */
   .ffh-widget { display: none; }
   /* The suggestion panel's tail (::before/::after) points at the
-     mascot's fixed corner — with him gone on mobile it would just be a
-     stray triangle pointing at nothing, so it's hidden too. */
+     mascot's fixed corner — with him hidden on mobile it would just be
+     a stray triangle pointing at nothing, so it's hidden too. */
   .hero-suggest-panel::before, .hero-suggest-panel::after { display: none; }
 }
 
@@ -1071,8 +1243,11 @@ body.tool-landing-page .site-global-faq {
   /* Fluid instead of a fixed 3.9rem: the homepage's short "Work with
      files." never revealed it, but a longer tool-page headline (e.g.
      Remove Background's custom heroCopy) can overflow a narrow phone
-     width at a fixed size — this scales down smoothly instead. */
-  font-size: clamp(2rem, 7.5vw, 3.9rem);
+     width at a fixed size — this scales down smoothly instead. Max
+     trimmed to 3.625rem (58px) — inside the 52-60px desktop target —
+     from the previous 3.9rem/62.4px, a deliberate size rather than
+     whatever the old one-line headline happened to reach. */
+  font-size: clamp(2rem, 7.5vw, 3.625rem);
   margin: 0 0 16px;
   color: var(--text);
   line-height: 1.1;
@@ -1086,12 +1261,39 @@ body.tool-landing-page .site-global-faq {
   color: var(--text-muted);
   font-size: 1.625rem;
   margin: 0;
+  /* Controlled reading width on wide desktop screens instead of
+     stretching to the .hero container's full 900px. */
+  max-width: 60ch;
+  margin: 0 auto;
   line-height: 1.5;
 }
+
+/* Compact eyebrow badge above the H1 — "63+ PRIVATE BROWSER TOOLS".
+   Same pill language as .hero-trust-item (existing palette, no new
+   visual identity) but in the accent red so it reads as a single, quiet
+   lead-in line rather than another trust badge competing with the row
+   below the fold. */
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 6px 14px;
+  background: var(--red-light);
+  color: var(--red-dark);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-eyebrow .icon { width: 14px; height: 14px; }
 
 /* ---------- Mobile hero (375-430px phones) ---------- */
 @media (max-width: 480px) {
   .hero { padding: 28px 20px 12px; }
+  .hero-eyebrow { font-size: 0.72rem; padding: 5px 12px; margin: 0 0 10px; }
   .hero h1 {
     /* 36-42px, tightened line-height so the headline reads as one
        compact block instead of a desktop headline just shrunk down. */
@@ -1134,6 +1336,9 @@ body.tool-landing-page .site-global-faq {
 }
 
 .hero-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.98rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -1143,6 +1348,8 @@ body.tool-landing-page .site-global-faq {
   border-radius: 20px;
   white-space: nowrap;
 }
+
+.hero-trust-item .icon { width: 16px; height: 16px; }
 
 /* Four items squeezed into one wrapping row read as clutter on a
    phone — a fixed 2x2 grid keeps them tidy and predictable instead of
@@ -1157,9 +1364,123 @@ body.tool-landing-page .site-global-faq {
   }
   .hero-trust-item {
     white-space: normal;
+    justify-content: center;
     text-align: center;
     padding: 8px 10px;
   }
+}
+
+/* ---------- Popular tools ---------- */
+.popular-tools-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 32px 8px;
+}
+
+.popular-tools-inner h2 {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  color: var(--text);
+  margin: 0 0 6px;
+  text-align: center;
+}
+
+.popular-tools-sub {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0 0 28px;
+}
+
+.popular-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.popular-tool-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 18px;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .popular-tool-card:hover {
+    box-shadow: 0 6px 18px rgba(27, 36, 48, 0.1);
+    transform: translateY(-3px);
+    border-color: var(--gray);
+  }
+  .popular-tool-card:hover .popular-tool-arrow { transform: translateX(3px); }
+}
+
+.popular-tool-card:active {
+  box-shadow: 0 2px 8px rgba(27, 36, 48, 0.1);
+  transform: scale(0.99);
+}
+
+.popular-tool-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 44px;
+  height: 44px;
+}
+
+.popular-tool-icon img { width: 28px; height: 28px; }
+.popular-tool-icon .arrow { font-size: 0.85rem; color: var(--text-muted); }
+
+.popular-tool-body { flex: 1; min-width: 0; }
+
+.popular-tool-cat {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.popular-tool-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.popular-tool-card p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.popular-tool-arrow {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+@media (max-width: 860px) {
+  .popular-tools-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .popular-tools-section { padding: 40px 20px 4px; }
+  .popular-tools-grid { grid-template-columns: 1fr; gap: 12px; }
+  .popular-tool-card { padding: 16px; }
 }
 
 /* ---------- Filter tabs ---------- */
@@ -1528,6 +1849,34 @@ body.tool-landing-page .site-global-faq {
   box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.18);
 }
 
+/* Ctrl+K hint — a visible kbd badge instead of baked into the
+   placeholder string, so it can be hidden on touch/small screens with
+   plain CSS while the shortcut itself (wired in JS, unaffected by this
+   markup) keeps working on desktop regardless. */
+.search-kbd-hint {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 3px 7px;
+  background: var(--gray-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+.home-search-input { padding-right: 68px; }
+
+@media (max-width: 640px) {
+  .search-kbd-hint { display: none; }
+  .home-search-input { padding-right: 16px; }
+}
+
 .search-results-list {
   position: absolute;
   top: 100%;
@@ -1711,7 +2060,8 @@ body.tool-landing-page .site-global-faq {
   text-align: center;
 }
 
-.tp-file-fallback-icon { font-size: 3rem; }
+.tp-file-fallback-icon { display: flex; }
+.tp-file-fallback-icon .icon { width: 48px; height: 48px; }
 
 .tp-sidebar {
   display: flex;
@@ -2057,7 +2407,8 @@ body.tool-result-active #ffhWidget {
 }
 
 .tp-toast.visible { opacity: 1; transform: translateY(0) scale(1); }
-.tp-toast-icon { font-size: 1.05rem; }
+.tp-toast-icon { font-size: 1.05rem; display: inline-flex; align-items: center; }
+.tp-toast-icon .icon { width: 16px; height: 16px; vertical-align: -3px; }
 
 @media (prefers-reduced-motion: reduce) {
   .tp-workspace,
@@ -2185,6 +2536,7 @@ body.tool-result-active #ffhWidget {
 }
 
 .download-btn:hover { background: var(--red-dark); transform: translateY(-1px); }
+.download-btn .icon { width: 18px; height: 18px; color: #fff; }
 
 .reset-btn {
   display: block;
@@ -2415,6 +2767,9 @@ body.tool-result-active #ffhWidget {
   box-shadow: 0 0 0 2px var(--red-light);
 }
 
+.bgr-swatch .icon { width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+.tp-sidebar .bgr-swatch .icon { width: 22px; height: 22px; }
+
 .bgr-swatch-transparent {
   background-image:
     linear-gradient(45deg, #d9d9d9 25%, transparent 25%),
@@ -2548,7 +2903,9 @@ body.tool-result-active #ffhWidget {
 }
 
 .file-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
-.file-card-icon { font-size: 2rem; }
+.file-card-icon { display: flex; align-items: center; justify-content: center; }
+.file-card-icon .icon { width: 28px; height: 28px; color: var(--text-muted); }
+.file-card-thumb.icon { width: 28px; height: 28px; color: var(--text-muted); margin: auto; }
 
 .file-card-name {
   font-size: 0.78rem;
@@ -2737,6 +3094,113 @@ body.tool-result-active #ffhWidget {
   color: var(--blue);
 }
 
+/* ---------- Privacy diagram (homepage only) ----------
+   The one full "File → Browser → Processing → Result" diagram on the
+   whole site — individual tool pages reuse the compact .tp-trust badge
+   instead (see generate-seo-pages.mjs) rather than repeating this. */
+.privacy-diagram-section {
+  max-width: 900px;
+  margin: 72px auto 0;
+  padding: 0 32px;
+  text-align: center;
+}
+
+.privacy-diagram-inner h2 {
+  font-family: var(--font-display);
+  font-size: 1.95rem;
+  color: var(--text);
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+
+.privacy-diagram-sub {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  max-width: 56ch;
+  margin: 0 auto 36px;
+  line-height: 1.5;
+}
+
+.privacy-diagram-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.privacy-diagram-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 130px;
+  padding: 20px 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.privacy-diagram-icon { width: 26px; height: 26px; color: var(--blue); }
+
+.privacy-diagram-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.privacy-diagram-connector {
+  flex-shrink: 0;
+  width: 28px;
+  height: 2px;
+  background: var(--border);
+  position: relative;
+}
+
+.privacy-diagram-connector::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid var(--border);
+  border-right: 2px solid var(--border);
+}
+
+.privacy-diagram-no-server {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 8px 16px;
+  background: var(--gray-light);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.privacy-diagram-no-server .icon { width: 16px; height: 16px; }
+
+@media (max-width: 600px) {
+  .privacy-diagram-section { margin-top: 56px; padding: 0 20px; }
+  .privacy-diagram-inner h2 { font-size: 1.55rem; }
+  .privacy-diagram-sub { font-size: 1rem; margin-bottom: 28px; }
+  /* Stacks vertically on mobile, per spec — connectors rotate from
+     horizontal arrows to a short vertical drop between each step. */
+  .privacy-diagram-flow { flex-direction: column; gap: 4px; }
+  .privacy-diagram-step { width: 100%; max-width: 220px; flex-direction: row; justify-content: flex-start; padding: 14px 16px; }
+  .privacy-diagram-connector { width: 2px; height: 20px; }
+  .privacy-diagram-connector::after {
+    right: 50%;
+    top: -1px;
+    transform: translateX(50%) rotate(135deg);
+  }
+}
+
 /* ---------- FAQ (sits directly above the footer, every page) ---------- */
 .faq-section {
   margin-top: 60px;
@@ -2850,7 +3314,9 @@ body.tool-result-active #ffhWidget {
 .footer-brand-col { flex: 1 1 260px; max-width: 300px; }
 
 .footer-logo {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
@@ -2869,6 +3335,9 @@ body.tool-result-active #ffhWidget {
 .footer-trust-badges { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .footer-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.86rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid #2C3644;
@@ -2877,6 +3346,8 @@ body.tool-result-active #ffhWidget {
   border-radius: 20px;
   white-space: nowrap;
 }
+
+.footer-trust-badge .icon { width: 14px; height: 14px; }
 
 .footer-col { flex: 1 1 140px; }
 
@@ -2948,6 +3419,9 @@ body.tool-result-active #ffhWidget {
 }
 
 .tp-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.98rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -2957,6 +3431,8 @@ body.tool-result-active #ffhWidget {
   border-radius: 20px;
   white-space: nowrap;
 }
+
+.tp-trust-badge .icon { width: 16px; height: 16px; }
 
 .tp-open-btn {
   font-size: 1.1rem;
@@ -2987,7 +3463,7 @@ body.tool-result-active #ffhWidget {
   border-radius: 14px;
 }
 
-.tp-usecase-icon { font-size: 1.6rem; line-height: 1; }
+.tp-usecase-icon { width: 24px; height: 24px; color: var(--blue); }
 .tp-usecase-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-align: center; }
 
 .tp-dropzone {
@@ -3017,7 +3493,7 @@ body.tool-result-active #ffhWidget {
   cursor: pointer;
 }
 
-.tp-dropzone-icon { display: block; font-size: 2rem; line-height: 1; margin-bottom: 10px; }
+.tp-dropzone-icon { display: block; width: 32px; height: 32px; margin: 0 auto 10px; color: var(--blue); }
 .tp-dropzone-text { font-size: 1.235rem; font-weight: 700; color: var(--text); margin: 0; }
 .tp-dropzone-formats { font-size: 1rem; color: var(--text-muted); margin: 8px 0 0; }
 

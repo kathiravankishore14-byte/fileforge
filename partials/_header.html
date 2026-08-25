@@ -20,8 +20,8 @@
       <a href="/image" class="nav-link"><img src="/icons/icon-image.svg" class="nav-icon" width="22" height="22" alt="" /> Image</a>
       <a href="/excel" class="nav-link"><img src="/icons/icon-excel.svg" class="nav-icon" width="22" height="22" alt="" /> Excel</a>
       <a href="/word" class="nav-link"><img src="/icons/icon-word.svg" class="nav-icon" width="22" height="22" alt="" /> Word</a>
-      <a href="/ppt" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PPT</a>
-      <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Other Tools</a>
+      <a href="/ppt" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PowerPoint</a>
+      <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
     </nav>
     <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenuPanel">
       <span></span><span></span><span></span>
@@ -45,8 +45,8 @@
       <a href="/image"><img src="/icons/icon-image.svg" class="nav-icon" width="22" height="22" alt="" /> Image</a>
       <a href="/excel"><img src="/icons/icon-excel.svg" class="nav-icon" width="22" height="22" alt="" /> Excel</a>
       <a href="/word"><img src="/icons/icon-word.svg" class="nav-icon" width="22" height="22" alt="" /> Word</a>
-      <a href="/ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PPT</a>
-      <a href="/other-tools"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Other Tools</a>
+      <a href="/ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PowerPoint</a>
+      <a href="/other-tools"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
     </nav>
     <p class="mobile-nav-label">Company</p>
     <nav class="mobile-nav-links mobile-nav-links-secondary">
@@ -61,7 +61,9 @@
 <!-- Fixed corner mascot: intentionally OUTSIDE the hero-drop-wrap flow.
      position:fixed (see style.css) keeps him on screen in the same spot
      as you scroll, on every page, instead of scrolling away with the
-     page content like a normal element would. -->
+     page content like a normal element would. Shown on the homepage and
+     category pages; hidden on individual tool pages via
+     body.tool-landing-page in style.css. -->
 <div class="ffh-widget" id="ffhWidget">
   <div class="ffh-hero-wrap" id="ffhHeroWrap">
     <p class="ffh-hint" id="ffhHint">Say hi! 👋</p>
@@ -138,10 +140,13 @@
            put the whole time so its listeners never need rewiring. -->
       <div class="hero-drop-content" id="heroDropContent">
         <div class="hero-drop-idle" id="heroDropIdle">
-          <span class="hero-drop-icon" aria-hidden="true">📤</span>
-          <p class="hero-drop-text">Drag your file here</p>
+          <span class="icon icon-upload hero-drop-icon" aria-hidden="true"></span>
+          <p class="hero-drop-text">
+            <span class="drop-text-desktop">Drag your file here</span>
+            <span class="drop-text-mobile">Choose a file</span>
+          </p>
           <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
-          <p class="hero-drop-subtext">PDF, JPG, PNG, WEBP, Word, Excel &amp; PowerPoint</p>
+          <p class="hero-drop-subtext">PDF · JPG · PNG · WEBP · DOCX · XLSX · PPTX</p>
         </div>
       </div>
     </div>
