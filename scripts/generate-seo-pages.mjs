@@ -103,7 +103,7 @@ function deriveSeo(key, meta) {
   } else if (meta.usesServer) {
     faq.push({
       q: `Is my file safe when I use ${meta.label}?`,
-      a: `Your photo is sent securely to our server, which uses remove.bg to process the cutout — the photo is auto-deleted from their servers afterward. See our Privacy Policy for the full details. If our server is ever unavailable, ${meta.label} automatically falls back to an AI model that runs right in your browser instead, so nothing leaves your device at all.`,
+      a: `${meta.label} runs entirely in your browser using an on-device AI model. The model may be downloaded and cached by your browser, but your photo itself is not uploaded to our server or sent to a background-removal API.`,
     });
   } else {
     faq.push({
