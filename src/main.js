@@ -25,6 +25,29 @@ window.addEventListener('vite:preloadError', (event) => {
   }
 });
 
+
+// Security helpers: escape untrusted strings before inserting into HTML templates.
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function sanitizeFilename(name, fallback = 'download') {
+  const raw = String(name ?? '').replace(/[\x00-\x1f\x7f]/g, '').trim();
+  const safe = raw
+    .replace(/[\/\\:*?"<>|]/g, '-')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^\.+|\.+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 180);
+  return safe || fallback;
+}
+
 // ================= TOOL DATA (shared across every page) =================
 const CATEGORY_ICONS = {
   image: '/icons/icon-image.svg', word: '/icons/icon-word.svg', excel: '/icons/icon-excel.svg',
@@ -599,7 +622,7 @@ function showToast(message, icon) {
   }
   const toast = document.createElement('div');
   toast.className = 'tp-toast';
-  toast.innerHTML = `<span class="tp-toast-icon">${icon || '✓'}</span><span>${message}</span>`;
+  toast.innerHTML = `<span class="tp-toast-icon">${icon || '✓'}</span><span>${escapeHtml(message)}</span>`;
   toastHost.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('visible'));
   setTimeout(() => {
@@ -624,6 +647,7 @@ function clearResultPage() {
 }
 
 function showResultState(blob, filename, extraNote) {
+  filename = sanitizeFilename(filename);
   closeToolModal(false);
   const url = URL.createObjectURL(blob);
   const meta = toolMeta[currentToolKey];
@@ -675,10 +699,10 @@ function showResultState(blob, filename, extraNote) {
         </div>
         <aside class="tp-sidebar">
           ${ringHtml}
-          <a href="${url}" download="${filename}" class="download-btn"><span class="icon icon-download" aria-hidden="true"></span> Download ${filename}</a>
+          <a href="${url}" download="${escapeHtml(sanitizeFilename(filename))}" class="download-btn"><span class="icon icon-download" aria-hidden="true"></span> Download ${escapeHtml(sanitizeFilename(filename))}</a>
           <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
           ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
-          <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
+          <p class="result-filename">${escapeHtml(sanitizeFilename(filename))} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
           <button class="reset-btn" id="resetToolBtn">Process another file</button>
         </aside>
       </div>
@@ -1398,11 +1422,11 @@ function renderSingleFileConfig() {
         }
       } catch {
         const wrap = document.querySelector('#genericPdfPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
       }
     })();
   } else {
-    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name}</p>`);
+    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)}</p>`);
   }
 
   if (currentToolKey === 'compress') {
@@ -1850,7 +1874,7 @@ function renderSingleFileConfig() {
         wrap.innerHTML = '';
         wrap.appendChild(previewImg);
       } catch {
-        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
       }
     })();
 
@@ -2103,11 +2127,11 @@ function renderSingleFileConfig() {
         const wrap = document.querySelector('#docPreviewWrap');
         if (wrap) {
           const snippet = text.trim().slice(0, 400);
-          wrap.innerHTML = `<p class="doc-label">Preview (first ${snippet.length} characters):</p><p style="font-size:0.9rem; color:var(--text); white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px;">${snippet}${text.length > 400 ? '…' : ''}</p>`;
+          wrap.innerHTML = `<p class="doc-label">Preview (first ${snippet.length} characters):</p><p style="font-size:0.9rem; color:var(--text); white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px;">${escapeHtml(snippet)}${text.length > 400 ? '…' : ''}</p>`;
         }
       } catch {
         const wrap = document.querySelector('#docPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2138,12 +2162,12 @@ function renderSingleFileConfig() {
         const previewRows = rows.slice(0, 5);
         const wrap = document.querySelector('#sheetPreviewWrap');
         if (wrap) {
-          const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${cell ?? ''}</td>`).join('')}</tr>`).join('');
-          wrap.innerHTML = `<p class="doc-label">Sheet "${sheetName}": ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
+          const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${escapeHtml(cell ?? '')}</td>`).join('')}</tr>`).join('');
+          wrap.innerHTML = `<p class="doc-label">Sheet "${escapeHtml(sheetName)}": ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
         }
       } catch {
         const wrap = document.querySelector('#sheetPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2427,7 +2451,7 @@ function renderSingleFileConfig() {
     // Nothing had a visual preview for this tool (e.g. Compress PDF) — show
     // a plain file icon so the left pane isn't left empty.
     if (!previewPane.children.length) {
-      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon"><span class="icon icon-file" aria-hidden="true"></span></span><span>${currentFile.name}</span></div>`;
+      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon"><span class="icon icon-file" aria-hidden="true"></span></span><span>${escapeHtml(currentFile.name)}</span></div>`;
     }
   }
 }
@@ -2569,7 +2593,7 @@ function renderCaseConverterTool() {
   `;
   function show(val) {
     const wrap = document.querySelector('#caseOutWrap');
-    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#caseOutput')}`;
+    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(val)}</textarea>${copyBtn('#caseOutput')}`;
     wireCopyButtons();
   }
   document.querySelector('#cUpper').addEventListener('click', () => show(document.querySelector('#caseInput').value.toUpperCase()));
@@ -2644,10 +2668,10 @@ function renderJsonFormatterTool() {
     const wrap = document.querySelector('#jsonOutWrap');
     try {
       const pretty = JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value), null, 2);
-      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${pretty}</textarea>${copyBtn('#jsonOutput')}`;
+      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(pretty)}</textarea>${copyBtn('#jsonOutput')}`;
       wireCopyButtons();
     } catch (err) {
-      wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${err.message}</p>`;
+      wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${escapeHtml(err.message)}</p>`;
     }
   });
 }
@@ -2663,7 +2687,7 @@ function renderBase64Tool() {
   `;
   function show(val) {
     const wrap = document.querySelector('#b64OutWrap');
-    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#b64Output')}`;
+    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(val)}</textarea>${copyBtn('#b64Output')}`;
     wireCopyButtons();
   }
   document.querySelector('#b64Enc').addEventListener('click', () => { try { show(btoa(document.querySelector('#b64Input').value)); } catch { show('Error: cannot encode these characters.'); } });
@@ -4020,7 +4044,7 @@ function wireSearch(inputId, resultsId) {
         return t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || categoryLabel.includes(q);
       });
       if (!matches.length) {
-        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
+        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${escapeHtml(input.value)}"</div>`;
       } else {
         resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
           <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" data-key="${t.key}" data-cat="${t.category}">
