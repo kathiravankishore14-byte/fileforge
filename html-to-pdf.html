@@ -21,7 +21,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"HTML to PDF — OnlineToolsWeb","url":"https://onlinetoolsweb.com/html-to-pdf","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (runs in browser)","description":"Paste HTML code and export it as a PDF. Free, private, and runs right in your browser — no upload, no signup.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is HTML to PDF free to use?","acceptedAnswer":{"@type":"Answer","text":"Yes — core OnlineToolsWeb tools are free to use, including HTML to PDF. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free."}},{"@type":"Question","name":"Do I need to install anything to use HTML to PDF?","acceptedAnswer":{"@type":"Answer","text":"No installation needed. HTML to PDF runs directly in your browser on any modern desktop or mobile browser — just open this page and use it."}},{"@type":"Question","name":"Does HTML to PDF store or send what I enter?","acceptedAnswer":{"@type":"Answer","text":"No. HTML to PDF runs entirely in your browser — nothing you type or generate here is uploaded or saved on a server."}}]}</script>
   </head>
-  <body class="tool-landing-page">
+  <body class="tool-landing-page" data-tool-landing="htmltopdf">
     <!--HEADER-->
 
     <!-- Visible breadcrumb nav intentionally removed per request — the
@@ -108,9 +108,6 @@
 
     <!--FOOTER-->
 
-    <script type="module">
-      import { initToolLandingPage } from '/src/main.js';
-      initToolLandingPage('htmltopdf');
-    </script>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>

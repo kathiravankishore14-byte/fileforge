@@ -21,7 +21,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Grayscale Converter — OnlineToolsWeb","url":"https://onlinetoolsweb.com/grayscale-image-converter","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (runs in browser)","description":"Convert a photo to black and white. Free, private, and runs right in your browser — no upload, no signup.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Grayscale Converter free to use?","acceptedAnswer":{"@type":"Answer","text":"Yes — core OnlineToolsWeb tools are free to use, including Grayscale Converter. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free."}},{"@type":"Question","name":"Do I need to install anything to use Grayscale Converter?","acceptedAnswer":{"@type":"Answer","text":"No installation needed. Grayscale Converter runs directly in your browser on any modern desktop or mobile browser — just open this page and use it."}},{"@type":"Question","name":"Is my file safe when I use Grayscale Converter?","acceptedAnswer":{"@type":"Answer","text":"Yes. Grayscale Converter processes your file entirely on your own device. It's never uploaded anywhere, so no one else ever sees it."}},{"@type":"Question","name":"What file types does Grayscale Converter support?","acceptedAnswer":{"@type":"Answer","text":"Grayscale Converter works with JPG, PNG, WebP and other common image formats."}}]}</script>
   </head>
-  <body class="tool-landing-page">
+  <body class="tool-landing-page" data-tool-landing="grayscale">
     <!--HEADER-->
 
     <!-- Visible breadcrumb nav intentionally removed per request — the
@@ -122,9 +122,6 @@
 
     <!--FOOTER-->
 
-    <script type="module">
-      import { initToolLandingPage } from '/src/main.js';
-      initToolLandingPage('grayscale');
-    </script>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>

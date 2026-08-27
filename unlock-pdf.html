@@ -21,7 +21,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unlock PDF — OnlineToolsWeb","url":"https://onlinetoolsweb.com/unlock-pdf","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (runs in browser)","description":"Remove a password you already know. Free, private, and runs right in your browser — no upload, no signup.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Unlock PDF free to use?","acceptedAnswer":{"@type":"Answer","text":"Yes — core OnlineToolsWeb tools are free to use, including Unlock PDF. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free."}},{"@type":"Question","name":"Do I need to install anything to use Unlock PDF?","acceptedAnswer":{"@type":"Answer","text":"No installation needed. Unlock PDF runs directly in your browser on any modern desktop or mobile browser — just open this page and use it."}},{"@type":"Question","name":"Is my file safe when I use Unlock PDF?","acceptedAnswer":{"@type":"Answer","text":"Yes. Unlock PDF processes your file entirely on your own device. It's never uploaded anywhere, so no one else ever sees it."}},{"@type":"Question","name":"What file types does Unlock PDF support?","acceptedAnswer":{"@type":"Answer","text":"Unlock PDF works with PDF files."}}]}</script>
   </head>
-  <body class="tool-landing-page">
+  <body class="tool-landing-page" data-tool-landing="pdfunlock">
     <!--HEADER-->
 
     <!-- Visible breadcrumb nav intentionally removed per request — the
@@ -122,9 +122,6 @@
 
     <!--FOOTER-->
 
-    <script type="module">
-      import { initToolLandingPage } from '/src/main.js';
-      initToolLandingPage('pdfunlock');
-    </script>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>

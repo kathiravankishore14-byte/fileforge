@@ -103,7 +103,7 @@ function deriveSeo(key, meta) {
   } else if (meta.usesServer) {
     faq.push({
       q: `Is my file safe when I use ${meta.label}?`,
-      a: `${meta.label} runs entirely in your browser using an on-device AI model. The model may be downloaded and cached by your browser, but your photo itself is not uploaded to our server or sent to a background-removal API.`,
+      a: `Your photo is sent securely to our server, which uses remove.bg to process the cutout — the photo is auto-deleted from their servers afterward. See our Privacy Policy for the full details. If our server is ever unavailable, ${meta.label} automatically falls back to an AI model that runs right in your browser instead, so nothing leaves your device at all.`,
     });
   } else {
     faq.push({
@@ -299,7 +299,7 @@ function buildPage(key) {
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     ${jsonLd(key, meta, seo, categoryUrl)}
   </head>
-  <body class="tool-landing-page">
+  <body class="tool-landing-page" data-tool-landing="${key}">
     <!--HEADER-->
 
     <!-- Visible breadcrumb nav intentionally removed per request — the
@@ -336,10 +336,7 @@ function buildPage(key) {
 
     <!--FOOTER-->
 
-    <script type="module">
-      import { initToolLandingPage } from '/src/main.js';
-      initToolLandingPage('${key}');
-    </script>
+    <script type="module" src="/src/bootstrap.js"></script>
   </body>
 </html>
 `;
