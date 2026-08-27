@@ -1,10 +1,22 @@
 {
   "name": "fileforge",
-  "main": "worker/index.js",
   "compatibility_date": "2026-08-14",
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    // Explicit binding name so the Worker can reach static assets via
+    // env.ASSETS.fetch(request) — without this the Worker has no way
+    // to hand a request through to the dist/ output at all.
     "binding": "ASSETS",
+    // Without this, Cloudflare serves a matching static asset directly
+    // and never invokes the Worker below — which means no nonce, no
+    // per-response CSP, and no security headers on any HTML response.
+    // This is the setting that makes worker/index.js run on every
+    // request instead of only on a 404. Verify this field name against
+    // the Cloudflare Workers "static assets" docs for your installed
+    // wrangler version before deploying — the assets-config surface is
+    // actively evolving and a renamed/relocated field would silently
+    // put the Worker back into "404-only" mode rather than erroring.
     "run_worker_first": true
   }
 }
