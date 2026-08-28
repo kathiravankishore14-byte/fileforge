@@ -870,27 +870,6 @@ body.tool-landing-page .site-global-faq {
 
 .hero-suggest-panel.visible { display: flex; }
 
-/* Tail on the right edge, pointing toward the mascot's fixed spot in
-   the corner — he's the one "asking", not the drop zone. --tail-top is
-   set by updateSuggestTailPosition() in main.js so the tail tracks the
-   mascot's actual screen position (which stays fixed) as the page
-   scrolls, instead of sitting at one static height. 30px is just the
-   pre-JS fallback. (This panel only ever renders on the homepage and
-   category pages anyway — the whole .hero-drop-wrap it lives in is
-   hidden on tool-landing pages — so no extra scoping is needed here.) */
-.hero-suggest-panel::before, .hero-suggest-panel::after {
-  content: "";
-  position: absolute;
-  right: -15px;
-  top: var(--tail-top, 30px);
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 13px 0 13px 16px;
-}
-.hero-suggest-panel::before { border-color: transparent transparent transparent var(--border); }
-.hero-suggest-panel::after { right: -13px; border-color: transparent transparent transparent var(--white); }
-
 .hero-suggest-title {
   font-size: 1.1rem;
   font-weight: 700;
@@ -980,57 +959,6 @@ body.tool-landing-page .site-global-faq {
   cursor: pointer;
 }
 
-/* ---------- Hero mascot widget ---------- */
-.ffh-widget {
-  /* Fixed to the viewport (not the page): he stays on screen in the
-     same spot as you scroll, on every page, instead of scrolling away
-     with the rest of the content. Sits outside the hero-drop-wrap in
-     the DOM for exactly this reason. A soft white halo (::before)
-     keeps him readable whether he's floating over the sky, a tool
-     grid, or the dark footer. Shown only on the homepage and category
-     pages (see body.tool-landing-page override below) — individual
-     tool pages already have a lot going on without a corner overlay. */
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  width: 170px;
-  height: 210px;
-  z-index: 40;
-  cursor: pointer;
-}
-
-.ffh-widget::before {
-  content: "";
-  position: absolute;
-  inset: -14px;
-  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 72%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.ffh-hint {
-  position: absolute;
-  top: -34px;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  color: #fff;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-shadow: 0 2px 6px rgba(20, 40, 70, 0.5);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 3;
-  transition: opacity 0.2s ease;
-}
-
-/* Only the homepage and the 6 category pages carry the shared
-   hero-drop-wrap chrome (see body.tool-landing-page .hero-drop-wrap
-   above) — the mascot is scoped to match, since he's fixed-position
-   and otherwise wouldn't be caught by that rule at all. */
-body.tool-landing-page .ffh-widget { display: none; }
-
 /* Fixed sky layer: sits behind everything, in the viewport, on every
    page — this is what makes the clouds feel like part of the whole
    site's background rather than boxed into one widget. */
@@ -1085,113 +1013,6 @@ body.tool-landing-page .ffh-widget { display: none; }
   to { transform: translateX(30px); }
 }
 
-.ffh-hero-wrap {
-  position: absolute;
-  bottom: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: ffhBob 3.2s ease-in-out infinite;
-  z-index: 2;
-}
-@keyframes ffhBob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-8px); }
-}
-
-.ffh-shadow {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  width: 90px;
-  height: 14px;
-  background: rgba(20, 40, 20, 0.22);
-  border-radius: 50%;
-  transform: translateX(-50%);
-  filter: blur(2px);
-  animation: ffhShadowPulse 3.2s ease-in-out infinite;
-}
-@keyframes ffhShadowPulse {
-  0%, 100% { transform: translateX(-50%) scaleX(1); }
-  50% { transform: translateX(-50%) scaleX(0.9); }
-}
-
-.ffh-hero-svg { display: block; width: 210px; height: auto; overflow: visible; }
-
-.ffh-cape {
-  animation: ffhSway 2.6s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-}
-@keyframes ffhSway {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(3deg); }
-}
-
-.ffh-hair {
-  animation: ffhWind 2.2s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: bottom center;
-}
-@keyframes ffhWind {
-  0%, 100% { transform: rotate(-2deg) skewX(-1deg); }
-  50% { transform: rotate(3deg) skewX(2deg); }
-}
-
-.ffh-pupil { transition: none; }
-.ffh-eyelid {
-  transform: scaleY(0);
-  transform-box: fill-box;
-  transform-origin: top;
-}
-
-.ffh-arm-group { transform-box: view-box; }
-#ffhArmL { transform-origin: 105px 195px; }
-#ffhArmR { transform-origin: 235px 195px; }
-#ffhArmR.ffh-waving-now {
-  animation: ffhWaveHand 0.5s ease-in-out 3;
-  transform-origin: 235px 195px;
-}
-@keyframes ffhWaveHand {
-  0%, 100% { transform: rotate(-100deg); }
-  50% { transform: rotate(-70deg); }
-}
-.ffh-arm-group.ffh-lowering { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-#ffhHeadGroup { transform-box: view-box; transform-origin: 170px 128px; }
-#ffhBodyGroup { transform-box: view-box; transform-origin: 170px 245px; }
-
-.ffh-speech-bubble {
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%) scale(0.7) translateY(6px);
-  background: white;
-  color: #1A1A1A;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 6px 12px;
-  border-radius: 14px;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
-  z-index: 4;
-}
-.ffh-speech-bubble::after {
-  content: "";
-  position: absolute;
-  bottom: -7px;
-  left: 50%;
-  margin-left: -7px;
-  border-width: 7px 7px 0 7px;
-  border-style: solid;
-  border-color: white transparent transparent transparent;
-}
-.ffh-speech-bubble.show {
-  opacity: 1;
-  transform: translateX(-50%) scale(1) translateY(0);
-}
-
 @media (max-width: 860px) {
   .hero-drop-row { flex-direction: column; }
   /* Both boxes drop the desktop's fixed 320px height here and size to
@@ -1213,16 +1034,6 @@ body.tool-landing-page .ffh-widget { display: none; }
      collapse everything inside it. */
   .hero-drop-content { height: auto; padding: 6px 0; }
   .hero-suggest-panel.visible { flex: 0 0 auto; height: auto; margin-top: 16px; }
-  /* Mascot hidden on mobile — on a narrow screen he's a fixed corner
-     overlay competing with real content (tap targets, text) on an
-     already-long stacked page, without the room to be the fun
-     "companion" touch he is on desktop. (Also scoped off tool-landing
-     pages entirely, at any width — see body.tool-landing-page above.) */
-  .ffh-widget { display: none; }
-  /* The suggestion panel's tail (::before/::after) points at the
-     mascot's fixed corner — with him hidden on mobile it would just be
-     a stray triangle pointing at nothing, so it's hidden too. */
-  .hero-suggest-panel::before, .hero-suggest-panel::after { display: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -2158,8 +1969,7 @@ body.tool-result-active .hero,
 body.tool-result-active .hero-drop-wrap,
 body.tool-result-active .hero-suggest-panel,
 body.tool-result-active .awaiting-tool-hint,
-body.tool-result-active #tpDropZone,
-body.tool-result-active #ffhWidget {
+body.tool-result-active #tpDropZone {
   display: none !important;
 }
 

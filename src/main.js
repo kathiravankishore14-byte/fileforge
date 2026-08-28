@@ -25,29 +25,6 @@ window.addEventListener('vite:preloadError', (event) => {
   }
 });
 
-
-// Security helpers: escape untrusted strings before inserting into HTML templates.
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function sanitizeFilename(name, fallback = 'download') {
-  const raw = String(name ?? '').replace(/[\x00-\x1f\x7f]/g, '').trim();
-  const safe = raw
-    .replace(/[\/\\:*?"<>|]/g, '-')
-    .replace(/\.{2,}/g, '.')
-    .replace(/^\.+|\.+$/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 180);
-  return safe || fallback;
-}
-
 // ================= TOOL DATA (shared across every page) =================
 const CATEGORY_ICONS = {
   image: '/icons/icon-image.svg', word: '/icons/icon-word.svg', excel: '/icons/icon-excel.svg',
@@ -622,7 +599,7 @@ function showToast(message, icon) {
   }
   const toast = document.createElement('div');
   toast.className = 'tp-toast';
-  toast.innerHTML = `<span class="tp-toast-icon">${icon || '✓'}</span><span>${escapeHtml(message)}</span>`;
+  toast.innerHTML = `<span class="tp-toast-icon">${icon || '✓'}</span><span>${message}</span>`;
   toastHost.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('visible'));
   setTimeout(() => {
@@ -647,7 +624,6 @@ function clearResultPage() {
 }
 
 function showResultState(blob, filename, extraNote) {
-  filename = sanitizeFilename(filename);
   closeToolModal(false);
   const url = URL.createObjectURL(blob);
   const meta = toolMeta[currentToolKey];
@@ -699,10 +675,10 @@ function showResultState(blob, filename, extraNote) {
         </div>
         <aside class="tp-sidebar">
           ${ringHtml}
-          <a href="${url}" download="${escapeHtml(sanitizeFilename(filename))}" class="download-btn"><span class="icon icon-download" aria-hidden="true"></span> Download ${escapeHtml(sanitizeFilename(filename))}</a>
+          <a href="${url}" download="${filename}" class="download-btn"><span class="icon icon-download" aria-hidden="true"></span> Download ${filename}</a>
           <div class="result-done-badge"><span class="result-done-check">✓</span> Done</div>
           ${extraNote ? `<p class="result-stat-pill">${extraNote}</p>` : ''}
-          <p class="result-filename">${escapeHtml(sanitizeFilename(filename))} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
+          <p class="result-filename">${filename} <span class="result-filesize">· ${formatBytes(blob.size)}</span></p>
           <button class="reset-btn" id="resetToolBtn">Process another file</button>
         </aside>
       </div>
@@ -1422,11 +1398,11 @@ function renderSingleFileConfig() {
         }
       } catch {
         const wrap = document.querySelector('#genericPdfPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
   } else {
-    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)}</p>`);
+    previewTarget.insertAdjacentHTML('beforeend', `<p class="tp-generic-file-line" style="font-size:0.92rem; color: var(--text-muted);"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name}</p>`);
   }
 
   if (currentToolKey === 'compress') {
@@ -1874,7 +1850,7 @@ function renderSingleFileConfig() {
         wrap.innerHTML = '';
         wrap.appendChild(previewImg);
       } catch {
-        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
+        document.querySelector('#pdfPreviewWrap').innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
 
@@ -2127,11 +2103,11 @@ function renderSingleFileConfig() {
         const wrap = document.querySelector('#docPreviewWrap');
         if (wrap) {
           const snippet = text.trim().slice(0, 400);
-          wrap.innerHTML = `<p class="doc-label">Preview (first ${snippet.length} characters):</p><p style="font-size:0.9rem; color:var(--text); white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px;">${escapeHtml(snippet)}${text.length > 400 ? '…' : ''}</p>`;
+          wrap.innerHTML = `<p class="doc-label">Preview (first ${snippet.length} characters):</p><p style="font-size:0.9rem; color:var(--text); white-space:pre-wrap; max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:12px;">${snippet}${text.length > 400 ? '…' : ''}</p>`;
         }
       } catch {
         const wrap = document.querySelector('#docPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2162,12 +2138,12 @@ function renderSingleFileConfig() {
         const previewRows = rows.slice(0, 5);
         const wrap = document.querySelector('#sheetPreviewWrap');
         if (wrap) {
-          const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${escapeHtml(cell ?? '')}</td>`).join('')}</tr>`).join('');
-          wrap.innerHTML = `<p class="doc-label">Sheet "${escapeHtml(sheetName)}": ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
+          const tableHtml = previewRows.map((r) => `<tr>${r.map((cell) => `<td style="padding:4px 8px; border:1px solid var(--border); font-size:0.85rem;">${cell ?? ''}</td>`).join('')}</tr>`).join('');
+          wrap.innerHTML = `<p class="doc-label">Sheet "${sheetName}": ${rows.length} row(s) total. Preview of first ${previewRows.length}:</p><div style="overflow-x:auto;"><table style="border-collapse:collapse;">${tableHtml}</table></div>`;
         }
       } catch {
         const wrap = document.querySelector('#sheetPreviewWrap');
-        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${escapeHtml(currentFile.name)} (preview unavailable)</p>`;
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
       }
     })();
     document.querySelector('#cfgApply').addEventListener('click', async () => {
@@ -2451,7 +2427,7 @@ function renderSingleFileConfig() {
     // Nothing had a visual preview for this tool (e.g. Compress PDF) — show
     // a plain file icon so the left pane isn't left empty.
     if (!previewPane.children.length) {
-      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon"><span class="icon icon-file" aria-hidden="true"></span></span><span>${escapeHtml(currentFile.name)}</span></div>`;
+      previewPane.innerHTML = `<div class="tp-file-fallback"><span class="tp-file-fallback-icon"><span class="icon icon-file" aria-hidden="true"></span></span><span>${currentFile.name}</span></div>`;
     }
   }
 }
@@ -2593,7 +2569,7 @@ function renderCaseConverterTool() {
   `;
   function show(val) {
     const wrap = document.querySelector('#caseOutWrap');
-    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(val)}</textarea>${copyBtn('#caseOutput')}`;
+    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#caseOutput')}`;
     wireCopyButtons();
   }
   document.querySelector('#cUpper').addEventListener('click', () => show(document.querySelector('#caseInput').value.toUpperCase()));
@@ -2668,10 +2644,10 @@ function renderJsonFormatterTool() {
     const wrap = document.querySelector('#jsonOutWrap');
     try {
       const pretty = JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value), null, 2);
-      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(pretty)}</textarea>${copyBtn('#jsonOutput')}`;
+      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${pretty}</textarea>${copyBtn('#jsonOutput')}`;
       wireCopyButtons();
     } catch (err) {
-      wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${escapeHtml(err.message)}</p>`;
+      wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${err.message}</p>`;
     }
   });
 }
@@ -2687,7 +2663,7 @@ function renderBase64Tool() {
   `;
   function show(val) {
     const wrap = document.querySelector('#b64OutWrap');
-    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${escapeHtml(val)}</textarea>${copyBtn('#b64Output')}`;
+    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#b64Output')}`;
     wireCopyButtons();
   }
   document.querySelector('#b64Enc').addEventListener('click', () => { try { show(btoa(document.querySelector('#b64Input').value)); } catch { show('Error: cannot encode these characters.'); } });
@@ -3914,50 +3890,7 @@ function renderHeroSuggestions() {
     });
   });
 
-  updateSuggestTailPosition();
   alignHeroBoxHeights();
-}
-
-// ================= SUGGESTION-BUBBLE TAIL TRACKING =================
-// The suggestion panel's speech-bubble tail should always point at the
-// mascot, who is fixed to the viewport corner. As the page scrolls the
-// panel moves but the mascot doesn't, so the tail's position *within*
-// the panel has to be recomputed continuously — this keeps it level
-// ("in parallel") with the mascot at any scroll depth.
-let suggestTailRaf = null;
-
-function updateSuggestTailPosition() {
-  const widget = document.querySelector('#ffhWidget');
-  const panel = document.querySelector('#heroSuggestPanel');
-  if (!widget || !panel || !panel.classList.contains('visible')) return;
-  const widgetRect = widget.getBoundingClientRect();
-  const panelRect = panel.getBoundingClientRect();
-  if (!panelRect.height) return;
-  // Aim roughly at the mascot's chest/speech-bubble height, not his feet.
-  const mascotY = widgetRect.top + widgetRect.height * 0.32;
-  let tailTop = mascotY - panelRect.top;
-  // Keep the tail on the flat part of the panel's right edge, clear of
-  // the 24px rounded corners (plus the triangle's own ~13px half-height)
-  // — otherwise it clips into the curve and looks jagged/detached
-  // instead of a smooth, properly-seated speech-bubble tail.
-  const cornerClearance = 40;
-  const clampMin = cornerClearance;
-  const clampMax = panelRect.height - cornerClearance;
-  tailTop = Math.max(clampMin, Math.min(clampMax, tailTop));
-  panel.style.setProperty('--tail-top', `${tailTop}px`);
-}
-
-function requestSuggestTailUpdate() {
-  if (suggestTailRaf) return;
-  suggestTailRaf = requestAnimationFrame(() => {
-    suggestTailRaf = null;
-    updateSuggestTailPosition();
-  });
-}
-
-function wireSuggestTailTracking() {
-  window.addEventListener('scroll', requestSuggestTailUpdate, { passive: true });
-  window.addEventListener('resize', requestSuggestTailUpdate);
 }
 
 function storePendingHeroFile(file) {
@@ -4044,7 +3977,7 @@ function wireSearch(inputId, resultsId) {
         return t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || categoryLabel.includes(q);
       });
       if (!matches.length) {
-        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${escapeHtml(input.value)}"</div>`;
+        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
       } else {
         resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
           <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" data-key="${t.key}" data-cat="${t.category}">
@@ -4133,113 +4066,6 @@ function wireHamburger() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !menuBackdrop.classList.contains('hidden')) closeMenu();
   });
-}
-
-// ================= HERO MASCOT WIDGET =================
-function wireHeroMascot() {
-  const widget = document.querySelector('#ffhWidget');
-  const eyeL = document.querySelector('#ffhEyeL');
-  const eyeR = document.querySelector('#ffhEyeR');
-  const pupilL = document.querySelector('#ffhPupilL');
-  const pupilR = document.querySelector('#ffhPupilR');
-  const headGroup = document.querySelector('#ffhHeadGroup');
-  const headCircle = document.querySelector('#ffhHeadCircle');
-  const armLGroup = document.querySelector('#ffhArmL');
-  const armRGroup = document.querySelector('#ffhArmR');
-  const heroWrap = document.querySelector('#ffhHeroWrap');
-  const speechBubble = document.querySelector('#ffhSpeechBubble');
-  const eyelidL = document.querySelector('#ffhEyelidL');
-  const eyelidR = document.querySelector('#ffhEyelidR');
-  const hint = document.querySelector('#ffhHint');
-  if (!widget || !eyeL || !eyeR || !headGroup || !headCircle) return;
-
-  const maxPupilOffset = 4.5;
-  let isWaving = false;
-
-  [pupilL, pupilR].forEach((p) => {
-    p.setAttribute('data-base-cx', p.getAttribute('cx'));
-    p.setAttribute('data-base-cy', p.getAttribute('cy'));
-  });
-
-  function moveEye(eyeEl, pupilEl, mouseX, mouseY) {
-    const rect = eyeEl.getBoundingClientRect();
-    const eyeCenterX = rect.left + rect.width / 2;
-    const eyeCenterY = rect.top + rect.height / 2;
-    const dx = mouseX - eyeCenterX;
-    const dy = mouseY - eyeCenterY;
-    const angle = Math.atan2(dy, dx);
-    const distance = Math.min(Math.hypot(dx, dy) / 18, maxPupilOffset);
-    const baseCx = parseFloat(pupilEl.getAttribute('data-base-cx'));
-    const baseCy = parseFloat(pupilEl.getAttribute('data-base-cy'));
-    pupilEl.setAttribute('cx', baseCx + Math.cos(angle) * distance);
-    pupilEl.setAttribute('cy', baseCy + Math.sin(angle) * distance);
-  }
-
-  function updateFullBodyTracking(mouseX, mouseY) {
-    if (isWaving) return;
-    const headRect = headCircle.getBoundingClientRect();
-    const charCenterX = headRect.left + headRect.width / 2;
-    const charCenterY = headRect.top + headRect.height / 2 + 40;
-    const dx = mouseX - charCenterX;
-    const dy = mouseY - charCenterY;
-    const headMaxAngle = 10;
-    const headAngle = Math.max(-headMaxAngle, Math.min(headMaxAngle, (dx / 300) * headMaxAngle));
-    const headTiltY = Math.max(-6, Math.min(6, (dy / 300) * 6));
-    headGroup.style.transform = `rotate(${headAngle.toFixed(2)}deg) translateY(${headTiltY.toFixed(2)}px)`;
-  }
-
-  function handlePointerMove(x, y) {
-    moveEye(eyeL, pupilL, x, y);
-    moveEye(eyeR, pupilR, x, y);
-    updateFullBodyTracking(x, y);
-  }
-
-  window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
-  window.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    if (touch) handlePointerMove(touch.clientX, touch.clientY);
-  });
-
-  function blink() {
-    if (!isWaving && eyelidL && eyelidR) {
-      [eyelidL, eyelidR].forEach((el) => {
-        el.style.transition = 'transform 0.09s cubic-bezier(0.4, 0, 1, 1)';
-        el.style.transform = 'scaleY(1)';
-      });
-      setTimeout(() => {
-        [eyelidL, eyelidR].forEach((el) => {
-          el.style.transition = 'transform 0.14s cubic-bezier(0, 0, 0.2, 1)';
-          el.style.transform = 'scaleY(0)';
-        });
-      }, 90 + Math.random() * 40);
-    }
-    setTimeout(blink, 2400 + Math.random() * 3200);
-  }
-  setTimeout(blink, 1800);
-
-  function waveHello() {
-    if (isWaving) return;
-    isWaving = true;
-    // Mouth stays neutral throughout — no smiling, on proximity or here.
-    if (speechBubble) speechBubble.classList.add('show');
-    if (hint) hint.style.opacity = '0';
-    armRGroup.style.transform = 'rotate(-100deg)';
-    armRGroup.classList.add('ffh-waving-now');
-    setTimeout(() => {
-      armRGroup.classList.remove('ffh-waving-now');
-      armRGroup.classList.add('ffh-lowering');
-      requestAnimationFrame(() => {
-        armRGroup.style.transform = 'rotate(-18deg)';
-      });
-      if (speechBubble) speechBubble.classList.remove('show');
-      if (hint) hint.style.opacity = '';
-      setTimeout(() => {
-        armRGroup.classList.remove('ffh-lowering');
-        isWaving = false;
-      }, 400);
-    }, 1500);
-  }
-  widget.addEventListener('click', waveHello);
 }
 
 // ================= CATEGORY-SPECIFIC HEADER NAV =================
@@ -4475,9 +4301,7 @@ function wireNavDropdowns() {
 export function initToolPage(pageCategory) {
   wireHeroDropZone();
   wireHamburger();
-  wireHeroMascot();
   wireFeaturedBanner();
-  wireSuggestTailTracking();
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
   wireNavDropdowns();
