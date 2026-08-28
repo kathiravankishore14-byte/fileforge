@@ -2476,24 +2476,6 @@ function renderNoFileTool(toolKey) {
   if (toolKey === 'aisummarizer') renderContentParaphraserTool();
 }
 
-function copyBtn(targetSelector) {
-  return `<button type="button" class="config-action-btn copy-btn" data-copy-target="${targetSelector}" style="margin-top:8px;">Copy</button>`;
-}
-
-function wireCopyButtons() {
-  modalBody.querySelectorAll('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const target = document.querySelector(btn.dataset.copyTarget);
-      if (!target) return;
-      navigator.clipboard.writeText(target.value || target.textContent).then(() => {
-        const original = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = original; }, 1200);
-      });
-    });
-  });
-}
-
 function renderTextToPptTool() {
   modalBody.innerHTML = `
     <p style="font-size:0.92rem; color:var(--text-muted); margin-bottom:8px;">Separate slides with a blank line first line of each block becomes the slide title.</p>
@@ -2565,19 +2547,17 @@ function renderCaseConverterTool() {
       <button type="button" id="cTitle">Title Case</button>
       <button type="button" id="cSentence">Sentence case</button>
     </div>
-    <div id="caseOutWrap"></div>
   `;
-  function show(val) {
-    const wrap = document.querySelector('#caseOutWrap');
-    wrap.innerHTML = `<textarea id="caseOutput" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#caseOutput')}`;
-    wireCopyButtons();
+  function show(val, kind) {
+    if (!val) return;
+    showResultState(new Blob([val], { type: 'text/plain' }), `${kind}-text.txt`);
   }
-  document.querySelector('#cUpper').addEventListener('click', () => show(document.querySelector('#caseInput').value.toUpperCase()));
-  document.querySelector('#cLower').addEventListener('click', () => show(document.querySelector('#caseInput').value.toLowerCase()));
-  document.querySelector('#cTitle').addEventListener('click', () => show(document.querySelector('#caseInput').value.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase())));
+  document.querySelector('#cUpper').addEventListener('click', () => show(document.querySelector('#caseInput').value.toUpperCase(), 'uppercase'));
+  document.querySelector('#cLower').addEventListener('click', () => show(document.querySelector('#caseInput').value.toLowerCase(), 'lowercase'));
+  document.querySelector('#cTitle').addEventListener('click', () => show(document.querySelector('#caseInput').value.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.substr(1).toLowerCase()), 'title-case'));
   document.querySelector('#cSentence').addEventListener('click', () => {
     const text = document.querySelector('#caseInput').value.toLowerCase();
-    show(text.replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase()));
+    show(text.replace(/(^\s*\w|[.!?]\s*\w)/g, (c) => c.toUpperCase()), 'sentence-case');
   });
 }
 
@@ -2587,24 +2567,15 @@ function renderQrCodeTool() {
       <input type="text" id="qrInput" placeholder="https://example.com" style="flex:1; min-width:200px;" />
       <button class="config-action-btn" id="cfgGen">Generate</button>
     </div>
-    <div id="qrOutput" style="text-align:center; margin-top:14px;"></div>
   `;
   document.querySelector('#cfgGen').addEventListener('click', async () => {
     const val = document.querySelector('#qrInput').value.trim();
     if (!val) return;
+    showProcessingState('Generating your QR code...');
     const QRCode = (await import('qrcode')).default;
     const canvas = document.createElement('canvas');
-    await QRCode.toCanvas(canvas, val, { width: 220 });
-    const output = document.querySelector('#qrOutput');
-    output.innerHTML = '';
-    output.appendChild(canvas);
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url; link.download = 'qrcode.png'; link.textContent = 'Download QR Code'; link.className = 'download-btn';
-      output.appendChild(document.createElement('br'));
-      output.appendChild(link);
-    });
+    await QRCode.toCanvas(canvas, val, { width: 480 });
+    canvas.toBlob((blob) => showResultState(blob, 'qrcode.png'), 'image/png');
   });
 }
 
@@ -2617,7 +2588,6 @@ function renderPasswordGenTool() {
       <label><input type="checkbox" id="pwSymbols" checked /> Symbols</label>
       <button class="config-action-btn" id="cfgGen">Generate</button>
     </div>
-    <div id="pwOutWrap"></div>
   `;
   document.querySelector('#cfgGen').addEventListener('click', () => {
     const len = parseInt(document.querySelector('#pwLength').value) || 16;
@@ -2629,8 +2599,7 @@ function renderPasswordGenTool() {
     crypto.getRandomValues(arr);
     let pw = '';
     for (let i = 0; i < len; i++) pw += chars[arr[i] % chars.length];
-    document.querySelector('#pwOutWrap').innerHTML = `<p id="pwResult" style="font-size:1.2rem; font-family:monospace; margin-top:12px; word-break:break-all;">${pw}</p>${copyBtn('#pwResult')}`;
-    wireCopyButtons();
+    showResultState(new Blob([pw], { type: 'text/plain' }), 'password.txt');
   });
 }
 
@@ -2644,8 +2613,7 @@ function renderJsonFormatterTool() {
     const wrap = document.querySelector('#jsonOutWrap');
     try {
       const pretty = JSON.stringify(JSON.parse(document.querySelector('#jsonInput').value), null, 2);
-      wrap.innerHTML = `<textarea id="jsonOutput" rows="10" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${pretty}</textarea>${copyBtn('#jsonOutput')}`;
-      wireCopyButtons();
+      showResultState(new Blob([pretty], { type: 'application/json' }), 'formatted.json');
     } catch (err) {
       wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">Invalid JSON: ${err.message}</p>`;
     }
@@ -2661,13 +2629,18 @@ function renderBase64Tool() {
     </div>
     <div id="b64OutWrap"></div>
   `;
-  function show(val) {
+  function showError(msg) {
     const wrap = document.querySelector('#b64OutWrap');
-    wrap.innerHTML = `<textarea id="b64Output" rows="6" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;">${val}</textarea>${copyBtn('#b64Output')}`;
-    wireCopyButtons();
+    wrap.innerHTML = `<p style="color:var(--red-dark); margin-top:10px;">${msg}</p>`;
   }
-  document.querySelector('#b64Enc').addEventListener('click', () => { try { show(btoa(document.querySelector('#b64Input').value)); } catch { show('Error: cannot encode these characters.'); } });
-  document.querySelector('#b64Dec').addEventListener('click', () => { try { show(atob(document.querySelector('#b64Input').value)); } catch { show('Error: invalid Base64 input.'); } });
+  document.querySelector('#b64Enc').addEventListener('click', () => {
+    try { showResultState(new Blob([btoa(document.querySelector('#b64Input').value)], { type: 'text/plain' }), 'encoded.txt'); }
+    catch { showError('Error: cannot encode these characters.'); }
+  });
+  document.querySelector('#b64Dec').addEventListener('click', () => {
+    try { showResultState(new Blob([atob(document.querySelector('#b64Input').value)], { type: 'text/plain' }), 'decoded.txt'); }
+    catch { showError('Error: invalid Base64 input.'); }
+  });
 }
 
 function renderLoremIpsumTool() {
@@ -2676,7 +2649,6 @@ function renderLoremIpsumTool() {
       <label>Paragraphs <input type="number" id="loremCount" value="3" min="1" max="20" /></label>
       <button class="config-action-btn" id="cfgGen">Generate</button>
     </div>
-    <div id="loremOutWrap"></div>
   `;
   const sentences = [
     'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -2693,9 +2665,7 @@ function renderLoremIpsumTool() {
       const shuffled = [...sentences].sort(() => Math.random() - 0.5);
       paragraphs.push(shuffled.slice(0, 4).join(' '));
     }
-    const wrap = document.querySelector('#loremOutWrap');
-    wrap.innerHTML = `<textarea id="loremOutput" rows="12" readonly style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; margin-top:10px;">${paragraphs.join('\n\n')}</textarea>${copyBtn('#loremOutput')}`;
-    wireCopyButtons();
+    showResultState(new Blob([paragraphs.join('\n\n')], { type: 'text/plain' }), 'lorem-ipsum.txt');
   });
 }
 
@@ -2786,7 +2756,6 @@ function renderCitationGenTool() {
       <label>Publisher / Website <input type="text" id="citePub" /></label>
       <button class="config-action-btn" id="cfgGen" style="margin-top:6px;">Generate Citation</button>
     </div>
-    <div id="citeOutWrap"></div>
   `;
   document.querySelector('#cfgGen').addEventListener('click', () => {
     const style = document.querySelector('#citeStyle').value;
@@ -2797,8 +2766,7 @@ function renderCitationGenTool() {
     let result = style === 'apa' ? `${author} (${year}). ${title}. ${pub}.`
       : style === 'mla' ? `${author}. "${title}." ${pub}, ${year}.`
       : `${author}. ${title}. ${pub}, ${year}.`;
-    document.querySelector('#citeOutWrap').innerHTML = `<p id="citeResult" style="margin-top:10px;">${result}</p>${copyBtn('#citeResult')}`;
-    wireCopyButtons();
+    showResultState(new Blob([result], { type: 'text/plain' }), 'citation.txt');
   });
 }
 
@@ -2810,19 +2778,19 @@ function renderRandomGenTool() {
       <label>Max <input type="number" id="randMax" value="100" /></label>
       <button class="config-action-btn" id="cfgGen">Generate</button>
     </div>
-    <p id="randOutput" style="margin-top:10px; font-size:1.1rem;"></p>
   `;
   document.querySelector('#cfgGen').addEventListener('click', () => {
     const type = document.querySelector('#randType').value;
     if (type === 'number') {
       const min = parseInt(document.querySelector('#randMin').value) || 0;
       const max = parseInt(document.querySelector('#randMax').value) || 100;
-      document.querySelector('#randOutput').textContent = `Random number: ${Math.floor(Math.random() * (max - min + 1)) + min}`;
+      const result = Math.floor(Math.random() * (max - min + 1)) + min;
+      showResultState(new Blob([`Random number: ${result}`], { type: 'text/plain' }), 'random-number.txt');
     } else {
       const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
       let str = '';
       for (let i = 0; i < 12; i++) str += chars[Math.floor(Math.random() * chars.length)];
-      document.querySelector('#randOutput').textContent = `Random string: ${str}`;
+      showResultState(new Blob([`Random string: ${str}`], { type: 'text/plain' }), 'random-string.txt');
     }
   });
 }
@@ -3352,7 +3320,6 @@ function renderContentParaphraserTool() {
     <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:8px;">Paste text to paraphrase. First use downloads a small AI model (one-time, cached after); everything runs in your browser, nothing is sent anywhere.</p>
     <textarea id="aiInput" rows="8" placeholder="Paste an article, essay, or long passage here..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></textarea>
     <div class="config-panel"><button class="config-action-btn" id="cfgGen">Paraphrase</button></div>
-    <div id="aiOutWrap"></div>
   `;
   document.querySelector('#cfgGen').addEventListener('click', async () => {
     const text = document.querySelector('#aiInput').value.trim();
@@ -3376,14 +3343,7 @@ function renderContentParaphraserTool() {
       const result = await summarizerPipeline(text, { max_new_tokens: 120, min_new_tokens: 20 });
       const summary = result[0].summary_text;
       await minWait(300);
-      modalBody.innerHTML = `
-        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:6px;">Paraphrased version:</p>
-        <p id="aiSummaryResult" style="font-size:1rem; line-height:1.6;">${summary}</p>
-        ${copyBtn('#aiSummaryResult')}
-        <button class="reset-btn" id="aiResetBtn" style="margin-top:14px; display:block;">Paraphrase something else</button>
-      `;
-      wireCopyButtons();
-      document.querySelector('#aiResetBtn').addEventListener('click', renderContentParaphraserTool);
+      showResultState(new Blob([summary], { type: 'text/plain' }), 'paraphrased-text.txt');
     } catch (err) { showErrorState(err.message); }
   });
 }
