@@ -3890,7 +3890,50 @@ function renderHeroSuggestions() {
     });
   });
 
+  updateSuggestTailPosition();
   alignHeroBoxHeights();
+}
+
+// ================= SUGGESTION-BUBBLE TAIL TRACKING =================
+// The suggestion panel's speech-bubble tail should always point at the
+// mascot, who is fixed to the viewport corner. As the page scrolls the
+// panel moves but the mascot doesn't, so the tail's position *within*
+// the panel has to be recomputed continuously — this keeps it level
+// ("in parallel") with the mascot at any scroll depth.
+let suggestTailRaf = null;
+
+function updateSuggestTailPosition() {
+  const widget = document.querySelector('#ffhWidget');
+  const panel = document.querySelector('#heroSuggestPanel');
+  if (!widget || !panel || !panel.classList.contains('visible')) return;
+  const widgetRect = widget.getBoundingClientRect();
+  const panelRect = panel.getBoundingClientRect();
+  if (!panelRect.height) return;
+  // Aim roughly at the mascot's chest/speech-bubble height, not his feet.
+  const mascotY = widgetRect.top + widgetRect.height * 0.32;
+  let tailTop = mascotY - panelRect.top;
+  // Keep the tail on the flat part of the panel's right edge, clear of
+  // the 24px rounded corners (plus the triangle's own ~13px half-height)
+  // — otherwise it clips into the curve and looks jagged/detached
+  // instead of a smooth, properly-seated speech-bubble tail.
+  const cornerClearance = 40;
+  const clampMin = cornerClearance;
+  const clampMax = panelRect.height - cornerClearance;
+  tailTop = Math.max(clampMin, Math.min(clampMax, tailTop));
+  panel.style.setProperty('--tail-top', `${tailTop}px`);
+}
+
+function requestSuggestTailUpdate() {
+  if (suggestTailRaf) return;
+  suggestTailRaf = requestAnimationFrame(() => {
+    suggestTailRaf = null;
+    updateSuggestTailPosition();
+  });
+}
+
+function wireSuggestTailTracking() {
+  window.addEventListener('scroll', requestSuggestTailUpdate, { passive: true });
+  window.addEventListener('resize', requestSuggestTailUpdate);
 }
 
 function storePendingHeroFile(file) {
@@ -4066,6 +4109,113 @@ function wireHamburger() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !menuBackdrop.classList.contains('hidden')) closeMenu();
   });
+}
+
+// ================= HERO MASCOT WIDGET =================
+function wireHeroMascot() {
+  const widget = document.querySelector('#ffhWidget');
+  const eyeL = document.querySelector('#ffhEyeL');
+  const eyeR = document.querySelector('#ffhEyeR');
+  const pupilL = document.querySelector('#ffhPupilL');
+  const pupilR = document.querySelector('#ffhPupilR');
+  const headGroup = document.querySelector('#ffhHeadGroup');
+  const headCircle = document.querySelector('#ffhHeadCircle');
+  const armLGroup = document.querySelector('#ffhArmL');
+  const armRGroup = document.querySelector('#ffhArmR');
+  const heroWrap = document.querySelector('#ffhHeroWrap');
+  const speechBubble = document.querySelector('#ffhSpeechBubble');
+  const eyelidL = document.querySelector('#ffhEyelidL');
+  const eyelidR = document.querySelector('#ffhEyelidR');
+  const hint = document.querySelector('#ffhHint');
+  if (!widget || !eyeL || !eyeR || !headGroup || !headCircle) return;
+
+  const maxPupilOffset = 4.5;
+  let isWaving = false;
+
+  [pupilL, pupilR].forEach((p) => {
+    p.setAttribute('data-base-cx', p.getAttribute('cx'));
+    p.setAttribute('data-base-cy', p.getAttribute('cy'));
+  });
+
+  function moveEye(eyeEl, pupilEl, mouseX, mouseY) {
+    const rect = eyeEl.getBoundingClientRect();
+    const eyeCenterX = rect.left + rect.width / 2;
+    const eyeCenterY = rect.top + rect.height / 2;
+    const dx = mouseX - eyeCenterX;
+    const dy = mouseY - eyeCenterY;
+    const angle = Math.atan2(dy, dx);
+    const distance = Math.min(Math.hypot(dx, dy) / 18, maxPupilOffset);
+    const baseCx = parseFloat(pupilEl.getAttribute('data-base-cx'));
+    const baseCy = parseFloat(pupilEl.getAttribute('data-base-cy'));
+    pupilEl.setAttribute('cx', baseCx + Math.cos(angle) * distance);
+    pupilEl.setAttribute('cy', baseCy + Math.sin(angle) * distance);
+  }
+
+  function updateFullBodyTracking(mouseX, mouseY) {
+    if (isWaving) return;
+    const headRect = headCircle.getBoundingClientRect();
+    const charCenterX = headRect.left + headRect.width / 2;
+    const charCenterY = headRect.top + headRect.height / 2 + 40;
+    const dx = mouseX - charCenterX;
+    const dy = mouseY - charCenterY;
+    const headMaxAngle = 10;
+    const headAngle = Math.max(-headMaxAngle, Math.min(headMaxAngle, (dx / 300) * headMaxAngle));
+    const headTiltY = Math.max(-6, Math.min(6, (dy / 300) * 6));
+    headGroup.style.transform = `rotate(${headAngle.toFixed(2)}deg) translateY(${headTiltY.toFixed(2)}px)`;
+  }
+
+  function handlePointerMove(x, y) {
+    moveEye(eyeL, pupilL, x, y);
+    moveEye(eyeR, pupilR, x, y);
+    updateFullBodyTracking(x, y);
+  }
+
+  window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
+  window.addEventListener('touchmove', (e) => {
+    const touch = e.touches[0];
+    if (touch) handlePointerMove(touch.clientX, touch.clientY);
+  });
+
+  function blink() {
+    if (!isWaving && eyelidL && eyelidR) {
+      [eyelidL, eyelidR].forEach((el) => {
+        el.style.transition = 'transform 0.09s cubic-bezier(0.4, 0, 1, 1)';
+        el.style.transform = 'scaleY(1)';
+      });
+      setTimeout(() => {
+        [eyelidL, eyelidR].forEach((el) => {
+          el.style.transition = 'transform 0.14s cubic-bezier(0, 0, 0.2, 1)';
+          el.style.transform = 'scaleY(0)';
+        });
+      }, 90 + Math.random() * 40);
+    }
+    setTimeout(blink, 2400 + Math.random() * 3200);
+  }
+  setTimeout(blink, 1800);
+
+  function waveHello() {
+    if (isWaving) return;
+    isWaving = true;
+    // Mouth stays neutral throughout — no smiling, on proximity or here.
+    if (speechBubble) speechBubble.classList.add('show');
+    if (hint) hint.style.opacity = '0';
+    armRGroup.style.transform = 'rotate(-100deg)';
+    armRGroup.classList.add('ffh-waving-now');
+    setTimeout(() => {
+      armRGroup.classList.remove('ffh-waving-now');
+      armRGroup.classList.add('ffh-lowering');
+      requestAnimationFrame(() => {
+        armRGroup.style.transform = 'rotate(-18deg)';
+      });
+      if (speechBubble) speechBubble.classList.remove('show');
+      if (hint) hint.style.opacity = '';
+      setTimeout(() => {
+        armRGroup.classList.remove('ffh-lowering');
+        isWaving = false;
+      }, 400);
+    }, 1500);
+  }
+  widget.addEventListener('click', waveHello);
 }
 
 // ================= CATEGORY-SPECIFIC HEADER NAV =================
@@ -4301,7 +4451,9 @@ function wireNavDropdowns() {
 export function initToolPage(pageCategory) {
   wireHeroDropZone();
   wireHamburger();
+  wireHeroMascot();
   wireFeaturedBanner();
+  wireSuggestTailTracking();
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
   wireNavDropdowns();
