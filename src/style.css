@@ -421,17 +421,6 @@ body.tool-landing-page .hero-drop-wrap {
   display: none;
 }
 
-/* Every dedicated tool landing page already has its own tool-specific FAQ
-   section (with matching FAQPage structured data) — the generic sitewide
-   one from partials/_footer.html would otherwise duplicate the "Frequently
-   Asked Questions" heading a second time right before the footer. Most
-   noticeable — and most costly — on mobile, where it roughly doubles an
-   already-long page. */
-body.tool-landing-page .site-global-faq {
-  display: none;
-}
-
-
 /* ---------- Featured-tools banner (replaces the old search box) ---------- */
 .ffh-banner {
   /* Full-bleed: stretches past .hero-drop-wrap's own 32px side padding
@@ -3351,14 +3340,6 @@ body.tool-result-active #ffhWidget {
 
 .footer-copyright { margin: 0; }
 
-.footer-social { display: flex; gap: 16px; }
-
-.footer-social a {
-  display: inline-flex;
-  color: #9CA3AF;
-  transition: color 0.15s ease;
-}
-
 /* Stacked sections instead of the desktop's multi-column layout
    squeezed narrower — each group gets its own full-width block with
    consistent spacing, no cramped 2-up wrapping. */
@@ -3523,5 +3504,3 @@ body.tool-result-active #ffhWidget {
   .tp-dropzone { padding: 24px 18px; margin: 0 auto 28px; }
   .tp-dropzone-browse-btn { width: 100%; max-width: 280px; }
 }
-
-.footer-social a:hover { color: var(--red); }
