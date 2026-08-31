@@ -124,7 +124,7 @@ function buildCsp(nonce) {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "form-action 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${JSDELIVR}`,
+    `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${JSDELIVR} ${STATICIMGLY}`,
     "script-src-attr 'none'",
     `style-src-elem 'self' 'nonce-${nonce}' ${GOOGLE_FONTS_CSS}`,
     // Phase 1 only — see README §"style-src-attr migration". ~300
@@ -135,7 +135,16 @@ function buildCsp(nonce) {
     "img-src 'self' data: blob:",
     `font-src 'self' ${GOOGLE_FONTS_FILES}`,
     `connect-src 'self' ${HUGGINGFACE_HOSTS.join(' ')} ${JSDELIVR} ${STATICIMGLY}`,
-    "worker-src 'self' blob:",
+    // @imgly/background-removal (the isnet fallback model) loads its
+    // onnxruntime-web WASM runtime — script + worker — directly from
+    // staticimgly.com at runtime (see the connect-src comment above).
+    // connect-src alone only covers its fetch() calls; the actual
+    // script/worker load also needs script-src and worker-src, which
+    // were missing this host — the CSP was silently blocking the
+    // fallback model's own runtime code, surfacing as a cryptic
+    // "no available backend found" error from onnxruntime-web instead
+    // of an obvious CSP violation message.
+    `worker-src 'self' blob: ${STATICIMGLY}`,
     "child-src 'self' blob:",
     "media-src 'self' blob:",
     "manifest-src 'self'",
