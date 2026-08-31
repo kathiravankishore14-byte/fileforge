@@ -4,7 +4,6 @@ import 'cropperjs/dist/cropper.css';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Tesseract from 'tesseract.js';
-import { removeBackground } from '@imgly/background-removal';
 import { PDFDocument, degrees, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } from 'pdf-lib';
 import { TOOL_SLUGS, toolUrl } from './toolSlugs.js';
 import './style.css';
@@ -1684,30 +1683,12 @@ function renderSingleFileConfig() {
       showProcessingState('Downloading AI model...');
       let cutoutBlob;
       try {
-        // Primary: BiRefNet, full precision — the most accurate model that
-        // can realistically run in a browser, at the cost of a bigger
-        // one-time download than the fallback below.
-        cutoutBlob = await runWithSingleThreadedWasm(() => removeBackgroundBiRefNet(currentFile, (pct) => {
+        cutoutBlob = await removeBackgroundBiRefNet(currentFile, (pct) => {
           updateProcessingProgress(pct, `Downloading AI model... ${pct}%`);
-        }));
-      } catch (birefnetErr) {
-        // Fallback: the lighter isnet model. Covers devices that can't
-        // handle BiRefNet's memory footprint, or any other failure — this
-        // path is the one that was already shipping and working.
-        try {
-          showProcessingState('Trying a lighter AI model...');
-          cutoutBlob = await runWithSingleThreadedWasm(() => removeBackground(currentFile, {
-            model: 'isnet',
-            progress: (key, current, total) => {
-              const pct = total ? Math.round((current / total) * 100) : 0;
-              const label = key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`;
-              updateProcessingProgress(pct, label);
-            },
-          }));
-        } catch (fallbackErr) {
-          showErrorState(fallbackErr.message);
-          return;
-        }
+        });
+      } catch (err) {
+        showErrorState(`Couldn't remove the background: ${err && err.message ? err.message : err}`);
+        return;
       }
       // Soften the raw AI mask's edge before showing it — segmentation
       // masks tend to be near-binary (fully opaque or fully transparent),
@@ -3243,58 +3224,64 @@ function renderHtmlToExcelTool() {
   });
 }
 
-// onnxruntime-web (used by both the BiRefNet and isnet paths below) only
-// self-corrects its thread count back to 1 when nothing set it and the
-// page isn't cross-origin isolated — @imgly/background-removal's isnet
-// path explicitly sets numThreads from navigator.hardwareConcurrency
-// unconditionally, which bypasses that safety net and tries to spin up
-// the multi-threaded WASM backend even without the COOP/COEP headers
-// SharedArrayBuffer-based threading needs. On a page that isn't
-// cross-origin isolated, that WASM backend fails to instantiate — surfacing
-// as a cryptic "no available backend found... reading 'default'" error
-// instead of a working (if slightly slower) single-threaded fallback.
-// Temporarily shadowing hardwareConcurrency as 1 keeps both model paths on
-// the safe single-threaded WASM backend, with no site-wide header change.
-async function runWithSingleThreadedWasm(fn) {
-  const hadOwnProp = Object.prototype.hasOwnProperty.call(navigator, 'hardwareConcurrency');
-  const originalDescriptor = hadOwnProp ? Object.getOwnPropertyDescriptor(navigator, 'hardwareConcurrency') : null;
-  try {
-    Object.defineProperty(navigator, 'hardwareConcurrency', { value: 1, configurable: true });
-  } catch (defineErr) { /* some browsers may disallow shadowing this — proceed unmodified */ }
-  try {
-    return await fn();
-  } finally {
-    try {
-      if (hadOwnProp) Object.defineProperty(navigator, 'hardwareConcurrency', originalDescriptor);
-      else delete navigator.hardwareConcurrency;
-    } catch (restoreErr) { /* best-effort restore only */ }
-  }
-}
-
-// ================= BACKGROUND REMOVAL (BiRefNet, primary — 100% client-side) =================
-// BiRefNet is a newer, more accurate segmentation model than the isnet
-// model @imgly/background-removal ships (better edges on hair, fur, and
-// cluttered real-world backgrounds) — but it's heavier, and transformer
-// -based models are known to occasionally exhaust WASM memory on
-// lower-end devices or very large images. Cached after first load, same
-// pattern as the summarizer pipeline below. The bgremove click handler
-// tries this first and falls back to the older, lighter isnet model (via
-// removeBackground()) if this throws for any reason, so a visitor on a
-// device that can't handle BiRefNet still gets a working result. No
-// server involved anywhere in this chain — everything runs on-device.
-let birefnetPipeline = null;
+// ================= BACKGROUND REMOVAL (BiRefNet — 100% client-side) =================
+// This used to be a two-model chain: BiRefNet first, then — if that threw —
+// a second, different library (@imgly/background-removal's "isnet" model)
+// as a fallback. That fallback library fetched its own WASM runtime AND its
+// model weights from a third-party CDN (staticimgly.com) at runtime, and it
+// was the confirmed, reproducible source of a live production failure
+// ("Failed to create session ... no available backend found") that
+// persisted even after widening the CSP to allow that host — so it's been
+// removed rather than patched further. Falling back to a *different,
+// CDN-dependent library* traded one failure mode for another; falling back
+// across *dtypes of the same model* below does not.
+//
+// Everything this pipeline needs is either bundled same-origin by Vite (the
+// onnxruntime-web WASM/JS runtime — confirmed via the compiled output) or
+// fetched from Hugging Face over a host this site's CSP connect-src already
+// allows (the model weights themselves). No other host is involved, and no
+// photo is ever sent anywhere — only the model files travel over the
+// network, and only once per browser (cached afterward).
+//
+// 'q8' (8-bit quantized) is tried first: a much smaller download and a much
+// smaller WASM memory footprint than full precision, so it's more likely to
+// succeed on an ordinary or lower-end device, and it's faster besides.
+// 'fp32' is the fallback — slightly crisper edges, in case the model repo
+// ever stops publishing a q8 build (that would 404 immediately, costing no
+// real time). A real failure from either attempt is logged to the console
+// (rather than swallowed) so it can actually be diagnosed from a report,
+// and the last one is what the tool shows the visitor if both fail.
+const BIREFNET_DTYPES = ['q8', 'fp32'];
+const birefnetPipelines = {};
 async function removeBackgroundBiRefNet(file, onProgress) {
-  const { pipeline } = await import('@huggingface/transformers');
-  if (!birefnetPipeline) {
-    birefnetPipeline = await pipeline('background-removal', 'onnx-community/BiRefNet_lite-ONNX', {
-      dtype: 'fp32', // full precision — noticeably crisper mask edges than fp16, ~2x the one-time download
-      progress_callback: (p) => {
-        if (p.status === 'progress' && p.progress != null) onProgress(Math.round(p.progress));
-      },
-    });
+  const { pipeline, env } = await import('@huggingface/transformers');
+  // Belt-and-suspenders: the library's own bundled onnxruntime-web already
+  // only turns on multi-threading when the page is cross-origin isolated
+  // (confirmed directly in the compiled bundle), and this site isn't, so it
+  // already self-corrects to a single thread. Setting it here too removes
+  // any dependence on that internal heuristic firing correctly at all.
+  env.backends.onnx.wasm.numThreads = 1;
+
+  let lastErr;
+  for (const dtype of BIREFNET_DTYPES) {
+    try {
+      if (!birefnetPipelines[dtype]) {
+        birefnetPipelines[dtype] = await pipeline('background-removal', 'onnx-community/BiRefNet_lite-ONNX', {
+          dtype,
+          progress_callback: (p) => {
+            if (p.status === 'progress' && p.progress != null) onProgress(Math.round(p.progress));
+          },
+        });
+      }
+      const result = await birefnetPipelines[dtype](file);
+      return result.toBlob('image/png');
+    } catch (err) {
+      console.error(`Remove Background: the ${dtype} model failed to load or run —`, err);
+      birefnetPipelines[dtype] = null; // don't keep a half-initialized pipeline cached
+      lastErr = err;
+    }
   }
-  const result = await birefnetPipeline(file);
-  return result.toBlob('image/png');
+  throw lastErr;
 }
 
 // Softens the hard, near-binary edge a segmentation mask leaves around the

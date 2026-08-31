@@ -52,29 +52,23 @@
 //     narrower single-host allowance the original target policy
 //     specified is kept as-is here — it's already correct.
 //
-//   https://staticimgly.com
-//     @imgly/background-removal (the fallback "isnet" model used
-//     when the primary BiRefNet pipeline throws — lower-end devices,
-//     memory-constrained browsers) is called in this app with NO
-//     `publicPath` override. Its own default schema
-//     (`background-removal`'s Zod config) resolves `publicPath` to
-//     `https://staticimgly.com/@imgly/background-removal-data/...`
-//     and fetches BOTH its WASM runtime and the ONNX model weights
-//     from there. This host is NOT part of the Hugging Face family
-//     and was verified directly against the compiled bundle, not
-//     assumed. Drop it and the Remove Background tool's fallback
-//     path breaks for exactly the users it exists to protect.
-//
-// Everything else (pdf.js's worker, onnxruntime-web's own threaded-
-// WASM worker used by the BiRefNet/summarizer pipeline, heic2any's
-// worker) is bundled and resolved to a same-origin /assets/... URL
-// by Vite at build time — confirmed by grepping the compiled output
-// for `new URL(..., import.meta.url)` — so none of those need an
-// extra host anywhere.
+// Everything else (pdf.js's worker, onnxruntime-web's own WASM runtime
+// used by the BiRefNet background-removal and summarizer pipelines,
+// heic2any's worker) is bundled and resolved to a same-origin
+// /assets/... URL by Vite at build time — confirmed by grepping the
+// compiled output for `new URL(..., import.meta.url)` — so none of
+// those need an extra host anywhere. (Background Removal previously
+// also depended on @imgly/background-removal, which fetched its own
+// WASM runtime and model weights from staticimgly.com at runtime. That
+// library was the confirmed, reproducible source of a live "Failed to
+// create session ... no available backend found" failure that
+// persisted even after this Worker's CSP was widened to allow that
+// host — it has since been removed from the app entirely in favor of
+// a single same-origin pipeline, so staticimgly.com is no longer
+// referenced here.)
 // ----------------------------------------------------------------
 
 const JSDELIVR = 'https://cdn.jsdelivr.net';
-const STATICIMGLY = 'https://staticimgly.com';
 const HUGGINGFACE_HOSTS = [
   'https://huggingface.co',
   'https://*.huggingface.co',
@@ -124,7 +118,7 @@ function buildCsp(nonce) {
     "frame-ancestors 'none'",
     "frame-src 'none'",
     "form-action 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${JSDELIVR} ${STATICIMGLY}`,
+    `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' ${JSDELIVR}`,
     "script-src-attr 'none'",
     `style-src-elem 'self' 'nonce-${nonce}' ${GOOGLE_FONTS_CSS}`,
     // Phase 1 only — see README §"style-src-attr migration". ~300
@@ -134,17 +128,8 @@ function buildCsp(nonce) {
     "style-src-attr 'unsafe-inline'",
     "img-src 'self' data: blob:",
     `font-src 'self' ${GOOGLE_FONTS_FILES}`,
-    `connect-src 'self' ${HUGGINGFACE_HOSTS.join(' ')} ${JSDELIVR} ${STATICIMGLY}`,
-    // @imgly/background-removal (the isnet fallback model) loads its
-    // onnxruntime-web WASM runtime — script + worker — directly from
-    // staticimgly.com at runtime (see the connect-src comment above).
-    // connect-src alone only covers its fetch() calls; the actual
-    // script/worker load also needs script-src and worker-src, which
-    // were missing this host — the CSP was silently blocking the
-    // fallback model's own runtime code, surfacing as a cryptic
-    // "no available backend found" error from onnxruntime-web instead
-    // of an obvious CSP violation message.
-    `worker-src 'self' blob: ${STATICIMGLY}`,
+    `connect-src 'self' ${HUGGINGFACE_HOSTS.join(' ')} ${JSDELIVR}`,
+    "worker-src 'self' blob:",
     "child-src 'self' blob:",
     "media-src 'self' blob:",
     "manifest-src 'self'",

@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
-    "@imgly/background-removal": "^1.7.0",
     "@pdfsmaller/pdf-decrypt": "^1.0.1",
     "@pdfsmaller/pdf-encrypt-lite": "^1.2.0",
     "browser-image-compression": "^2.0.2",
