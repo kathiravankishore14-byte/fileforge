@@ -1687,23 +1687,23 @@ function renderSingleFileConfig() {
         // Primary: BiRefNet, full precision — the most accurate model that
         // can realistically run in a browser, at the cost of a bigger
         // one-time download than the fallback below.
-        cutoutBlob = await removeBackgroundBiRefNet(currentFile, (pct) => {
+        cutoutBlob = await runWithSingleThreadedWasm(() => removeBackgroundBiRefNet(currentFile, (pct) => {
           updateProcessingProgress(pct, `Downloading AI model... ${pct}%`);
-        });
+        }));
       } catch (birefnetErr) {
         // Fallback: the lighter isnet model. Covers devices that can't
         // handle BiRefNet's memory footprint, or any other failure — this
         // path is the one that was already shipping and working.
         try {
           showProcessingState('Trying a lighter AI model...');
-          cutoutBlob = await removeBackground(currentFile, {
+          cutoutBlob = await runWithSingleThreadedWasm(() => removeBackground(currentFile, {
             model: 'isnet',
             progress: (key, current, total) => {
               const pct = total ? Math.round((current / total) * 100) : 0;
               const label = key.startsWith('fetch') ? `Downloading AI model... ${pct}%` : `Removing background... ${pct}%`;
               updateProcessingProgress(pct, label);
             },
-          });
+          }));
         } catch (fallbackErr) {
           showErrorState(fallbackErr.message);
           return;
@@ -3241,6 +3241,34 @@ function renderHtmlToExcelTool() {
       showResultState(new Blob([wbout], { type: 'application/octet-stream' }), 'html-export.xlsx');
     } catch (err) { showErrorState(err.message); }
   });
+}
+
+// onnxruntime-web (used by both the BiRefNet and isnet paths below) only
+// self-corrects its thread count back to 1 when nothing set it and the
+// page isn't cross-origin isolated — @imgly/background-removal's isnet
+// path explicitly sets numThreads from navigator.hardwareConcurrency
+// unconditionally, which bypasses that safety net and tries to spin up
+// the multi-threaded WASM backend even without the COOP/COEP headers
+// SharedArrayBuffer-based threading needs. On a page that isn't
+// cross-origin isolated, that WASM backend fails to instantiate — surfacing
+// as a cryptic "no available backend found... reading 'default'" error
+// instead of a working (if slightly slower) single-threaded fallback.
+// Temporarily shadowing hardwareConcurrency as 1 keeps both model paths on
+// the safe single-threaded WASM backend, with no site-wide header change.
+async function runWithSingleThreadedWasm(fn) {
+  const hadOwnProp = Object.prototype.hasOwnProperty.call(navigator, 'hardwareConcurrency');
+  const originalDescriptor = hadOwnProp ? Object.getOwnPropertyDescriptor(navigator, 'hardwareConcurrency') : null;
+  try {
+    Object.defineProperty(navigator, 'hardwareConcurrency', { value: 1, configurable: true });
+  } catch (defineErr) { /* some browsers may disallow shadowing this — proceed unmodified */ }
+  try {
+    return await fn();
+  } finally {
+    try {
+      if (hadOwnProp) Object.defineProperty(navigator, 'hardwareConcurrency', originalDescriptor);
+      else delete navigator.hardwareConcurrency;
+    } catch (restoreErr) { /* best-effort restore only */ }
+  }
 }
 
 // ================= BACKGROUND REMOVAL (BiRefNet, primary — 100% client-side) =================
