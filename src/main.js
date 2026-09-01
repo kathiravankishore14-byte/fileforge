@@ -3225,63 +3225,198 @@ function renderHtmlToExcelTool() {
 }
 
 // ================= BACKGROUND REMOVAL (BiRefNet — 100% client-side) =================
-// This used to be a two-model chain: BiRefNet first, then — if that threw —
-// a second, different library (@imgly/background-removal's "isnet" model)
-// as a fallback. That fallback library fetched its own WASM runtime AND its
-// model weights from a third-party CDN (staticimgly.com) at runtime, and it
-// was the confirmed, reproducible source of a live production failure
-// ("Failed to create session ... no available backend found") that
-// persisted even after widening the CSP to allow that host — so it's been
-// removed rather than patched further. Falling back to a *different,
-// CDN-dependent library* traded one failure mode for another; falling back
-// across *dtypes of the same model* below does not.
+// This used to run on the onnxruntime-web build bundled inside
+// @huggingface/transformers — and that build turned out to be the real,
+// root-level reason background removal never worked on the live site.
+// onnxruntime-web stopped shipping a non-threaded WASM binary after v1.18:
+// every version since (including the one transformers.js bundles) ships
+// ONLY a pthread-based build, and that build's WASM module tries to
+// allocate *shared* memory the moment it loads — which requires
+// `SharedArrayBuffer`, which browsers only expose on a page sending
+// Cross-Origin-Opener-Policy/Cross-Origin-Embedder-Policy headers. This
+// site has never sent those, so that allocation threw on every load,
+// which is exactly what surfaced as the cryptic "no available backend
+// found ... reading 'default'" error — confirmed by reading the actual
+// shipped WASM glue code, and then reproduced and fixed in an isolated,
+// headless-browser test before this was ever shipped.
 //
-// Everything this pipeline needs is either bundled same-origin by Vite (the
-// onnxruntime-web WASM/JS runtime — confirmed via the compiled output) or
-// fetched from Hugging Face over a host this site's CSP connect-src already
-// allows (the model weights themselves). No other host is involved, and no
-// photo is ever sent anywhere — only the model files travel over the
-// network, and only once per browser (cached afterward).
+// The fix: this tool now imports `onnxruntime-web` directly, pinned to
+// 1.18.0 — the last release with a genuine non-threaded WASM build — and
+// drives the model itself instead of going through transformers.js's
+// pipeline() convenience wrapper (which is hard-pinned to the newer,
+// threaded-only build internally, with no way to swap just that piece
+// out). No COOP/COEP headers, no SharedArrayBuffer, no third-party CDN —
+// the WASM runtime is bundled same-origin (see public/onnxruntime/), and
+// the only network request left is the one-time model download from
+// Hugging Face, over a host already in this site's CSP connect-src. No
+// photo is ever sent anywhere; only the model file travels the network.
 //
-// 'q8' (8-bit quantized) is tried first: a much smaller download and a much
-// smaller WASM memory footprint than full precision, so it's more likely to
-// succeed on an ordinary or lower-end device, and it's faster besides.
-// 'fp32' is the fallback — slightly crisper edges, in case the model repo
-// ever stops publishing a q8 build (that would 404 immediately, costing no
-// real time). A real failure from either attempt is logged to the console
-// (rather than swallowed) so it can actually be diagnosed from a report,
-// and the last one is what the tool shows the visitor if both fail.
-const BIREFNET_DTYPES = ['q8', 'fp32'];
-const birefnetPipelines = {};
-async function removeBackgroundBiRefNet(file, onProgress) {
-  const { pipeline, env } = await import('@huggingface/transformers');
-  // Belt-and-suspenders: the library's own bundled onnxruntime-web already
-  // only turns on multi-threading when the page is cross-origin isolated
-  // (confirmed directly in the compiled bundle), and this site isn't, so it
-  // already self-corrects to a single thread. Setting it here too removes
-  // any dependence on that internal heuristic firing correctly at all.
-  env.backends.onnx.wasm.numThreads = 1;
+// The one-time model download is cached in the browser's Cache Storage,
+// so it only happens once per browser, not once per photo.
+const BIREFNET_WASM_PATH = '/onnxruntime/';
+const BIREFNET_MODEL_CACHE = 'ff-birefnet-model-v1';
+const BIREFNET_INPUT_SIZE = 1024; // BiRefNet's published inference recipe resizes to a fixed 1024x1024 square, ignoring aspect ratio
+const BIREFNET_MEAN = [0.485, 0.456, 0.406]; // ImageNet normalization stats — the standard BiRefNet preprocessing recipe
+const BIREFNET_STD = [0.229, 0.224, 0.225];
+// Tried in order: 'q8' (quantized — smaller download, faster) first, then
+// full precision if that file isn't published for this model repo (a 404
+// there is immediate — no real time lost before falling through).
+const BIREFNET_MODEL_CANDIDATES = [
+  { dtype: 'q8', filename: 'model_quantized.onnx' },
+  { dtype: 'fp32', filename: 'model.onnx' },
+];
 
-  let lastErr;
-  for (const dtype of BIREFNET_DTYPES) {
+async function fetchModelBuffer(url, onProgress) {
+  if ('caches' in window) {
     try {
-      if (!birefnetPipelines[dtype]) {
-        birefnetPipelines[dtype] = await pipeline('background-removal', 'onnx-community/BiRefNet_lite-ONNX', {
-          dtype,
-          progress_callback: (p) => {
-            if (p.status === 'progress' && p.progress != null) onProgress(Math.round(p.progress));
-          },
-        });
-      }
-      const result = await birefnetPipelines[dtype](file);
-      return result.toBlob('image/png');
-    } catch (err) {
-      console.error(`Remove Background: the ${dtype} model failed to load or run —`, err);
-      birefnetPipelines[dtype] = null; // don't keep a half-initialized pipeline cached
-      lastErr = err;
-    }
+      const cache = await caches.open(BIREFNET_MODEL_CACHE);
+      const cached = await cache.match(url);
+      if (cached) return await cached.arrayBuffer();
+    } catch (cacheErr) { /* fall through to a plain network fetch */ }
   }
-  throw lastErr;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Model download failed (HTTP ${resp.status})`);
+  const total = Number(resp.headers.get('content-length')) || 0;
+  let buffer;
+  if (resp.body && total) {
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let received = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      onProgress(Math.min(100, Math.round((received / total) * 100)));
+    }
+    buffer = new Uint8Array(received);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.length; }
+  } else {
+    buffer = new Uint8Array(await resp.arrayBuffer());
+  }
+  if ('caches' in window) {
+    try {
+      const cache = await caches.open(BIREFNET_MODEL_CACHE);
+      await cache.put(url, new Response(buffer));
+    } catch (cacheErr) { /* not fatal — just means it re-downloads next time */ }
+  }
+  return buffer.buffer;
+}
+
+let birefnetSessionPromise = null;
+async function getBirefnetSession(onProgress) {
+  if (birefnetSessionPromise) return birefnetSessionPromise;
+  birefnetSessionPromise = (async () => {
+    const ort = await import('onnxruntime-web');
+    ort.env.wasm.wasmPaths = BIREFNET_WASM_PATH;
+    ort.env.wasm.numThreads = 1; // belt-and-suspenders — the non-threaded build never spawns a worker anyway
+    let lastErr;
+    for (const candidate of BIREFNET_MODEL_CANDIDATES) {
+      try {
+        const url = `https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/${candidate.filename}`;
+        const buf = await fetchModelBuffer(url, onProgress);
+        return await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
+      } catch (err) {
+        console.error(`Remove Background: the ${candidate.dtype} model failed to load —`, err);
+        lastErr = err;
+      }
+    }
+    throw lastErr;
+  })();
+  try {
+    return await birefnetSessionPromise;
+  } catch (err) {
+    birefnetSessionPromise = null; // don't keep a failed attempt cached — let a retry try again
+    throw err;
+  }
+}
+
+// Resizes `img` to BIREFNET_INPUT_SIZE x BIREFNET_INPUT_SIZE and packs it
+// into a normalized, channel-first (NCHW) Float32Array — the tensor layout
+// ONNX vision models expect.
+function preprocessForBirefnet(img) {
+  const size = BIREFNET_INPUT_SIZE;
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, size, size);
+  const { data } = ctx.getImageData(0, 0, size, size);
+  const plane = size * size;
+  const out = new Float32Array(3 * plane);
+  for (let i = 0; i < plane; i++) {
+    out[i] = (data[i * 4] / 255 - BIREFNET_MEAN[0]) / BIREFNET_STD[0];
+    out[plane + i] = (data[i * 4 + 1] / 255 - BIREFNET_MEAN[1]) / BIREFNET_STD[1];
+    out[2 * plane + i] = (data[i * 4 + 2] / 255 - BIREFNET_MEAN[2]) / BIREFNET_STD[2];
+  }
+  return out;
+}
+
+async function removeBackgroundBiRefNet(file, onProgress) {
+  const ort = await import('onnxruntime-web');
+  const session = await getBirefnetSession(onProgress);
+  updateProcessingCaption('Removing background...');
+
+  const img = await loadImageFromBlob(file);
+  const inputTensor = new ort.Tensor(
+    'float32',
+    preprocessForBirefnet(img),
+    [1, 3, BIREFNET_INPUT_SIZE, BIREFNET_INPUT_SIZE],
+  );
+  const results = await session.run({ [session.inputNames[0]]: inputTensor });
+  const output = results[session.outputNames[0]];
+  const dims = output.dims;
+  const maskW = dims[dims.length - 1], maskH = dims[dims.length - 2];
+  const raw = output.data;
+
+  // The exported graph may or may not include a final sigmoid — detect
+  // which by checking whether the raw values already look like [0,1]
+  // probabilities, and only apply sigmoid ourselves if they don't.
+  let min = Infinity, max = -Infinity;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw[i] < min) min = raw[i];
+    if (raw[i] > max) max = raw[i];
+  }
+  const alreadyProbabilities = min >= -0.001 && max <= 1.001;
+  const toAlpha = (v) => {
+    const p = alreadyProbabilities ? v : 1 / (1 + Math.exp(-v));
+    return Math.max(0, Math.min(255, Math.round(p * 255)));
+  };
+
+  const maskCanvas = document.createElement('canvas');
+  maskCanvas.width = maskW; maskCanvas.height = maskH;
+  const maskCtx = maskCanvas.getContext('2d');
+  const maskImageData = maskCtx.createImageData(maskW, maskH);
+  for (let i = 0; i < maskW * maskH; i++) {
+    const alpha = toAlpha(raw[i]);
+    maskImageData.data[i * 4] = alpha;
+    maskImageData.data[i * 4 + 1] = alpha;
+    maskImageData.data[i * 4 + 2] = alpha;
+    maskImageData.data[i * 4 + 3] = 255;
+  }
+  maskCtx.putImageData(maskImageData, 0, 0);
+
+  // Composite: the original photo at its native resolution, with the mask
+  // (bilinearly upscaled via drawImage) applied as the alpha channel.
+  const outW = img.naturalWidth, outH = img.naturalHeight;
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = outW; outCanvas.height = outH;
+  const outCtx = outCanvas.getContext('2d');
+  outCtx.drawImage(img, 0, 0, outW, outH);
+  const outImageData = outCtx.getImageData(0, 0, outW, outH);
+
+  const scaledMaskCanvas = document.createElement('canvas');
+  scaledMaskCanvas.width = outW; scaledMaskCanvas.height = outH;
+  const scaledMaskCtx = scaledMaskCanvas.getContext('2d');
+  scaledMaskCtx.drawImage(maskCanvas, 0, 0, outW, outH);
+  const scaledMaskData = scaledMaskCtx.getImageData(0, 0, outW, outH).data;
+
+  for (let i = 0; i < outW * outH; i++) {
+    outImageData.data[i * 4 + 3] = scaledMaskData[i * 4];
+  }
+  outCtx.putImageData(outImageData, 0, 0);
+
+  return new Promise((resolve) => outCanvas.toBlob(resolve, 'image/png'));
 }
 
 // Softens the hard, near-binary edge a segmentation mask leaves around the
