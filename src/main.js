@@ -3271,12 +3271,14 @@ const ISNET_MODEL_CACHE = 'ff-isnet-model-v1';
 const ISNET_INPUT_SIZE = 1024;
 const ISNET_MEAN = [128, 128, 128]; // operates on raw 0-255 pixel values, not 0-1 — see preprocessForIsnet()
 const ISNET_STD = [256, 256, 256];
-// Tried in order: 'q8' (quantized, ~44 MB) first, then full precision
-// (~176 MB) if that file isn't published for this model repo (a 404 there
-// is immediate — no real time lost before falling through).
+// Tried in order: full precision (~176 MB) first, for the sharpest, least
+// noisy mask — quantization measurably softens edge quality on this model.
+// 'q8' (quantized, ~44 MB) is the automatic fallback if that ever fails to
+// load (a lower-end device, a flaky connection), so a visitor is never left
+// without a working result, just a smaller download than usual.
 const ISNET_MODEL_CANDIDATES = [
-  { dtype: 'q8', filename: 'model_quantized.onnx' },
   { dtype: 'fp32', filename: 'model.onnx' },
+  { dtype: 'q8', filename: 'model_quantized.onnx' },
 ];
 
 async function fetchModelBuffer(url, onProgress) {
@@ -3355,6 +3357,8 @@ function preprocessForIsnet(img) {
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high'; // a cleaner downscale here means less high-frequency noise for the model to guess an edge from
   ctx.drawImage(img, 0, 0, size, size);
   const { data } = ctx.getImageData(0, 0, size, size);
   const plane = size * size;
@@ -3423,6 +3427,8 @@ async function removeBackgroundIsnet(file, onProgress) {
   const scaledMaskCanvas = document.createElement('canvas');
   scaledMaskCanvas.width = outW; scaledMaskCanvas.height = outH;
   const scaledMaskCtx = scaledMaskCanvas.getContext('2d');
+  scaledMaskCtx.imageSmoothingEnabled = true;
+  scaledMaskCtx.imageSmoothingQuality = 'high'; // the mask was only ever computed at 1024x1024 — a high-quality upscale here avoids blocky, stair-stepped edges on larger photos
   scaledMaskCtx.drawImage(maskCanvas, 0, 0, outW, outH);
   const scaledMaskData = scaledMaskCtx.getImageData(0, 0, outW, outH).data;
 
@@ -3439,9 +3445,18 @@ async function removeBackgroundIsnet(file, onProgress) {
 // pixels are untouched), so hair/fur/soft edges don't read as a harsh
 // jagged line. Deliberately subtle: large enough to anti-alias, small
 // enough not to eat into real detail.
-async function featherCutoutEdges(blob, radiusPx = 1.1) {
+//
+// The mask itself is only ever computed at ISNET_INPUT_SIZE (1024px) and
+// then upscaled — so on a photo much larger than that, its real edge
+// resolution is coarser than the output image's pixel grid. A fixed blur
+// radius barely registers on a large photo but over-softens a small one,
+// so the radius scales with how far the mask was actually upscaled.
+async function featherCutoutEdges(blob, radiusPx = null) {
   const img = await loadImageFromBlob(blob);
   const w = img.naturalWidth, h = img.naturalHeight;
+  if (radiusPx == null) {
+    radiusPx = Math.max(1, (Math.max(w, h) / ISNET_INPUT_SIZE) * 1.1);
+  }
 
   const canvas = document.createElement('canvas');
   canvas.width = w; canvas.height = h;
