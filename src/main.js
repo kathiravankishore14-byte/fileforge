@@ -1683,7 +1683,7 @@ function renderSingleFileConfig() {
       showProcessingState('Downloading AI model...');
       let cutoutBlob;
       try {
-        cutoutBlob = await removeBackgroundBiRefNet(currentFile, (pct) => {
+        cutoutBlob = await removeBackgroundIsnet(currentFile, (pct) => {
           updateProcessingProgress(pct, `Downloading AI model... ${pct}%`);
         });
       } catch (err) {
@@ -3224,7 +3224,7 @@ function renderHtmlToExcelTool() {
   });
 }
 
-// ================= BACKGROUND REMOVAL (BiRefNet — 100% client-side) =================
+// ================= BACKGROUND REMOVAL (ISNet — 100% client-side) =================
 // This used to run on the onnxruntime-web build bundled inside
 // @huggingface/transformers — and that build turned out to be the real,
 // root-level reason background removal never worked on the live site.
@@ -3251,17 +3251,30 @@ function renderHtmlToExcelTool() {
 // Hugging Face, over a host already in this site's CSP connect-src. No
 // photo is ever sent anywhere; only the model file travels the network.
 //
+// The model is ISNet (onnx-community/ISNet-ONNX), not BiRefNet: BiRefNet's
+// ONNX export only publishes a single 224 MB full-precision file with no
+// smaller/quantized variant, which is a lot of weight to hold in a single
+// non-threaded WASM instance's linear memory alongside a 1024x1024 input's
+// activations — in testing it failed inside onnxruntime-web itself (a raw,
+// untranslated WASM exception, not a clean JS error). ISNet is the same
+// architecture this tool used successfully before BiRefNet was ever added,
+// it publishes a real ~44 MB quantized file, and its preprocessing recipe
+// below is copied verbatim from its published preprocessor_config.json
+// (not guessed) — resize to 1024x1024, then `(pixel - 128) / 256` on raw
+// 0-255 values (note: NOT rescaled to 0-1 first — this model's config
+// explicitly turns that off).
+//
 // The one-time model download is cached in the browser's Cache Storage,
 // so it only happens once per browser, not once per photo.
-const BIREFNET_WASM_PATH = '/onnxruntime/';
-const BIREFNET_MODEL_CACHE = 'ff-birefnet-model-v1';
-const BIREFNET_INPUT_SIZE = 1024; // BiRefNet's published inference recipe resizes to a fixed 1024x1024 square, ignoring aspect ratio
-const BIREFNET_MEAN = [0.485, 0.456, 0.406]; // ImageNet normalization stats — the standard BiRefNet preprocessing recipe
-const BIREFNET_STD = [0.229, 0.224, 0.225];
-// Tried in order: 'q8' (quantized — smaller download, faster) first, then
-// full precision if that file isn't published for this model repo (a 404
-// there is immediate — no real time lost before falling through).
-const BIREFNET_MODEL_CANDIDATES = [
+const ISNET_WASM_PATH = '/onnxruntime/';
+const ISNET_MODEL_CACHE = 'ff-isnet-model-v1';
+const ISNET_INPUT_SIZE = 1024;
+const ISNET_MEAN = [128, 128, 128]; // operates on raw 0-255 pixel values, not 0-1 — see preprocessForIsnet()
+const ISNET_STD = [256, 256, 256];
+// Tried in order: 'q8' (quantized, ~44 MB) first, then full precision
+// (~176 MB) if that file isn't published for this model repo (a 404 there
+// is immediate — no real time lost before falling through).
+const ISNET_MODEL_CANDIDATES = [
   { dtype: 'q8', filename: 'model_quantized.onnx' },
   { dtype: 'fp32', filename: 'model.onnx' },
 ];
@@ -3269,7 +3282,7 @@ const BIREFNET_MODEL_CANDIDATES = [
 async function fetchModelBuffer(url, onProgress) {
   if ('caches' in window) {
     try {
-      const cache = await caches.open(BIREFNET_MODEL_CACHE);
+      const cache = await caches.open(ISNET_MODEL_CACHE);
       const cached = await cache.match(url);
       if (cached) return await cached.arrayBuffer();
     } catch (cacheErr) { /* fall through to a plain network fetch */ }
@@ -3297,24 +3310,24 @@ async function fetchModelBuffer(url, onProgress) {
   }
   if ('caches' in window) {
     try {
-      const cache = await caches.open(BIREFNET_MODEL_CACHE);
+      const cache = await caches.open(ISNET_MODEL_CACHE);
       await cache.put(url, new Response(buffer));
     } catch (cacheErr) { /* not fatal — just means it re-downloads next time */ }
   }
   return buffer.buffer;
 }
 
-let birefnetSessionPromise = null;
-async function getBirefnetSession(onProgress) {
-  if (birefnetSessionPromise) return birefnetSessionPromise;
-  birefnetSessionPromise = (async () => {
+let isnetSessionPromise = null;
+async function getIsnetSession(onProgress) {
+  if (isnetSessionPromise) return isnetSessionPromise;
+  isnetSessionPromise = (async () => {
     const ort = await import('onnxruntime-web');
-    ort.env.wasm.wasmPaths = BIREFNET_WASM_PATH;
+    ort.env.wasm.wasmPaths = ISNET_WASM_PATH;
     ort.env.wasm.numThreads = 1; // belt-and-suspenders — the non-threaded build never spawns a worker anyway
     let lastErr;
-    for (const candidate of BIREFNET_MODEL_CANDIDATES) {
+    for (const candidate of ISNET_MODEL_CANDIDATES) {
       try {
-        const url = `https://huggingface.co/onnx-community/BiRefNet_lite-ONNX/resolve/main/onnx/${candidate.filename}`;
+        const url = `https://huggingface.co/onnx-community/ISNet-ONNX/resolve/main/onnx/${candidate.filename}`;
         const buf = await fetchModelBuffer(url, onProgress);
         return await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
       } catch (err) {
@@ -3325,18 +3338,20 @@ async function getBirefnetSession(onProgress) {
     throw lastErr;
   })();
   try {
-    return await birefnetSessionPromise;
+    return await isnetSessionPromise;
   } catch (err) {
-    birefnetSessionPromise = null; // don't keep a failed attempt cached — let a retry try again
+    isnetSessionPromise = null; // don't keep a failed attempt cached — let a retry try again
     throw err;
   }
 }
 
-// Resizes `img` to BIREFNET_INPUT_SIZE x BIREFNET_INPUT_SIZE and packs it
-// into a normalized, channel-first (NCHW) Float32Array — the tensor layout
-// ONNX vision models expect.
-function preprocessForBirefnet(img) {
-  const size = BIREFNET_INPUT_SIZE;
+// Resizes `img` to ISNET_INPUT_SIZE x ISNET_INPUT_SIZE and packs it into a
+// normalized, channel-first (NCHW) Float32Array — the tensor layout ONNX
+// vision models expect. Per this model's published preprocessor_config.json,
+// normalization runs directly on raw 0-255 pixel values (do_rescale: false)
+// — there is deliberately no "/ 255" here.
+function preprocessForIsnet(img) {
+  const size = ISNET_INPUT_SIZE;
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -3345,23 +3360,23 @@ function preprocessForBirefnet(img) {
   const plane = size * size;
   const out = new Float32Array(3 * plane);
   for (let i = 0; i < plane; i++) {
-    out[i] = (data[i * 4] / 255 - BIREFNET_MEAN[0]) / BIREFNET_STD[0];
-    out[plane + i] = (data[i * 4 + 1] / 255 - BIREFNET_MEAN[1]) / BIREFNET_STD[1];
-    out[2 * plane + i] = (data[i * 4 + 2] / 255 - BIREFNET_MEAN[2]) / BIREFNET_STD[2];
+    out[i] = (data[i * 4] - ISNET_MEAN[0]) / ISNET_STD[0];
+    out[plane + i] = (data[i * 4 + 1] - ISNET_MEAN[1]) / ISNET_STD[1];
+    out[2 * plane + i] = (data[i * 4 + 2] - ISNET_MEAN[2]) / ISNET_STD[2];
   }
   return out;
 }
 
-async function removeBackgroundBiRefNet(file, onProgress) {
+async function removeBackgroundIsnet(file, onProgress) {
   const ort = await import('onnxruntime-web');
-  const session = await getBirefnetSession(onProgress);
+  const session = await getIsnetSession(onProgress);
   updateProcessingCaption('Removing background...');
 
   const img = await loadImageFromBlob(file);
   const inputTensor = new ort.Tensor(
     'float32',
-    preprocessForBirefnet(img),
-    [1, 3, BIREFNET_INPUT_SIZE, BIREFNET_INPUT_SIZE],
+    preprocessForIsnet(img),
+    [1, 3, ISNET_INPUT_SIZE, ISNET_INPUT_SIZE],
   );
   const results = await session.run({ [session.inputNames[0]]: inputTensor });
   const output = results[session.outputNames[0]];
