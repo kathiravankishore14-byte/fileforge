@@ -1683,7 +1683,7 @@ function renderSingleFileConfig() {
       showProcessingState('Downloading AI model...');
       let cutoutBlob;
       try {
-        cutoutBlob = await removeBackgroundIsnet(currentFile, (pct) => {
+        cutoutBlob = await removeBackgroundOrmbg(currentFile, (pct) => {
           updateProcessingProgress(pct, `Downloading AI model... ${pct}%`);
         });
       } catch (err) {
@@ -3224,7 +3224,7 @@ function renderHtmlToExcelTool() {
   });
 }
 
-// ================= BACKGROUND REMOVAL (ISNet — 100% client-side) =================
+// ================= BACKGROUND REMOVAL (ORMBG — 100% client-side) =================
 // This used to run on the onnxruntime-web build bundled inside
 // @huggingface/transformers — and that build turned out to be the real,
 // root-level reason background removal never worked on the live site.
@@ -3251,32 +3251,34 @@ function renderHtmlToExcelTool() {
 // Hugging Face, over a host already in this site's CSP connect-src. No
 // photo is ever sent anywhere; only the model file travels the network.
 //
-// The model is ISNet (onnx-community/ISNet-ONNX), not BiRefNet: BiRefNet's
-// ONNX export only publishes a single 224 MB full-precision file with no
-// smaller/quantized variant, which is a lot of weight to hold in a single
-// non-threaded WASM instance's linear memory alongside a 1024x1024 input's
-// activations — in testing it failed inside onnxruntime-web itself (a raw,
-// untranslated WASM exception, not a clean JS error). ISNet is the same
-// architecture this tool used successfully before BiRefNet was ever added,
-// it publishes a real ~44 MB quantized file, and its preprocessing recipe
-// below is copied verbatim from its published preprocessor_config.json
-// (not guessed) — resize to 1024x1024, then `(pixel - 128) / 256` on raw
-// 0-255 values (note: NOT rescaled to 0-1 first — this model's config
-// explicitly turns that off).
+// The model is ORMBG (onnx-community/ormbg-ONNX) — not BiRefNet (its only
+// ONNX export is a 224 MB full-precision file with no smaller variant,
+// which failed inside onnxruntime-web itself as a raw, untranslated WASM
+// exception rather than a clean JS error), and an upgrade from the first
+// working version of this tool, which used ISNet (onnx-community/ISNet-ONNX).
+// ISNet worked with no crashes, but its edges were visibly noisier/blockier
+// than a paid service on real test photos. ORMBG is trained specifically
+// on photos with people in them (the common case for this tool — headshots,
+// group photos, portraits), shares ISNet's exact architecture and file
+// sizes (same ~44 MB quantized / ~176 MB full-precision split, so the same
+// size/reliability tradeoffs apply), and is Apache-2.0 licensed. Its
+// preprocessing recipe below is copied verbatim from its published
+// preprocessor_config.json (not guessed) — resize to 1024x1024, then
+// divide raw 0-255 pixel values by 255. Unlike ISNet, this model's config
+// has no mean/std centering step at all — do not add one.
 //
 // The one-time model download is cached in the browser's Cache Storage,
 // so it only happens once per browser, not once per photo.
-const ISNET_WASM_PATH = '/onnxruntime/';
-const ISNET_MODEL_CACHE = 'ff-isnet-model-v1';
-const ISNET_INPUT_SIZE = 1024;
-const ISNET_MEAN = [128, 128, 128]; // operates on raw 0-255 pixel values, not 0-1 — see preprocessForIsnet()
-const ISNET_STD = [256, 256, 256];
+const ORMBG_WASM_PATH = '/onnxruntime/';
+const ORMBG_MODEL_CACHE = 'ff-ormbg-model-v1';
+const ORMBG_INPUT_SIZE = 1024;
+const ORMBG_RESCALE_FACTOR = 1 / 255; // per this model's preprocessor_config.json: do_rescale, no mean/std centering at all
 // Tried in order: full precision (~176 MB) first, for the sharpest, least
 // noisy mask — quantization measurably softens edge quality on this model.
 // 'q8' (quantized, ~44 MB) is the automatic fallback if that ever fails to
 // load (a lower-end device, a flaky connection), so a visitor is never left
 // without a working result, just a smaller download than usual.
-const ISNET_MODEL_CANDIDATES = [
+const ORMBG_MODEL_CANDIDATES = [
   { dtype: 'fp32', filename: 'model.onnx' },
   { dtype: 'q8', filename: 'model_quantized.onnx' },
 ];
@@ -3284,7 +3286,7 @@ const ISNET_MODEL_CANDIDATES = [
 async function fetchModelBuffer(url, onProgress) {
   if ('caches' in window) {
     try {
-      const cache = await caches.open(ISNET_MODEL_CACHE);
+      const cache = await caches.open(ORMBG_MODEL_CACHE);
       const cached = await cache.match(url);
       if (cached) return await cached.arrayBuffer();
     } catch (cacheErr) { /* fall through to a plain network fetch */ }
@@ -3312,24 +3314,24 @@ async function fetchModelBuffer(url, onProgress) {
   }
   if ('caches' in window) {
     try {
-      const cache = await caches.open(ISNET_MODEL_CACHE);
+      const cache = await caches.open(ORMBG_MODEL_CACHE);
       await cache.put(url, new Response(buffer));
     } catch (cacheErr) { /* not fatal — just means it re-downloads next time */ }
   }
   return buffer.buffer;
 }
 
-let isnetSessionPromise = null;
-async function getIsnetSession(onProgress) {
-  if (isnetSessionPromise) return isnetSessionPromise;
-  isnetSessionPromise = (async () => {
+let ormbgSessionPromise = null;
+async function getOrmbgSession(onProgress) {
+  if (ormbgSessionPromise) return ormbgSessionPromise;
+  ormbgSessionPromise = (async () => {
     const ort = await import('onnxruntime-web');
-    ort.env.wasm.wasmPaths = ISNET_WASM_PATH;
+    ort.env.wasm.wasmPaths = ORMBG_WASM_PATH;
     ort.env.wasm.numThreads = 1; // belt-and-suspenders — the non-threaded build never spawns a worker anyway
     let lastErr;
-    for (const candidate of ISNET_MODEL_CANDIDATES) {
+    for (const candidate of ORMBG_MODEL_CANDIDATES) {
       try {
-        const url = `https://huggingface.co/onnx-community/ISNet-ONNX/resolve/main/onnx/${candidate.filename}`;
+        const url = `https://huggingface.co/onnx-community/ormbg-ONNX/resolve/main/onnx/${candidate.filename}`;
         const buf = await fetchModelBuffer(url, onProgress);
         return await ort.InferenceSession.create(buf, { executionProviders: ['wasm'] });
       } catch (err) {
@@ -3340,20 +3342,20 @@ async function getIsnetSession(onProgress) {
     throw lastErr;
   })();
   try {
-    return await isnetSessionPromise;
+    return await ormbgSessionPromise;
   } catch (err) {
-    isnetSessionPromise = null; // don't keep a failed attempt cached — let a retry try again
+    ormbgSessionPromise = null; // don't keep a failed attempt cached — let a retry try again
     throw err;
   }
 }
 
-// Resizes `img` to ISNET_INPUT_SIZE x ISNET_INPUT_SIZE and packs it into a
-// normalized, channel-first (NCHW) Float32Array — the tensor layout ONNX
-// vision models expect. Per this model's published preprocessor_config.json,
-// normalization runs directly on raw 0-255 pixel values (do_rescale: false)
-// — there is deliberately no "/ 255" here.
-function preprocessForIsnet(img) {
-  const size = ISNET_INPUT_SIZE;
+// Resizes `img` to ORMBG_INPUT_SIZE x ORMBG_INPUT_SIZE and packs it into a
+// channel-first (NCHW) Float32Array — the tensor layout ONNX vision models
+// expect. Per this model's published preprocessor_config.json, that's the
+// only preprocessing it wants: rescale raw 0-255 pixel values to 0-1. No
+// mean/std centering step — do not add one.
+function preprocessForOrmbg(img) {
+  const size = ORMBG_INPUT_SIZE;
   const canvas = document.createElement('canvas');
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
@@ -3364,23 +3366,23 @@ function preprocessForIsnet(img) {
   const plane = size * size;
   const out = new Float32Array(3 * plane);
   for (let i = 0; i < plane; i++) {
-    out[i] = (data[i * 4] - ISNET_MEAN[0]) / ISNET_STD[0];
-    out[plane + i] = (data[i * 4 + 1] - ISNET_MEAN[1]) / ISNET_STD[1];
-    out[2 * plane + i] = (data[i * 4 + 2] - ISNET_MEAN[2]) / ISNET_STD[2];
+    out[i] = data[i * 4] * ORMBG_RESCALE_FACTOR;
+    out[plane + i] = data[i * 4 + 1] * ORMBG_RESCALE_FACTOR;
+    out[2 * plane + i] = data[i * 4 + 2] * ORMBG_RESCALE_FACTOR;
   }
   return out;
 }
 
-async function removeBackgroundIsnet(file, onProgress) {
+async function removeBackgroundOrmbg(file, onProgress) {
   const ort = await import('onnxruntime-web');
-  const session = await getIsnetSession(onProgress);
+  const session = await getOrmbgSession(onProgress);
   updateProcessingCaption('Removing background...');
 
   const img = await loadImageFromBlob(file);
   const inputTensor = new ort.Tensor(
     'float32',
-    preprocessForIsnet(img),
-    [1, 3, ISNET_INPUT_SIZE, ISNET_INPUT_SIZE],
+    preprocessForOrmbg(img),
+    [1, 3, ORMBG_INPUT_SIZE, ORMBG_INPUT_SIZE],
   );
   const results = await session.run({ [session.inputNames[0]]: inputTensor });
   const output = results[session.outputNames[0]];
@@ -3446,7 +3448,7 @@ async function removeBackgroundIsnet(file, onProgress) {
 // jagged line. Deliberately subtle: large enough to anti-alias, small
 // enough not to eat into real detail.
 //
-// The mask itself is only ever computed at ISNET_INPUT_SIZE (1024px) and
+// The mask itself is only ever computed at ORMBG_INPUT_SIZE (1024px) and
 // then upscaled — so on a photo much larger than that, its real edge
 // resolution is coarser than the output image's pixel grid. A fixed blur
 // radius barely registers on a large photo but over-softens a small one,
@@ -3455,7 +3457,7 @@ async function featherCutoutEdges(blob, radiusPx = null) {
   const img = await loadImageFromBlob(blob);
   const w = img.naturalWidth, h = img.naturalHeight;
   if (radiusPx == null) {
-    radiusPx = Math.max(1, (Math.max(w, h) / ISNET_INPUT_SIZE) * 1.1);
+    radiusPx = Math.max(1, (Math.max(w, h) / ORMBG_INPUT_SIZE) * 1.1);
   }
 
   const canvas = document.createElement('canvas');
