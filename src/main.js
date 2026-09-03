@@ -4396,97 +4396,76 @@ const CATEGORY_NAV_CONFIG = {
 
 const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PowerPoint', utilities: 'Utilities' };
 
-// Home ("all") page nav: every top-level category gets its own hover
-// dropdown listing every tool in that category, same grid/mega-menu
-// styling category pages use for their own current category, just
-// applied across all six at once since the home page has no single
-// "current" category to special-case.
-const NAV_CATEGORY_ICON = { pdf: 'icon-pdf', image: 'icon-image', excel: 'icon-excel', word: 'icon-word', ppt: 'icon-ppt', utilities: 'icon-utilities' };
-const NAV_CATEGORY_ORDER = ['pdf', 'image', 'excel', 'word', 'ppt', 'utilities'];
-
-// Flat, header-less dropdown grid: every tool in the category as one
-// evenly spaced row×column grid (no "Popular"/group sub-headers), with
-// the column count picked so rows and columns come out as close to
-// equal as the item count allows (ceil(sqrt(n))), then left filled in
-// reading order. Only PDF, Image and Utilities get this — Excel, Word
-// and PowerPoint are plain nav links per the Phase 7 spec.
-function flatMegaMenuHtml(config) {
-  const keys = [...config.top3, ...config.groups.flatMap((g) => g.tools)];
-  const cols = Math.max(1, Math.ceil(Math.sqrt(keys.length)));
+// Flat, header-less dropdown grid: every tool in the list as one evenly
+// spaced row×column grid (no "Popular"/group sub-headers, no icons —
+// text only), with the column count picked so rows and columns come out
+// as close to equal as the item count allows (ceil(sqrt(n))), then left
+// filled in reading order. Every label stays on a single line — see
+// .mega-menu in style.css, which sizes each column to its own content
+// instead of a fixed width so nothing wraps. Capped at 5 columns: for a
+// ~20-tool category dropdown ceil(sqrt(n)) never hits the cap (stays at
+// 4-5, same as before), but the ~65-tool "All Tools" list would
+// otherwise land on 8 single-line columns — wider than any dropdown
+// should be. Capping it re-balances that toward more rows instead,
+// which the panel's own vertical scroll already handles.
+function flatMegaMenuHtml(keys) {
+  const cols = Math.max(1, Math.min(5, Math.ceil(Math.sqrt(keys.length))));
   const linksHtml = keys
-    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`)
+    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}">${toolMeta[k].label}</a>`)
     .join('');
   return `<div class="dropdown mega-menu mega-menu-flat" style="--mega-cols:${cols}">${linksHtml}</div>`;
 }
 
-function populateHomeCategoryDropdowns() {
-  const navEl = document.querySelector('.main-nav');
-  if (!navEl) return;
-
-  navEl.innerHTML = NAV_CATEGORY_ORDER.map((category) => {
-    const label = CATEGORY_LABELS[category] || category;
-    const iconHtml = `<img src="/icons/${NAV_CATEGORY_ICON[category]}.svg" class="nav-icon" width="20" height="24" alt="" />`;
-    const config = CATEGORY_NAV_CONFIG[category];
-    const href = pageUrlMap[category] || `/${category}`;
-
-    if (!config) {
-      // Excel, Word, PowerPoint: plain link, no dropdown.
-      return `<a href="${href}" class="nav-link">${iconHtml} ${label}</a>`;
-    }
-
-    return `
-      <div class="nav-item">
-        <a href="${href}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
-        ${flatMegaMenuHtml(config)}
-      </div>
-    `;
-  }).join('');
-  // Nav/mega-menu links now point straight at each tool's dedicated,
-  // indexable URL (toolUrl(k)) and navigate normally — no click
-  // interception needed here anymore.
+function categoryToolKeys(config) {
+  return [...config.top3, ...config.groups.flatMap((g) => g.tools)];
 }
 
-function renderCategoryNav(category) {
-  const config = CATEGORY_NAV_CONFIG[category];
+// One identical nav bar everywhere — home page and every tool/category
+// page alike, so there's no page-dependent nav shape to keep in sync.
+// PDF, Image and Utilities each keep their own dropdown of just that
+// category's tools; "All Tools" is every tool on the site, in every
+// category, combined into one dropdown; "Categories" jumps straight to
+// any category's landing page (including Excel/Word/PowerPoint, which
+// no longer get their own top-level nav item).
+function renderMainNav() {
   const navEl = document.querySelector('.main-nav');
   if (!navEl) return;
 
-  // "Categories" dropdown: lets you jump straight to any other category page
-  // from wherever you are, instead of routing back through the home page.
+  const categoryItem = (label, category) => `
+    <div class="nav-item">
+      <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link nav-trigger-link">${label}</a>
+      ${flatMegaMenuHtml(categoryToolKeys(CATEGORY_NAV_CONFIG[category]))}
+    </div>
+  `;
+
+  const allToolsKeys = Object.keys(toolMeta).filter((k) => !toolMeta[k].comingSoon);
+  const allToolsItem = `
+    <div class="nav-item">
+      <a href="/" class="nav-link nav-trigger-link">All Tools</a>
+      ${flatMegaMenuHtml(allToolsKeys)}
+    </div>
+  `;
+
   const categoriesLinksHtml = Object.keys(categoryTools)
     .map((cat) => `<a href="${pageUrlMap[cat] || `/${cat}`}">${CATEGORY_LABELS[cat] || cat}</a>`)
     .join('');
-  const categoriesDropdownHtml = `
+  const categoriesItem = `
     <div class="nav-item">
       <button class="nav-trigger">Categories</button>
       <div class="dropdown">${categoriesLinksHtml}</div>
     </div>
   `;
 
-  if (!config) {
-    // Excel, Word, PowerPoint: plain link back to the category, no dropdown.
-    const label = CATEGORY_LABELS[category] || (category.charAt(0).toUpperCase() + category.slice(1));
-    navEl.innerHTML = `
-      <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link">All ${label} Tools</a>
-      ${categoriesDropdownHtml}
-    `;
-  } else {
-    // PDF, Image, Utilities: quick top3 links right on the bar, plus one
-    // flat, evenly spaced dropdown grid of every remaining tool.
-    const top3Html = config.top3.map((k) => `
-      <a href="${toolUrl(k) || `?tool=${k}`}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
-    `).join('');
-    navEl.innerHTML = `
-      ${top3Html}
-      <div class="nav-item">
-        <button class="nav-trigger">${config.allLabel}</button>
-        ${flatMegaMenuHtml(config)}
-      </div>
-      ${categoriesDropdownHtml}
-    `;
-  }
+  navEl.innerHTML = `
+    ${categoryItem('PDF', 'pdf')}
+    ${categoryItem('Image', 'image')}
+    ${categoryItem('Utilities', 'utilities')}
+    ${allToolsItem}
+    ${categoriesItem}
+  `;
   // Nav/mega-menu links point straight at each tool's dedicated,
-  // indexable URL (toolUrl(k)) and navigate normally.
+  // indexable URL (toolUrl(k)) and navigate normally — no click
+  // interception needed here.
 }
 
 // Hover-intent for the nav dropdowns/mega-menus: wait a beat before
@@ -4773,8 +4752,7 @@ export function initToolPage(pageCategory) {
   wireSoundToggle();
   wirePointerEffects();
   wireHoverSound();
-  if (pageCategory !== 'all') renderCategoryNav(pageCategory);
-  else populateHomeCategoryDropdowns();
+  renderMainNav();
   wireNavDropdowns();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   // Prominent homepage search (only present on index.html — wireSearch
@@ -4900,7 +4878,7 @@ export function initToolLandingPage(toolKey) {
   wireHoverSound();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   wireSearchShortcut();
-  renderCategoryNav(meta.category);
+  renderMainNav();
   wireNavDropdowns();
   wireScrollReveal();
 

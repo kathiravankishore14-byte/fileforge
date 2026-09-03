@@ -433,7 +433,7 @@ a { color: inherit; }
   border-radius: 8px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 1.274rem;
+  font-size: 0.637rem; /* half of the previous 1.274rem, per request — logo is untouched */
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -454,7 +454,7 @@ a { color: inherit; }
   padding: 10px 14px;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 1.274rem;
+  font-size: 0.637rem; /* half of the previous 1.274rem, per request — logo is untouched */
   font-weight: 600;
   font-family: var(--font-body);
   cursor: pointer;
@@ -534,56 +534,45 @@ a { color: inherit; }
 .dropdown a:hover { background: var(--gray-light); color: var(--accent); }
 
 /* A contained, rounded panel anchored under its own trigger — not a
-   full-viewport-width bar. Flat, header-less: every tool in the
-   category as direct grid items, no group sub-headers. Column count
-   is set per-category via --mega-cols (main.js computes it as
-   ceil(sqrt(itemCount)), so rows and columns land as close to equal
-   as the item count allows), and every column is a fixed width so the
-   grid reads as perfectly linear rows, not auto-sized per column. */
+   full-viewport-width bar. Flat, header-less: every tool as a direct
+   grid item, no group sub-headers, no icons — text only. Column count
+   is set per-dropdown via --mega-cols (main.js computes it as
+   ceil(sqrt(itemCount)) capped at 5, so rows and columns land as close
+   to equal as the item count allows without ever going wider than 6
+   columns). Each column sizes to its own longest label (max-content)
+   rather than a fixed width, so every label — including the "All
+   Tools" dropdown's ~65 — stays on one line without wrapping; columns
+   still end up close to matching width since tool names run a fairly
+   similar length. max-width is generous (the nav bar this lives in
+   only ever renders at >=1180px viewports — see the media query below
+   — so there's always room), and overflow-y handles the rare case
+   (the big "All Tools" grid, capped at 5 columns so it runs to ~13
+   rows) where content is taller than max-height. */
 .mega-menu {
   display: grid;
-  grid-template-columns: repeat(var(--mega-cols, 4), 172px);
+  grid-template-columns: repeat(var(--mega-cols, 4), max-content);
   grid-auto-rows: 1fr;
   width: max-content;
-  max-width: min(960px, 94vw);
+  max-width: min(1120px, 94vw);
   max-height: min(560px, calc(100vh - 120px));
-  overflow-y: auto;
+  overflow: auto;
   padding: 16px 18px;
-  gap: 2px 4px;
+  gap: 2px 10px;
 }
 
 .mega-menu a {
   display: flex;
-  /* flex-start, not center: a couple of tool names (GPA / CGPA
-     Calculator, Base64 Encode/Decode) run long enough in a narrow
-     column to wrap to two lines — center-aligning the icon against
-     that would float it oddly relative to the first line of text. */
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
   padding: 10px 12px;
   color: var(--text);
   text-decoration: none;
   font-size: 1.144rem;
   line-height: 1.3;
   border-radius: 10px;
-  /* Wrap rather than clip — nowrap here let long labels overflow their
-     own grid column and visually collide with the next one over. */
-  white-space: normal;
+  white-space: nowrap;
 }
 
-.mega-menu a img,
-.mega-menu-icons { margin-top: 1px; }
-
 .mega-menu a:hover { background: var(--gray-light); color: var(--accent); }
-.mega-menu a img { width: 20px; height: 20px; flex-shrink: 0; }
-
-/* Small categories' flat dropdown (Excel/Word/PPT) reuses the same
-   icon-badge markup as the mega-menu but previously had no sizing
-   rule of its own, so the icon rendered at its raw intrinsic size
-   instead of a compact inline badge. */
-.dropdown a img { width: 20px; height: 20px; flex-shrink: 0; vertical-align: middle; }
-.mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.mega-menu-icons .arrow { font-size: 0.91rem; color: var(--text-secondary); }
 
 @media (max-width: 1180px) {
   .main-nav { display: none; }
@@ -882,6 +871,12 @@ a { color: inherit; }
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+  /* Centered rather than left-anchored — on any viewport wide enough to
+     show every chip at once, that leaves a lopsided empty gap on the
+     right. justify-content: center only affects that no-overflow case;
+     once the row is actually wider than its container (small screens),
+     the browser still anchors scrolling at the first chip as normal. */
+  justify-content: center;
   gap: 10px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -1397,6 +1392,8 @@ a { color: inherit; }
   font-family: var(--font-body);
   background-color: var(--surface);
   color: var(--text);
+  transform-origin: center;
+  transition: transform var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
   /* Inline SVG icon — no extra request, no icon-font dependency. */
   background-repeat: no-repeat;
   background-position: 16px center;
@@ -1404,8 +1401,19 @@ a { color: inherit; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
 }
 
+/* Grows and swaps to a tinted background on hover, and stays that way
+   while focused/typing (:focus covers both) — the same treatment, just
+   a touch more pronounced once you're actually in the field. */
+.site-search-input:hover {
+  transform: scale(1.015);
+  background-color: var(--gray-light);
+  border-color: var(--accent);
+}
+
 .site-search-input:focus {
   outline: none;
+  transform: scale(1.03);
+  background-color: var(--gray-light);
   border-color: var(--red);
   /* Outline removed above, but a visible ring still needs to replace
      it — a border-color change alone is too subtle to count as a

@@ -25,13 +25,15 @@
     <a href="/" class="logo">
       <span class="logo-mark">⌁</span> OnlineToolsWeb
     </a>
+    <!-- Static fallback shown before renderMainNav() (src/main.js) replaces
+         this on load with the real hover dropdowns — kept as plain,
+         icon-free links here since building the mega-menu content needs
+         the JS-only tool data. -->
     <nav class="main-nav">
-      <a href="/pdf" class="nav-link"><img src="/icons/icon-pdf.svg" class="nav-icon" width="22" height="22" alt="" /> PDF</a>
-      <a href="/image" class="nav-link"><img src="/icons/icon-image.svg" class="nav-icon" width="22" height="22" alt="" /> Image</a>
-      <a href="/excel" class="nav-link"><img src="/icons/icon-excel.svg" class="nav-icon" width="22" height="22" alt="" /> Excel</a>
-      <a href="/word" class="nav-link"><img src="/icons/icon-word.svg" class="nav-icon" width="22" height="22" alt="" /> Word</a>
-      <a href="/ppt" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PowerPoint</a>
-      <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
+      <a href="/pdf" class="nav-link">PDF</a>
+      <a href="/image" class="nav-link">Image</a>
+      <a href="/other-tools" class="nav-link">Utilities</a>
+      <a href="/" class="nav-link">All Tools</a>
     </nav>
     <div class="header-actions">
       <!-- Hover sounds are a desktop-only, hover-only affordance (see
@@ -71,12 +73,10 @@
     </div>
     <p class="mobile-nav-label">Tools</p>
     <nav class="mobile-nav-links">
-      <a href="/pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="22" height="22" alt="" /> PDF</a>
-      <a href="/image"><img src="/icons/icon-image.svg" class="nav-icon" width="22" height="22" alt="" /> Image</a>
-      <a href="/excel"><img src="/icons/icon-excel.svg" class="nav-icon" width="22" height="22" alt="" /> Excel</a>
-      <a href="/word"><img src="/icons/icon-word.svg" class="nav-icon" width="22" height="22" alt="" /> Word</a>
-      <a href="/ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PowerPoint</a>
-      <a href="/other-tools"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
+      <a href="/pdf">PDF</a>
+      <a href="/image">Image</a>
+      <a href="/other-tools">Utilities</a>
+      <a href="/">All Tools</a>
     </nav>
     <p class="mobile-nav-label">Company</p>
     <nav class="mobile-nav-links mobile-nav-links-secondary">
