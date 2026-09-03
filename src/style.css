@@ -418,6 +418,13 @@ a { color: inherit; }
 
 .logo-mark { color: var(--red); }
 
+/* The provided OTW artwork, cropped to just its icon mark and keyed to
+   transparent — sits inline to the left of the live "OnlineToolsWeb"
+   text (kept as real text rather than baked into the image, so it
+   stays crisp and independently sizeable/themeable). */
+.logo-mark-img { display: block; height: 34px; width: auto; }
+.mobile-menu-header .logo-mark-img { height: 29px; }
+
 .main-nav {
   display: flex;
   align-items: center;
@@ -433,7 +440,7 @@ a { color: inherit; }
   border-radius: 8px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 0.637rem; /* half of the previous 1.274rem, per request — logo is untouched */
+  font-size: 0.796rem; /* was 0.637rem (half of the original 1.274rem); bumped back up 25% per request — logo is untouched */
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -454,7 +461,7 @@ a { color: inherit; }
   padding: 10px 14px;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 0.637rem; /* half of the previous 1.274rem, per request — logo is untouched */
+  font-size: 0.796rem; /* was 0.637rem (half of the original 1.274rem); bumped back up 25% per request — logo is untouched */
   font-weight: 600;
   font-family: var(--font-body);
   cursor: pointer;
@@ -535,25 +542,27 @@ a { color: inherit; }
 
 /* A contained, rounded panel anchored under its own trigger — not a
    full-viewport-width bar. Flat, header-less: every tool as a direct
-   grid item, no group sub-headers, no icons — text only. Column count
-   is set per-dropdown via --mega-cols (main.js computes it as
-   ceil(sqrt(itemCount)) capped at 5, so rows and columns land as close
-   to equal as the item count allows without ever going wider than 6
-   columns). Each column sizes to its own longest label (max-content)
-   rather than a fixed width, so every label — including the "All
-   Tools" dropdown's ~65 — stays on one line without wrapping; columns
-   still end up close to matching width since tool names run a fairly
-   similar length. max-width is generous (the nav bar this lives in
-   only ever renders at >=1180px viewports — see the media query below
-   — so there's always room), and overflow-y handles the rare case
-   (the big "All Tools" grid, capped at 5 columns so it runs to ~13
-   rows) where content is taller than max-height. */
+   grid item, no group sub-headers, each with the same icon badge as
+   its tool-grid card (renderIconBadge), shrunk to sit inline at about
+   the same size as the label text. Column count is set per-dropdown
+   via --mega-cols (main.js computes it as ceil(sqrt(itemCount)) capped
+   at 5, so rows and columns land as close to equal as the item count
+   allows without ever going wider than 5 columns). Each column sizes
+   to its own longest label (max-content) rather than a fixed width, so
+   every label — including the "All Tools" dropdown's ~65 — stays on
+   one line without wrapping; columns still end up close to matching
+   width since tool names run a fairly similar length. max-width is
+   generous — up to 60% of the viewport, since the nav bar this lives
+   in only ever renders at >=1180px viewports (see the media query
+   below), so there's always room — and overflow-y handles the rare
+   case (the big "All Tools" grid, capped at 5 columns so it runs to
+   ~13 rows) where content is taller than max-height. */
 .mega-menu {
   display: grid;
   grid-template-columns: repeat(var(--mega-cols, 4), max-content);
   grid-auto-rows: 1fr;
   width: max-content;
-  max-width: min(1120px, 94vw);
+  max-width: min(60vw, 1400px);
   max-height: min(560px, calc(100vh - 120px));
   overflow: auto;
   padding: 16px 18px;
@@ -563,6 +572,7 @@ a { color: inherit; }
 .mega-menu a {
   display: flex;
   align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   color: var(--text);
   text-decoration: none;
@@ -573,6 +583,12 @@ a { color: inherit; }
 }
 
 .mega-menu a:hover { background: var(--gray-light); color: var(--accent); }
+
+/* Icon badge — identical artwork to the tool-grid cards, sized down to
+   sit inline at roughly the same size as the label text beside it. */
+.mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.mega-menu-icons img { width: 19px; height: 19px; flex-shrink: 0; display: block; }
+.mega-menu-icons .arrow { font-size: 0.85rem; color: var(--text-secondary); }
 
 @media (max-width: 1180px) {
   .main-nav { display: none; }
@@ -606,7 +622,8 @@ a { color: inherit; }
      trimmed to 3.625rem (58px) — inside the 52-60px desktop target —
      from the previous 3.9rem/62.4px, a deliberate size rather than
      whatever the old one-line headline happened to reach. */
-  font-size: clamp(2rem, 7.5vw, 3.625rem);
+  /* 15% smaller than the original clamp(2rem, 7.5vw, 3.625rem), per request. */
+  font-size: clamp(1.7rem, 6.375vw, 3.081rem);
   margin: 0 0 16px;
   color: var(--text);
   line-height: 1.1;
@@ -618,7 +635,8 @@ a { color: inherit; }
 
 .hero p {
   color: var(--text-muted);
-  font-size: 1.625rem;
+  /* 15% smaller than the original 1.625rem, per request. */
+  font-size: 1.381rem;
   margin: 0;
   /* Controlled reading width on wide desktop screens instead of
      stretching to the .hero container's full 900px. */
@@ -655,13 +673,15 @@ a { color: inherit; }
   .hero-eyebrow { font-size: 0.72rem; padding: 5px 12px; margin: 0 0 10px; }
   .hero h1 {
     /* 36-42px, tightened line-height so the headline reads as one
-       compact block instead of a desktop headline just shrunk down. */
-    font-size: clamp(2.25rem, 8.5vw, 2.625rem);
+       compact block instead of a desktop headline just shrunk down.
+       15% smaller than the original clamp(2.25rem, 8.5vw, 2.625rem), per request. */
+    font-size: clamp(1.913rem, 7.225vw, 2.231rem);
     line-height: 1.08;
     margin: 0 0 12px;
   }
   .hero p {
-    font-size: 1.0625rem;
+    /* 15% smaller than the original 1.0625rem, per request. */
+    font-size: 0.903rem;
     line-height: 1.5;
     max-width: 36ch;
     margin: 0 auto;
@@ -671,7 +691,8 @@ a { color: inherit; }
 /* ---------- Tablet hero (~601-860px) ---------- */
 @media (min-width: 481px) and (max-width: 860px) {
   .hero { padding: 32px 24px 14px; }
-  .hero h1 { font-size: clamp(2.75rem, 5.5vw, 3rem); line-height: 1.1; }
+  /* 15% smaller than the original clamp(2.75rem, 5.5vw, 3rem), per request. */
+  .hero h1 { font-size: clamp(2.338rem, 4.675vw, 2.55rem); line-height: 1.1; }
 }
 
 .home-search-wrap {
@@ -882,7 +903,7 @@ a { color: inherit; }
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
-  padding: 28px 0 6px;
+  padding: 28px 0 20px;
   scrollbar-width: none;
 }
 
@@ -924,7 +945,7 @@ a { color: inherit; }
 
 @media (max-width: 600px) {
   .category-bar-wrap { padding: 0 20px; }
-  .category-bar { padding: 20px 0 6px; }
+  .category-bar { padding: 20px 0 18px; }
 }
 
 /* ---------- Tool grid ---------- */
@@ -1401,19 +1422,22 @@ a { color: inherit; }
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
 }
 
-/* Grows and swaps to a tinted background on hover, and stays that way
-   while focused/typing (:focus covers both) — the same treatment, just
-   a touch more pronounced once you're actually in the field. */
+/* Grows and swaps to the site's actual page background on hover, and
+   stays that way while focused/typing (:focus covers both) — the same
+   treatment, just a touch more pronounced once you're actually in the
+   field. Uses --bg (the real page background) rather than the warmer
+   --gray-light hover tint used elsewhere, so the field visually
+   "sinks into" the page instead of taking on an unrelated color. */
 .site-search-input:hover {
   transform: scale(1.015);
-  background-color: var(--gray-light);
+  background-color: var(--bg);
   border-color: var(--accent);
 }
 
 .site-search-input:focus {
   outline: none;
   transform: scale(1.03);
-  background-color: var(--gray-light);
+  background-color: var(--bg);
   border-color: var(--red);
   /* Outline removed above, but a visible ring still needs to replace
      it — a border-color change alone is too subtle to count as a
@@ -3312,20 +3336,20 @@ body.tool-result-active #tpDropZone {
    as identical motion. */
 .editorial-media.reveal { transform: translateY(20px) scale(0.96); }
 
-/* The tool grid reveals its cards with a light per-column stagger
-   (by position within each row of 2) rather than all at once — a
-   cheap way to make a whole page of cards feel considered without
+/* Each tool card reveals individually as it scrolls into view (rather
+   than the whole grid at once), with a light per-column stagger (by
+   position within each row of 2) so a row feels considered without
    tracking per-card state in JS. */
-.tool-grid.reveal .tool-card { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
-.tool-grid.reveal-visible .tool-card { opacity: 1; transform: none; }
-.tool-grid.reveal-visible .tool-card:nth-child(2n+1) { transition-delay: 0ms; }
-.tool-grid.reveal-visible .tool-card:nth-child(2n+2) { transition-delay: 80ms; }
+.tool-card.reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.tool-card.reveal-visible { opacity: 1; transform: none; }
+.tool-card.reveal-visible:nth-child(2n+1) { transition-delay: 0ms; }
+.tool-card.reveal-visible:nth-child(2n+2) { transition-delay: 80ms; }
 
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .reveal.reveal-visible,
-  .tool-grid.reveal .tool-card,
-  .tool-grid.reveal-visible .tool-card {
+  .tool-card.reveal,
+  .tool-card.reveal-visible {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;

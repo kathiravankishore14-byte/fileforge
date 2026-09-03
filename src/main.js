@@ -4397,21 +4397,23 @@ const CATEGORY_NAV_CONFIG = {
 const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PowerPoint', utilities: 'Utilities' };
 
 // Flat, header-less dropdown grid: every tool in the list as one evenly
-// spaced row×column grid (no "Popular"/group sub-headers, no icons —
-// text only), with the column count picked so rows and columns come out
-// as close to equal as the item count allows (ceil(sqrt(n))), then left
-// filled in reading order. Every label stays on a single line — see
-// .mega-menu in style.css, which sizes each column to its own content
-// instead of a fixed width so nothing wraps. Capped at 5 columns: for a
-// ~20-tool category dropdown ceil(sqrt(n)) never hits the cap (stays at
-// 4-5, same as before), but the ~65-tool "All Tools" list would
-// otherwise land on 8 single-line columns — wider than any dropdown
-// should be. Capping it re-balances that toward more rows instead,
-// which the panel's own vertical scroll already handles.
+// spaced row×column grid (no "Popular"/group sub-headers), with the
+// column count picked so rows and columns come out as close to equal
+// as the item count allows (ceil(sqrt(n))), then left filled in reading
+// order. Every label stays on a single line — see .mega-menu in
+// style.css, which sizes each column to its own content instead of a
+// fixed width so nothing wraps. Each entry gets the exact same icon
+// badge as its tool-grid card (renderIconBadge), just shrunk down to
+// sit inline at roughly the same size as the label text next to it.
+// Capped at 5 columns: for a ~20-tool category dropdown ceil(sqrt(n))
+// never hits the cap (stays at 4-5, same as before), but the ~65-tool
+// "All Tools" list would otherwise land on 8 columns — wider than any
+// dropdown should be. Capping it re-balances that toward more rows
+// instead, which the panel's own vertical scroll already handles.
 function flatMegaMenuHtml(keys) {
-  const cols = Math.max(1, Math.min(5, Math.ceil(Math.sqrt(keys.length))));
+  const cols = Math.max(1, Math.min(3, Math.ceil(Math.sqrt(keys.length))));
   const linksHtml = keys
-    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}">${toolMeta[k].label}</a>`)
+    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`)
     .join('');
   return `<div class="dropdown mega-menu mega-menu-flat" style="--mega-cols:${cols}">${linksHtml}</div>`;
 }
@@ -4702,7 +4704,7 @@ function wireHoverSound() {
 // into/out of view (no unobserve) rather than firing once per page
 // load, and is a no-op under prefers-reduced-motion, where every target
 // is marked visible immediately instead of observed.
-const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-grid';
+const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-card';
 
 function wireScrollReveal() {
   const targets = document.querySelectorAll(SCROLL_REVEAL_SELECTOR);
