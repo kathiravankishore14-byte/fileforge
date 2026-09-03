@@ -86,7 +86,11 @@ function relatedToolsHtml(key, meta) {
     </section>`;
 }
 
-const RELATED_SECTION_RE = /<section class="tp-section tp-related">[\s\S]*?<\/section>/;
+// [^>]* tolerates any extra attributes on the opening tag (e.g.
+// data-reveal, added by a later pass) — a literal ">" here would stop
+// matching the moment any such attribute got added, silently turning
+// every future run of this script into a no-op.
+const RELATED_SECTION_RE = /<section class="tp-section tp-related"[^>]*>[\s\S]*?<\/section>/;
 
 let patched = 0;
 let skippedNoFile = 0;

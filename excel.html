@@ -31,23 +31,19 @@
       </div>
     </section>
 
-    <div class="page-with-sidebar">
-      <aside class="category-sidebar" aria-label="Tool categories">
-        <p class="category-sidebar-heading">Categories</p>
-        <nav class="category-sidebar-nav">
-          <a href="/" class="category-sidebar-link" data-filter="all"><span class="icon icon-grid" aria-hidden="true"></span> All Tools</a>
-          <a href="/pdf" class="category-sidebar-link" data-filter="pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="20" alt="" /> PDF</a>
-          <a href="/image" class="category-sidebar-link" data-filter="image"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="20" alt="" /> Image</a>
-          <a href="/excel" class="category-sidebar-link active" data-filter="excel" aria-current="page"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="20" alt="" /> Excel</a>
-          <a href="/word" class="category-sidebar-link" data-filter="word"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="20" alt="" /> Word</a>
-          <a href="/ppt" class="category-sidebar-link" data-filter="ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="20" alt="" /> PowerPoint</a>
-          <a href="/other-tools" class="category-sidebar-link" data-filter="utilities"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="20" alt="" /> Utilities</a>
-        </nav>
-      </aside>
-      <div class="page-main">
-        <div class="tool-grid" id="toolGrid"></div>
-      </div>
+    <div class="category-bar-wrap">
+      <nav class="category-bar" aria-label="Tool categories">
+        <a href="/" class="category-bar-link" data-filter="all"><span class="icon icon-grid" aria-hidden="true"></span> All Tools</a>
+        <a href="/pdf" class="category-bar-link" data-filter="pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="20" alt="" /> PDF</a>
+        <a href="/image" class="category-bar-link" data-filter="image"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="20" alt="" /> Image</a>
+        <a href="/excel" class="category-bar-link active" data-filter="excel" aria-current="page"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="20" alt="" /> Excel</a>
+        <a href="/word" class="category-bar-link" data-filter="word"><img src="/icons/icon-word.svg" class="nav-icon" width="20" height="20" alt="" /> Word</a>
+        <a href="/ppt" class="category-bar-link" data-filter="ppt"><img src="/icons/icon-ppt.svg" class="nav-icon" width="20" height="20" alt="" /> PowerPoint</a>
+        <a href="/other-tools" class="category-bar-link" data-filter="utilities"><img src="/icons/icon-utilities.svg" class="nav-icon" width="20" height="20" alt="" /> Utilities</a>
+      </nav>
     </div>
+
+    <div class="tool-grid" id="toolGrid"></div>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
       <div class="modal-box">

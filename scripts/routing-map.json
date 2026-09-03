@@ -400,6 +400,16 @@
     "description": "Draw a signature and place it on a page. Free, private, and runs right in your browser — no upload, no signup."
   },
   {
+    "key": "pdfedit",
+    "label": "Edit PDF",
+    "category": "pdf",
+    "slug": "edit-pdf",
+    "oldUrl": "/pdf?tool=pdfedit",
+    "title": "Edit PDF Online Free | OnlineToolsWeb",
+    "h1": "Edit PDF Online",
+    "description": "Add, cover, and replace text or images on any page. Free, private, and runs right in your browser — no upload, no signup."
+  },
+  {
     "key": "scantopdf",
     "label": "Scan to PDF",
     "category": "pdf",

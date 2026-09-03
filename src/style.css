@@ -521,13 +521,6 @@ a { color: inherit; }
   transform: translateY(0);
 }
 
-/* Flipped to the trigger's right edge instead of its left, only when
-   wireNavDropdowns() has measured that the default left-aligned
-   position would overflow past the viewport's right edge (set as a
-   plain class, not a media query, since it depends on which specific
-   trigger opened it, not the screen size alone). */
-.dropdown.dropdown-align-right { left: auto; right: 0; }
-
 .dropdown a {
   display: block;
   padding: 10px 12px;
@@ -541,31 +534,22 @@ a { color: inherit; }
 .dropdown a:hover { background: var(--gray-light); color: var(--accent); }
 
 /* A contained, rounded panel anchored under its own trigger — not a
-   full-viewport-width bar. Column count adapts to how many groups a
-   category actually has (2 for Excel/Word/PPT-sized categories up to
-   Utilities' 8) rather than a fixed 5-wide grid that left mostly-empty
-   columns on smaller categories. */
+   full-viewport-width bar. Flat, header-less: every tool in the
+   category as direct grid items, no group sub-headers. Column count
+   is set per-category via --mega-cols (main.js computes it as
+   ceil(sqrt(itemCount)), so rows and columns land as close to equal
+   as the item count allows), and every column is a fixed width so the
+   grid reads as perfectly linear rows, not auto-sized per column. */
 .mega-menu {
   display: grid;
+  grid-template-columns: repeat(var(--mega-cols, 4), 172px);
+  grid-auto-rows: 1fr;
   width: max-content;
-  max-width: min(820px, 92vw);
+  max-width: min(960px, 94vw);
   max-height: min(560px, calc(100vh - 120px));
   overflow-y: auto;
-  padding: 20px 22px;
-  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
-  gap: 22px 28px;
-}
-
-.mega-menu-section { min-width: 0; }
-
-.mega-menu-label {
-  font-size: 0.936rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  margin: 0 0 6px;
-  padding: 0 12px;
+  padding: 16px 18px;
+  gap: 2px 4px;
 }
 
 .mega-menu a {
@@ -879,119 +863,73 @@ a { color: inherit; }
   .editorial-points { align-items: center; }
 }
 
-/* ---------- Category sidebar ----------
+/* ---------- Category bar ----------
    The one category-switcher component for the homepage/All Tools and
    the 6 category pages (replaces the old standalone .filter-tabs pill
-   row — same [data-filter] values, same click handler in main.js, now
-   a single component instead of two). Desktop: a sticky vertical list
-   to the left of the tool grid, GravityWrite-style. Below ~1080px,
-   where there isn't room for a 200px rail beside a multi-column grid,
-   it collapses into a horizontal scrollable chip row instead — same
-   markup, no separate mobile component to keep in sync. */
-.page-with-sidebar {
-  display: flex;
-  align-items: flex-start;
-  gap: 40px;
+   row — same [data-filter] values, same click handler in main.js).
+   Sits right below the search bar, above the tool grid, as a single
+   horizontal row of pill chips at every viewport width — the same
+   momentum-scrolled chip-row treatment the old sidebar used to
+   collapse into below 1080px, now applied universally instead of a
+   left-hand sticky rail. */
+.category-bar-wrap {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 32px;
 }
 
-.page-main { flex: 1 1 auto; min-width: 0; }
-
-.category-sidebar {
-  flex: 0 0 200px;
-  position: sticky;
-  top: 96px;
-}
-
-.category-sidebar-heading {
-  margin: 0 0 10px;
-  padding: 0 14px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.category-sidebar-nav {
+.category-bar {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  padding: 28px 0 6px;
+  scrollbar-width: none;
 }
 
-.category-sidebar-link {
+.category-bar::-webkit-scrollbar { display: none; }
+
+.category-bar-link {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  padding: 11px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--white);
   color: var(--text);
   text-decoration: none;
   font-size: 1rem;
   font-weight: 600;
-  transition: background-color var(--motion-fast), color var(--motion-fast);
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
 }
 
-.category-sidebar-link .icon,
-.category-sidebar-link img.nav-icon {
+.category-bar-link .icon,
+.category-bar-link img.nav-icon {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
 }
 
-.category-sidebar-link:hover { background: var(--gray-light); }
-.category-sidebar-link:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.category-bar-link:hover { border-color: var(--red); color: var(--red); }
+.category-bar-link:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
 
-.category-sidebar-link.active {
+.category-bar-link.active {
   background: var(--ink);
+  border-color: var(--ink);
   color: var(--white);
 }
-.category-sidebar-link.active .icon { background-color: var(--white); }
-
-@media (min-width: 1081px) {
-  /* Same 2-up count as .tool-grid's own default — this override exists
-     for the margin/padding reset (the sidebar layout doesn't need
-     .tool-grid's normal page-edge padding), not a different column
-     count from the base rule. */
-  .page-with-sidebar .tool-grid { max-width: none; padding: 0; grid-template-columns: repeat(2, 1fr); margin: 24px 0 60px; }
-}
-
-/* Below ~1080px, a sticky 200px rail next to a narrowing grid gets
-   cramped fast — switch the same nav to a horizontal, momentum-scrolled
-   chip row sitting above the grid instead (Part 9's "tablet: horizontal
-   scroll/chips" / "mobile: category drawer/filter control"). */
-@media (max-width: 1080px) {
-  .page-with-sidebar { display: block; padding: 0; max-width: none; }
-  .category-sidebar { position: static; flex: none; margin: 28px 0 0; }
-  .category-sidebar-heading { display: none; }
-  .category-sidebar-nav {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: 8px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x proximity;
-    padding: 2px 32px 6px;
-    scrollbar-width: none;
-  }
-  .category-sidebar-nav::-webkit-scrollbar { display: none; }
-  .category-sidebar-link {
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    padding: 10px 18px;
-    border-radius: 22px;
-    border: 1px solid var(--border);
-    background: var(--white);
-  }
-  .category-sidebar-link:hover { border-color: var(--red); color: var(--red); background: var(--white); }
-  .category-sidebar-link.active { border-color: var(--ink); }
-}
+.category-bar-link.active .icon { background-color: var(--white); }
 
 @media (max-width: 600px) {
-  .category-sidebar-nav { padding: 2px 20px 6px; }
+  .category-bar-wrap { padding: 0 20px; }
+  .category-bar { padding: 20px 0 6px; }
 }
 
 /* ---------- Tool grid ---------- */
@@ -1001,33 +939,31 @@ a { color: inherit; }
    result-page grid and the static Related Tools grid on individual
    tool pages, which both reuse .tool-grid. */
 .tool-grid {
-  max-width: none;
-  margin: 32px auto 60px;
+  max-width: 1400px;
+  margin: 0 auto 60px;
   padding: 0 32px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
 
-/* Plain white card — icon, category eyebrow, title, a 2-line
-   description, and an arrow, at roughly double the original card's
-   scale. One card system for the whole site: this same class renders
-   every tool-grid card, the "continue with..." result-page grid, and
-   the static Related Tools cards on individual tool pages. */
+/* Plain white card — icon, category eyebrow, title, and a 2-line
+   description. One card system for the whole site: this same class
+   renders every tool-grid card, the "continue with..." result-page
+   grid, and the static Related Tools cards on individual tool pages. */
 .tool-card {
   /* Falls back to a plain neutral card (the coming-soon / "more tools"
      tiles have no cat-* class) when --card-accent isn't set below. */
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 18px;
   /* Taller than it is wide-relative — extra vertical padding on top of
-     the horizontal so the card's height grows in step with its (2x)
-     width instead of staying a flat, short row. */
-  padding: 44px 36px;
-  min-height: 210px;
+     the horizontal so the card keeps real presence at 3-up width. */
+  padding: 30px 26px;
+  min-height: 188px;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -1076,8 +1012,8 @@ a { color: inherit; }
 }
 
 .tool-card h3 {
-  font-size: 1.55rem;
-  margin: 0 0 10px;
+  font-size: 1.3rem;
+  margin: 0 0 8px;
   font-family: var(--font-display);
   color: var(--text);
   line-height: 1.25;
@@ -1092,10 +1028,10 @@ a { color: inherit; }
    description length. */
 .tool-card p {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   color: var(--text-muted);
-  line-height: 1.6;
-  min-height: calc(1.6em * 2);
+  line-height: 1.55;
+  min-height: calc(1.55em * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1104,8 +1040,8 @@ a { color: inherit; }
 
 .tool-card-arrow {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   color: var(--text-muted);
   transition: transform var(--motion-fast);
 }
@@ -1124,25 +1060,25 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 84px;
-  height: 84px;
+  width: 64px;
+  height: 64px;
 }
 
-.tool-icon-badge img { width: 52px; height: 52px; }
+.tool-icon-badge img { width: 40px; height: 40px; }
 .tool-icon-badge .arrow { display: none; }
 
 /* The "to" icon (last) is the base icon; the "from" icon (first)
    overlaps it in front, offset toward the bottom-left corner. Both
    render at the same size so the overlap reads as two same-weight
    stamps rather than one icon with a small badge on it. */
-.tool-icon-badge img:not(:only-child) { width: 44px; height: 44px; }
+.tool-icon-badge img:not(:only-child) { width: 32px; height: 32px; }
 .tool-icon-badge img:last-child:not(:only-child) { position: relative; z-index: 1; }
 
 .tool-icon-badge img:first-child:not(:only-child) {
   position: absolute;
-  bottom: -8px;
-  left: -8px;
-  border-radius: 8px;
+  bottom: -6px;
+  left: -6px;
+  border-radius: 6px;
   border: 2px solid var(--white);
   box-shadow: 0 1px 3px rgba(27, 36, 48, 0.2);
   z-index: 2;
@@ -1178,19 +1114,22 @@ a { color: inherit; }
   transition: color 0.15s ease;
 }
 
-/* Fewer columns on narrower screens — 2x-size cards only have room for
-   2-up down to tablet width, then a single full-width row card per
-   tool on phones. */
-@media (max-width: 900px) {
+/* Fewer columns on narrower screens — 3-up down to a wide tablet, then
+   2-up, then a single full-width row card per tool on phones. */
+@media (max-width: 1080px) {
+  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
   .tool-grid { grid-template-columns: 1fr; gap: 16px; padding: 0 20px; }
 }
 
 @media (max-width: 600px) {
-  .tool-card { padding: 22px; gap: 18px; }
-  .tool-card h3 { font-size: 1.25rem; }
-  .tool-icon-badge { width: 64px; height: 64px; }
-  .tool-icon-badge img { width: 40px; height: 40px; }
-  .tool-icon-badge img:not(:only-child) { width: 34px; height: 34px; }
+  .tool-card { padding: 20px; gap: 16px; min-height: 0; }
+  .tool-card h3 { font-size: 1.15rem; }
+  .tool-icon-badge { width: 56px; height: 56px; }
+  .tool-icon-badge img { width: 34px; height: 34px; }
+  .tool-icon-badge img:not(:only-child) { width: 28px; height: 28px; }
 }
 
 .coming-soon-badge {
@@ -1314,20 +1253,20 @@ a { color: inherit; }
 /* ---------- Cursor-follow glow (Part 3) ----------
    A single fixed element, created once by wireCursorGlow() in main.js
    and moved with the pointer via a transform (translate, not
-   top/left — stays off the layout/paint-heavy path). Sized well
-   past what's visible so the radial-gradient's soft edge never shows
-   a hard cutoff. Desktop mouse only — wireCursorGlow() never creates
-   it at all on touch devices or when the visitor asked for reduced
-   motion, so there's nothing to disable/re-enable here in CSS, only
-   the opacity fade for when the pointer enters/leaves the window. */
+   top/left — stays off the layout/paint-heavy path). A small, tight
+   radiant circle right around the cursor, always plain grey — no
+   per-category tinting. Desktop mouse only — wireCursorGlow() never
+   creates it at all on touch devices or when the visitor asked for
+   reduced motion, so there's nothing to disable/re-enable here in CSS,
+   only the opacity fade for when the pointer enters/leaves the window. */
 .cursor-glow {
   position: fixed;
   top: 0;
   left: 0;
-  width: 560px;
-  height: 560px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--cursor-glow-color, var(--accent)) 0%, transparent 72%);
+  background: radial-gradient(circle, var(--cursor-glow-color, var(--gray)) 0%, transparent 68%);
   pointer-events: none;
   z-index: 0;
   opacity: 0;
@@ -1750,6 +1689,173 @@ a { color: inherit; }
   .tp-sidebar { position: static; }
   .tp-preview-pane { min-height: 260px; padding: 18px; }
 }
+
+/* ---------- Edit PDF: overlay editor ----------
+   .pdfedit-stage is sized exactly to the rendered canvas (in CSS px);
+   .pdfedit-overlay sits directly on top of it at the same size, holding
+   one absolutely-positioned .pdfedit-el per text/image/cover box. All
+   element position/size math lives in main.js and is expressed in PDF
+   point units — this file only styles the boxes themselves. */
+.pdfedit-wrap { width: 100%; display: flex; justify-content: center; }
+
+.pdfedit-stage {
+  position: relative;
+  max-width: 100%;
+}
+
+.pdfedit-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(27, 36, 48, 0.14);
+}
+
+.pdfedit-overlay {
+  position: absolute;
+  inset: 0;
+}
+
+.pdfedit-el {
+  position: absolute;
+  box-sizing: border-box;
+  touch-action: none;
+  border: 1.5px dashed transparent;
+}
+
+.pdfedit-el.selected { border-color: var(--accent); }
+
+.pdfedit-el-text {
+  outline: none;
+  padding: 2px 4px;
+  line-height: 1.2;
+  font-family: Helvetica, Arial, sans-serif;
+  cursor: text;
+  user-select: text;
+  /* No overflow:hidden here on purpose — the drag grip and resize handle
+     are positioned just outside this box's edges (see .pdfedit-grip /
+     .pdfedit-handle), and clipping would hide them AND make them
+     unclickable for text elements specifically. Text that runs past the
+     box is a useful visual cue anyway: drawWrappedText() truncates at
+     the same boundary when the PDF is saved, so overflowing on screen
+     matches what will actually be cut off in the output. */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pdfedit-el-image {
+  cursor: move;
+  user-select: none;
+}
+
+.pdfedit-el-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: block;
+  pointer-events: none;
+}
+
+.pdfedit-el-cover {
+  cursor: move;
+  user-select: none;
+  background: #FFFFFF;
+  border-color: var(--border);
+}
+
+.pdfedit-el-cover.selected { border-color: var(--accent); }
+
+/* Text boxes drag only from this small grip (top-left) so a plain click
+   anywhere else in the box places a text caret instead of starting a
+   drag. Image/cover boxes have no grip — the whole box is draggable. */
+.pdfedit-grip {
+  position: absolute;
+  top: -12px;
+  left: -12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: move;
+  display: none;
+  touch-action: none;
+}
+
+.pdfedit-el.selected .pdfedit-grip { display: block; }
+
+.pdfedit-handle {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 2px solid var(--accent);
+  cursor: nwse-resize;
+  display: none;
+  touch-action: none;
+}
+
+.pdfedit-el.selected .pdfedit-handle { display: block; }
+
+.pdfedit-del-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #FFFFFF;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfedit-el.selected .pdfedit-del-btn { display: flex; }
+
+.pdfedit-toolbar { flex-direction: row !important; flex-wrap: wrap; gap: 10px !important; }
+
+.pdfedit-toolbar button {
+  flex: 1 1 auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.pdfedit-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+
+.pdfedit-sel-panel:empty { display: none; margin: 0; }
+
+.pdfedit-page-nav {
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px !important;
+}
+
+.pdfedit-page-nav button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.1rem;
+}
+
+.pdfedit-page-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ---------- Result page (separate from the modal) ----------
    showResultState() closes the modal and inserts a real page section in

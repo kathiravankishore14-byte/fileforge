@@ -26,6 +26,7 @@ export const TOOL_SLUGS = {
   pdfunlock: 'unlock-pdf',
   pdftomarkdown: 'pdf-to-markdown',
   pdfsign: 'sign-pdf',
+  pdfedit: 'edit-pdf',
   scantopdf: 'scan-to-pdf',
   pdfcompare: 'compare-pdf',
   pdfsplit: 'split-pdf',

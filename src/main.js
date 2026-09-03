@@ -4,7 +4,7 @@ import 'cropperjs/dist/cropper.css';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Tesseract from 'tesseract.js';
-import { PDFDocument, degrees, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } from 'pdf-lib';
+import { PDFDocument, degrees, rgb, StandardFonts, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } from 'pdf-lib';
 import { TOOL_SLUGS, toolUrl } from './toolSlugs.js';
 import './style.css';
 
@@ -98,6 +98,7 @@ const TOOL_ICON_OVERRIDES = {
   pdfsign: '/icons/icon-tool-pdfsign.svg',
   scantopdf: '/icons/icon-tool-scantopdf.svg',
   pdfcompare: '/icons/icon-tool-pdfcompare.svg',
+  pdfedit: '/icons/icon-tool-pdfedit.svg',
 };
 
 const toolMeta = {
@@ -164,6 +165,7 @@ const toolMeta = {
   pdfunlock: { label: 'Unlock PDF', desc: 'Remove a password you already know.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdftomarkdown: { label: 'PDF to Markdown', desc: 'Convert pages into basic Markdown text.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'text' },
   pdfsign: { label: 'Sign PDF', desc: 'Draw a signature and place it on a page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfedit: { label: 'Edit PDF', desc: 'Add, cover, and replace text or images on any page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   scantopdf: { label: 'Scan to PDF', desc: 'Capture pages with your camera.', noFile: true, category: 'pdf', iconTo: 'pdf' },
   pdfcompare: { label: 'Compare PDF', desc: 'See text differences between two PDFs.', needsConfig: true, compareFiles: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
 
@@ -200,7 +202,7 @@ const toolMeta = {
 // PDF, Image, Excel, Word, PPT, then Other Tools (utilities) last.
 // "text" is gone as a category — its 4 tools moved into "utilities" below.
 const categoryTools = {
-  pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdfsign', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
+  pdf: ['pdfmerge', 'pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfwatermark', 'pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdfprotect', 'pdfcrop', 'pdfunlock', 'pdftomarkdown', 'pdfsign', 'pdfedit', 'scantopdf', 'pdfcompare', 'pdfsplit', 'pdfcompress'],
   image: ['resize', 'compress', 'crop', 'pdf', 'imagetoexcel', 'imagetoppt', 'convertformat', 'rotateflip', 'watermarkimage', 'bgremove', 'colorpalette', 'socialresize', 'grayscale', 'sepia', 'blurimage', 'heictojpg', 'memecreator', 'collagemaker'],
   excel: ['exceltopdf', 'exceltocsv'],
   word: ['wordtoexcel', 'wordtopdf', 'wordtotext'],
@@ -1350,7 +1352,10 @@ function renderSingleFileConfig() {
   area.innerHTML = '';
   if (previewPane) previewPane.innerHTML = '';
   const previewTarget = previewPane || area; // fall back gracefully if the shell markup is ever missing the pane
-  if (currentFile.type.startsWith('image/')) {
+  if (currentToolKey === 'pdfedit') {
+    // Edit PDF builds its own multi-page canvas + overlay editor straight
+    // into previewTarget below — skip every generic preview branch here.
+  } else if (currentFile.type.startsWith('image/')) {
     showPreviewImage(currentFile);
   } else if (currentFile.type === 'application/pdf' && currentToolKey !== 'pdfcompress' && currentToolKey !== 'pdfrotate') {
     previewTarget.insertAdjacentHTML('beforeend', `<div id="genericPdfPreviewWrap" style="text-align:center;"><p style="color:var(--text-muted); font-size:0.85rem;">Loading preview...</p></div>`);
@@ -2039,6 +2044,418 @@ function renderSingleFileConfig() {
         const outBytes = await doc.save();
         await minWait(500);
         showResultState(new Blob([outBytes], { type: 'application/pdf' }), `signed-${currentFile.name}`);
+      } catch (err) { showErrorState(err.message); }
+    });
+  }
+
+  // ---------- Edit PDF ----------
+  // A true "rewrite the existing content stream" editor isn't feasible
+  // in-browser (or anywhere, really — no PDF tool actually reconstructs
+  // original fonts/layout). This gives the same "cover & replace" model
+  // every free PDF editor actually uses under the hood: draw a white box
+  // over anything you want gone, then drop new text or an image on top —
+  // plus freely add brand-new text/images anywhere, on any page. Every
+  // element lives in PDF point coordinates (not screen pixels), so it
+  // survives page navigation and re-renders at any zoom/scale.
+  else if (currentToolKey === 'pdfedit') {
+    area.insertAdjacentHTML('beforeend', `
+      <p class="tp-live-hint" id="pdfeditHint">Add text, an image, or a white "cover" box, then drag it into place. Click an element to edit, move, or resize it.</p>
+      <div class="config-panel pdfedit-toolbar">
+        <button type="button" id="peAddText">+ Text</button>
+        <button type="button" id="peAddImage">+ Image</button>
+        <button type="button" id="peAddCover">▭ Cover</button>
+      </div>
+      <input type="file" id="peImageInput" accept="image/*" style="display:none;" />
+      <div class="config-panel pdfedit-sel-panel" id="pdfeditSelPanel"></div>
+      <div class="config-panel pdfedit-page-nav">
+        <button type="button" id="pePrevPage" aria-label="Previous page">‹</button>
+        <span id="pePageIndicator">Page 1</span>
+        <button type="button" id="peNextPage" aria-label="Next page">›</button>
+      </div>
+      <div class="config-panel"><button class="config-action-btn" id="cfgApply">Save PDF</button></div>
+    `);
+    previewTarget.insertAdjacentHTML('beforeend', `<div class="pdfedit-wrap" id="pdfeditWrap"><p class="tp-live-hint">Loading page…</p></div>`);
+
+    // ---- state, scoped to this one tool activation ----
+    const myEditGeneration = renderGeneration; // stale-render guard, same pattern used elsewhere in this file
+    let pdfjsDocRef = null;
+    let pageCount = 1;
+    let pageIdx = 0;
+    let renderScale = 1;
+    let pageWpt = 612;
+    let pageHpt = 792;
+    const pagesData = {}; // pageIdx -> array of element objects, all coords/sizes in PDF points
+    let elCounter = 0;
+    let selectedId = null;
+
+    const pageEls = () => (pagesData[pageIdx] = pagesData[pageIdx] || []);
+    const findEl = (id) => pageEls().find((e) => e.id === id);
+    const ptToPx = (pt) => pt * renderScale;
+
+    function positionDiv(div, el) {
+      div.style.left = `${ptToPx(el.xPt)}px`;
+      div.style.top = `${ptToPx(pageHpt - el.yPt - el.heightPt)}px`;
+      div.style.width = `${ptToPx(el.widthPt)}px`;
+      div.style.height = `${ptToPx(el.heightPt)}px`;
+    }
+
+    function selectAllText(div) {
+      const range = document.createRange();
+      range.selectNodeContents(div);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function renderSelPanel() {
+      const panel = document.querySelector('#pdfeditSelPanel');
+      if (!panel) return;
+      const el = findEl(selectedId);
+      if (!el || el.type !== 'text') { panel.innerHTML = ''; return; }
+      panel.innerHTML = `
+        <label>Font size <input type="range" id="peFontSize" min="8" max="72" value="${el.fontSize}" /></label>
+        <label>Color <input type="color" id="peColor" value="${el.color}" /></label>
+      `;
+      document.querySelector('#peFontSize').addEventListener('input', (e) => {
+        el.fontSize = parseInt(e.target.value, 10) || 8;
+        const div = document.querySelector(`.pdfedit-el[data-id="${el.id}"]`);
+        if (div) div.style.fontSize = `${ptToPx(el.fontSize)}px`;
+      });
+      document.querySelector('#peColor').addEventListener('input', (e) => {
+        el.color = e.target.value;
+        const div = document.querySelector(`.pdfedit-el[data-id="${el.id}"]`);
+        if (div) div.style.color = el.color;
+      });
+    }
+
+    function selectElement(id) {
+      selectedId = id;
+      const overlay = document.querySelector('#pdfeditOverlay');
+      if (overlay) overlay.querySelectorAll('.pdfedit-el').forEach((d) => d.classList.toggle('selected', d.dataset.id === id));
+      renderSelPanel();
+    }
+
+    function deselectAll() {
+      selectedId = null;
+      const overlay = document.querySelector('#pdfeditOverlay');
+      if (overlay) overlay.querySelectorAll('.pdfedit-el').forEach((d) => d.classList.remove('selected'));
+      renderSelPanel();
+    }
+
+    function deleteElement(id) {
+      const arr = pageEls();
+      const i = arr.findIndex((e) => e.id === id);
+      if (i !== -1) arr.splice(i, 1);
+      const div = document.querySelector(`.pdfedit-el[data-id="${id}"]`);
+      if (div) div.remove();
+      if (selectedId === id) deselectAll();
+    }
+
+    // Every element type shares one drag+resize controller: `moveTarget`
+    // is what starts a move (the whole box for image/cover, but only a
+    // small corner grip for text — otherwise every click-to-place-your-
+    // caret inside the text would instead start dragging the box).
+    function wireDragResize(div, el, moveTarget, handle) {
+      let mode = null;
+      let startClientX = 0;
+      let startClientY = 0;
+      let startXPt = 0;
+      let startYPt = 0;
+      let startWPt = 0;
+      let startHPt = 0;
+      let topAnchorPt = 0;
+
+      function begin(e, m) {
+        e.stopPropagation();
+        mode = m;
+        startClientX = e.clientX;
+        startClientY = e.clientY;
+        startXPt = el.xPt;
+        startYPt = el.yPt;
+        startWPt = el.widthPt;
+        startHPt = el.heightPt;
+        topAnchorPt = pageHpt - (el.yPt + el.heightPt); // distance from page top to box top — kept fixed while resizing
+        div.setPointerCapture(e.pointerId);
+        selectElement(el.id);
+      }
+
+      moveTarget.addEventListener('pointerdown', (e) => { if (e.target === handle) return; begin(e, 'drag'); });
+      handle.addEventListener('pointerdown', (e) => begin(e, 'resize'));
+
+      div.addEventListener('pointermove', (e) => {
+        if (!mode) return;
+        const dxPt = (e.clientX - startClientX) / renderScale;
+        const dyPt = (e.clientY - startClientY) / renderScale;
+        if (mode === 'drag') {
+          el.xPt = Math.max(0, Math.min(startXPt + dxPt, pageWpt - el.widthPt));
+          el.yPt = Math.max(0, Math.min(startYPt - dyPt, pageHpt - el.heightPt));
+        } else {
+          // Bottom-right handle: top-left corner stays anchored, so the
+          // box grows/shrinks toward the bottom-right on screen — which
+          // in PDF coordinates (y-up) means the bottom edge (yPt) moves,
+          // not the top.
+          el.widthPt = Math.max(14, Math.min(startWPt + dxPt, pageWpt - startXPt));
+          el.heightPt = Math.max(10, Math.min(startHPt + dyPt, pageHpt - topAnchorPt));
+          el.yPt = pageHpt - topAnchorPt - el.heightPt;
+        }
+        positionDiv(div, el);
+      });
+
+      function stop(e) {
+        if (!mode) return;
+        mode = null;
+        try { div.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+      }
+      div.addEventListener('pointerup', stop);
+      div.addEventListener('pointercancel', stop);
+    }
+
+    function createElDiv(el) {
+      const overlay = document.querySelector('#pdfeditOverlay');
+      if (!overlay) return null;
+      const div = document.createElement('div');
+      div.className = `pdfedit-el pdfedit-el-${el.type}`;
+      div.dataset.id = el.id;
+      positionDiv(div, el);
+
+      let moveTarget = div;
+      if (el.type === 'text') {
+        div.contentEditable = 'true';
+        div.spellcheck = false;
+        div.textContent = el.text;
+        div.style.fontSize = `${ptToPx(el.fontSize)}px`;
+        div.style.color = el.color;
+        div.addEventListener('input', () => { el.text = div.innerText; });
+        div.addEventListener('focus', () => selectElement(el.id));
+        const grip = document.createElement('span');
+        grip.className = 'pdfedit-grip';
+        grip.setAttribute('aria-hidden', 'true');
+        div.appendChild(grip);
+        moveTarget = grip;
+      } else if (el.type === 'image') {
+        const img = document.createElement('img');
+        img.src = el.imgUrl;
+        img.draggable = false;
+        img.alt = '';
+        div.appendChild(img);
+      }
+
+      const handle = document.createElement('span');
+      handle.className = 'pdfedit-handle';
+      handle.setAttribute('aria-hidden', 'true');
+      div.appendChild(handle);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'pdfedit-del-btn';
+      delBtn.setAttribute('aria-label', 'Delete element');
+      delBtn.innerHTML = '✕';
+      delBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+      delBtn.addEventListener('click', (e) => { e.stopPropagation(); deleteElement(el.id); });
+      div.appendChild(delBtn);
+
+      wireDragResize(div, el, moveTarget, handle);
+      div.addEventListener('pointerdown', (e) => {
+        if (e.target === handle || e.target === delBtn) return;
+        selectElement(el.id);
+      });
+      overlay.appendChild(div);
+      return div;
+    }
+
+    async function renderPage(idx) {
+      if (myEditGeneration !== renderGeneration) return;
+      pageIdx = Math.max(0, Math.min(idx, pageCount - 1));
+      const wrap = document.querySelector('#pdfeditWrap');
+      if (!wrap) return;
+      wrap.innerHTML = '<p class="tp-live-hint">Loading page…</p>';
+      try {
+        const page = await pdfjsDocRef.getPage(pageIdx + 1);
+        const vp1 = page.getViewport({ scale: 1 });
+        pageWpt = vp1.width;
+        pageHpt = vp1.height;
+        const stageMaxW = Math.min((wrap.parentElement && wrap.parentElement.clientWidth) || 700, 720);
+        renderScale = Math.max(0.3, Math.min(2, stageMaxW / pageWpt));
+        const canvas = await renderPdfPageToCanvas(page, renderScale);
+        if (myEditGeneration !== renderGeneration) return;
+        canvas.className = 'pdfedit-canvas';
+        wrap.innerHTML = '';
+        const stage = document.createElement('div');
+        stage.className = 'pdfedit-stage';
+        stage.style.width = `${canvas.width}px`;
+        stage.style.height = `${canvas.height}px`;
+        const overlay = document.createElement('div');
+        overlay.className = 'pdfedit-overlay';
+        overlay.id = 'pdfeditOverlay';
+        overlay.addEventListener('pointerdown', (e) => { if (e.target === overlay) deselectAll(); });
+        stage.appendChild(canvas);
+        stage.appendChild(overlay);
+        wrap.appendChild(stage);
+        pageEls().forEach(createElDiv);
+        const indicator = document.querySelector('#pePageIndicator');
+        if (indicator) indicator.textContent = `Page ${pageIdx + 1} of ${pageCount}`;
+        const prevBtn = document.querySelector('#pePrevPage');
+        const nextBtn = document.querySelector('#peNextPage');
+        if (prevBtn) prevBtn.disabled = pageIdx === 0;
+        if (nextBtn) nextBtn.disabled = pageIdx === pageCount - 1;
+      } catch {
+        wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+      }
+    }
+
+    (async () => {
+      try {
+        const pdfjsLib = await getPdfjsLib();
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await pdfjsLib.getDocument({ data: bytes }).promise;
+        if (myEditGeneration !== renderGeneration) return;
+        pdfjsDocRef = doc;
+        pageCount = doc.numPages;
+        await renderPage(0);
+      } catch {
+        const wrap = document.querySelector('#pdfeditWrap');
+        if (wrap) wrap.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;"><span class="icon icon-file" aria-hidden="true"></span> ${currentFile.name} (preview unavailable)</p>`;
+      }
+    })();
+
+    document.querySelector('#pePrevPage').addEventListener('click', () => renderPage(pageIdx - 1));
+    document.querySelector('#peNextPage').addEventListener('click', () => renderPage(pageIdx + 1));
+
+    document.querySelector('#peAddText').addEventListener('click', () => {
+      const w = Math.min(200, pageWpt * 0.6);
+      const h = 36;
+      const el = {
+        id: `el${++elCounter}`, type: 'text',
+        xPt: (pageWpt - w) / 2, yPt: (pageHpt - h) / 2, widthPt: w, heightPt: h,
+        text: 'New text', fontSize: 16, color: '#111111',
+      };
+      pageEls().push(el);
+      const div = createElDiv(el);
+      selectElement(el.id);
+      if (div) { div.focus(); selectAllText(div); }
+    });
+
+    document.querySelector('#peAddCover').addEventListener('click', () => {
+      const w = Math.min(220, pageWpt * 0.6);
+      const h = Math.min(60, pageHpt * 0.15);
+      const el = {
+        id: `el${++elCounter}`, type: 'cover',
+        xPt: (pageWpt - w) / 2, yPt: (pageHpt - h) / 2, widthPt: w, heightPt: h,
+      };
+      pageEls().push(el);
+      createElDiv(el);
+      selectElement(el.id);
+    });
+
+    document.querySelector('#peAddImage').addEventListener('click', () => document.querySelector('#peImageInput').click());
+    document.querySelector('#peImageInput').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const probe = new Image();
+      probe.onload = () => {
+        const ratio = (probe.naturalHeight / probe.naturalWidth) || 1;
+        let w = Math.min(pageWpt * 0.6, pageWpt);
+        let h = w * ratio;
+        if (h > pageHpt * 0.8) { h = pageHpt * 0.8; w = h / ratio; }
+        const el = {
+          id: `el${++elCounter}`, type: 'image',
+          xPt: (pageWpt - w) / 2, yPt: (pageHpt - h) / 2, widthPt: w, heightPt: h,
+          imgFile: file, imgUrl: url,
+        };
+        pageEls().push(el);
+        createElDiv(el);
+        selectElement(el.id);
+      };
+      probe.src = url;
+    });
+
+    function drawWrappedText(page, font, el) {
+      const fontSize = el.fontSize;
+      const lineHeight = fontSize * 1.2;
+      const hex = (el.color || '#111111').replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16) / 255 || 0;
+      const g = parseInt(hex.substring(2, 4), 16) / 255 || 0;
+      const b = parseInt(hex.substring(4, 6), 16) / 255 || 0;
+      const color = rgb(r, g, b);
+      const lines = [];
+      el.text.split('\n').forEach((para) => {
+        const words = para.split(/\s+/).filter(Boolean);
+        if (!words.length) { lines.push(''); return; }
+        let line = '';
+        words.forEach((word) => {
+          const candidate = line ? `${line} ${word}` : word;
+          if (line && font.widthOfTextAtSize(candidate, fontSize) > el.widthPt) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = candidate;
+          }
+        });
+        lines.push(line);
+      });
+      let cursorY = el.yPt + el.heightPt - fontSize;
+      for (const line of lines) {
+        if (cursorY < el.yPt - lineHeight) break;
+        if (line) page.drawText(line, { x: el.xPt, y: cursorY, size: fontSize, font, color });
+        cursorY -= lineHeight;
+      }
+    }
+
+    async function reencodeImageToPng(file) {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await new Promise((resolve, reject) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.onerror = reject;
+          im.src = url;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+        return new Uint8Array(await blob.arrayBuffer());
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
+      const hasAny = Object.values(pagesData).some((arr) => arr && arr.length);
+      if (!hasAny) { showErrorState('Add at least one text box, image, or cover box before saving.'); return; }
+      showProcessingState('Applying your edits...');
+      try {
+        const bytes = await currentFile.arrayBuffer();
+        const doc = await PDFDocument.load(bytes);
+        const font = await doc.embedFont(StandardFonts.Helvetica);
+        const pages = doc.getPages();
+        for (const [idxStr, elements] of Object.entries(pagesData)) {
+          const idx = parseInt(idxStr, 10);
+          const p = pages[idx];
+          if (!p || !elements || !elements.length) continue;
+          for (const el of elements) {
+            if (el.type === 'cover') {
+              p.drawRectangle({ x: el.xPt, y: el.yPt, width: el.widthPt, height: el.heightPt, color: rgb(1, 1, 1) });
+            } else if (el.type === 'image' && el.imgFile) {
+              const imgBytes = new Uint8Array(await el.imgFile.arrayBuffer());
+              let embedded;
+              try {
+                embedded = el.imgFile.type === 'image/png' ? await doc.embedPng(imgBytes) : await doc.embedJpg(imgBytes);
+              } catch {
+                embedded = await doc.embedPng(await reencodeImageToPng(el.imgFile));
+              }
+              p.drawImage(embedded, { x: el.xPt, y: el.yPt, width: el.widthPt, height: el.heightPt });
+            } else if (el.type === 'text' && el.text && el.text.trim()) {
+              drawWrappedText(p, font, el);
+            }
+          }
+        }
+        const outBytes = await doc.save();
+        await minWait(500);
+        showResultState(new Blob([outBytes], { type: 'application/pdf' }), `edited-${currentFile.name}`);
       } catch (err) { showErrorState(err.message); }
     });
   }
@@ -3952,7 +4369,7 @@ const CATEGORY_NAV_CONFIG = {
     top3: ['pdfmerge', 'pdfcompress', 'pdfsplit'],
     groups: [
       { label: 'Convert', tools: ['pdftoword', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'pdftomarkdown'] },
-      { label: 'Organize', tools: ['pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfcrop'] },
+      { label: 'Organize', tools: ['pdfrotate', 'pdfpagenumbers', 'pdfextract', 'pdfdelete', 'pdfcrop', 'pdfedit'] },
       { label: 'Security', tools: ['pdfwatermark', 'pdfprotect', 'pdfunlock', 'pdfsign'] },
       { label: 'Create', tools: ['scantopdf'] },
       { label: 'Review', tools: ['pdfcompare'] },
@@ -3987,6 +4404,21 @@ const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Wor
 const NAV_CATEGORY_ICON = { pdf: 'icon-pdf', image: 'icon-image', excel: 'icon-excel', word: 'icon-word', ppt: 'icon-ppt', utilities: 'icon-utilities' };
 const NAV_CATEGORY_ORDER = ['pdf', 'image', 'excel', 'word', 'ppt', 'utilities'];
 
+// Flat, header-less dropdown grid: every tool in the category as one
+// evenly spaced row×column grid (no "Popular"/group sub-headers), with
+// the column count picked so rows and columns come out as close to
+// equal as the item count allows (ceil(sqrt(n))), then left filled in
+// reading order. Only PDF, Image and Utilities get this — Excel, Word
+// and PowerPoint are plain nav links per the Phase 7 spec.
+function flatMegaMenuHtml(config) {
+  const keys = [...config.top3, ...config.groups.flatMap((g) => g.tools)];
+  const cols = Math.max(1, Math.ceil(Math.sqrt(keys.length)));
+  const linksHtml = keys
+    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`)
+    .join('');
+  return `<div class="dropdown mega-menu mega-menu-flat" style="--mega-cols:${cols}">${linksHtml}</div>`;
+}
+
 function populateHomeCategoryDropdowns() {
   const navEl = document.querySelector('.main-nav');
   if (!navEl) return;
@@ -3995,36 +4427,17 @@ function populateHomeCategoryDropdowns() {
     const label = CATEGORY_LABELS[category] || category;
     const iconHtml = `<img src="/icons/${NAV_CATEGORY_ICON[category]}.svg" class="nav-icon" width="20" height="24" alt="" />`;
     const config = CATEGORY_NAV_CONFIG[category];
+    const href = pageUrlMap[category] || `/${category}`;
 
-    let dropdownHtml;
-    if (config) {
-      // Bigger categories: grouped mega-menu grid, same as on that
-      // category's own page.
-      const popularHtml = `
-        <div class="mega-menu-section">
-          <p class="mega-menu-label">Popular</p>
-          ${config.top3.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
-        </div>
-      `;
-      const groupsHtml = config.groups.map((group) => `
-        <div class="mega-menu-section">
-          <p class="mega-menu-label">${group.label}</p>
-          ${group.tools.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
-        </div>
-      `).join('');
-      dropdownHtml = `<div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>`;
-    } else {
-      // Smaller categories (Excel, Word, PPT): a single flat dropdown
-      // listing every tool in the category.
-      const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
-      const linksHtml = keys.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
-      dropdownHtml = `<div class="dropdown">${linksHtml}</div>`;
+    if (!config) {
+      // Excel, Word, PowerPoint: plain link, no dropdown.
+      return `<a href="${href}" class="nav-link">${iconHtml} ${label}</a>`;
     }
 
     return `
       <div class="nav-item">
-        <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
-        ${dropdownHtml}
+        <a href="${href}" class="nav-link nav-trigger-link">${iconHtml} ${label}</a>
+        ${flatMegaMenuHtml(config)}
       </div>
     `;
   }).join('');
@@ -4051,41 +4464,23 @@ function renderCategoryNav(category) {
   `;
 
   if (!config) {
-    // small categories: single hover dropdown listing every tool in the category
-    const keys = (categoryTools[category] || []).filter((k) => !toolMeta[k].comingSoon);
+    // Excel, Word, PowerPoint: plain link back to the category, no dropdown.
     const label = CATEGORY_LABELS[category] || (category.charAt(0).toUpperCase() + category.slice(1));
-    const linksHtml = keys.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('');
     navEl.innerHTML = `
-      <div class="nav-item">
-        <button class="nav-trigger">All ${label} Tools</button>
-        <div class="dropdown">${linksHtml}</div>
-      </div>
+      <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link">All ${label} Tools</a>
       ${categoriesDropdownHtml}
     `;
   } else {
-    // categories with a bigger tool list get a grouped mega-menu, with the
-    // top picks pinned in their own "Popular" section at the front — and
-    // also surfaced as direct quick links right on the nav bar itself.
+    // PDF, Image, Utilities: quick top3 links right on the bar, plus one
+    // flat, evenly spaced dropdown grid of every remaining tool.
     const top3Html = config.top3.map((k) => `
       <a href="${toolUrl(k) || `?tool=${k}`}" class="nav-link" data-nav-tool="${k}">${toolMeta[k].label}</a>
-    `).join('');
-    const popularHtml = `
-      <div class="mega-menu-section">
-        <p class="mega-menu-label">Popular</p>
-        ${config.top3.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
-      </div>
-    `;
-    const groupsHtml = config.groups.map((group) => `
-      <div class="mega-menu-section">
-        <p class="mega-menu-label">${group.label}</p>
-        ${group.tools.map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`).join('')}
-      </div>
     `).join('');
     navEl.innerHTML = `
       ${top3Html}
       <div class="nav-item">
         <button class="nav-trigger">${config.allLabel}</button>
-        <div class="dropdown mega-menu">${popularHtml}${groupsHtml}</div>
+        ${flatMegaMenuHtml(config)}
       </div>
       ${categoriesDropdownHtml}
     `;
@@ -4109,16 +4504,23 @@ function wireNavDropdowns() {
 
     const openNow = () => {
       item.classList.add('nav-item-open');
-      // Left-aligned by default; only flip to right-aligned once we can
-      // actually measure that the default position would run off the
-      // right edge of the viewport — a fixed nth-child rule can't do
-      // this correctly since it depends on the trigger's real position
-      // and the panel's real (variable, content-driven) width, not
-      // which page it's on.
+      // Left-aligned (left:0 against the trigger) by default, then
+      // nudged by an explicit pixel offset once we can measure the
+      // panel's real (variable, content-driven) width against the
+      // viewport — a plain left/right flip isn't enough for the wide
+      // flat grids (up to ~5 columns), since flipping a wide panel to
+      // its trigger's right edge can just push it off the LEFT edge
+      // instead, especially for a trigger near the start of the nav.
+      // Clamping the actual edges keeps it fully on-screen either way.
       if (panel) {
-        panel.classList.remove('dropdown-align-right');
-        if (panel.getBoundingClientRect().right > window.innerWidth - 12) {
-          panel.classList.add('dropdown-align-right');
+        panel.style.left = '';
+        const margin = 12;
+        const overflowRight = panel.getBoundingClientRect().right - (window.innerWidth - margin);
+        if (overflowRight > 0) panel.style.left = `${-overflowRight}px`;
+        const leftEdge = panel.getBoundingClientRect().left;
+        if (leftEdge < margin) {
+          const current = parseFloat(panel.style.left || '0');
+          panel.style.left = `${current + (margin - leftEdge)}px`;
         }
       }
     };
@@ -4193,9 +4595,6 @@ function wireSmartNav() {
 // "disabled" state to maintain elsewhere, they simply never wire up.
 const CARD_TILT_MAX_DEG = 1.4;
 const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon)';
-// Category classes are named cat-pdf/cat-image/.../cat-utilities — all
-// but "utilities" match a --category-* token name 1:1.
-const GLOW_TOKEN_FOR_CAT = { utilities: 'utility' };
 
 function wirePointerEffects() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -4235,13 +4634,8 @@ function wirePointerEffects() {
         `perspective(900px) translateY(-3px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
     }
 
-    const catEl = e.target.closest && e.target.closest('[class*="cat-"]');
-    const catMatch = catEl && [...catEl.classList].find((c) => c.startsWith('cat-'));
-    const cat = catMatch ? catMatch.slice(4) : null;
-    glow.style.setProperty(
-      '--cursor-glow-color',
-      cat ? `var(--category-${GLOW_TOKEN_FOR_CAT[cat] || cat})` : 'var(--accent)'
-    );
+    // Always a plain neutral grey — no per-category tinting — per the
+    // Phase 7 spec, so no color is set here; the CSS default handles it.
     glow.classList.add('active');
     if (raf) return;
     raf = requestAnimationFrame(() => {
@@ -4325,9 +4719,10 @@ function wireHoverSound() {
 // every page's markup to opt in with a data attribute — the homepage's
 // editorial sections and every generated tool page's .tp-section blocks
 // (Related Tools, How It Works, FAQ) already exist as real elements, so
-// this just watches for them. Triggers once per element (unobserve on
-// intersect) and is a no-op under prefers-reduced-motion, where every
-// target is marked visible immediately instead of observed.
+// this just watches for them. Replays every time an element crosses
+// into/out of view (no unobserve) rather than firing once per page
+// load, and is a no-op under prefers-reduced-motion, where every target
+// is marked visible immediately instead of observed.
 const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-grid';
 
 function wireScrollReveal() {
@@ -4342,9 +4737,7 @@ function wireScrollReveal() {
   targets.forEach((el) => el.classList.add('reveal'));
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('reveal-visible');
-      io.unobserve(entry.target);
+      entry.target.classList.toggle('reveal-visible', entry.isIntersecting);
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
   targets.forEach((el) => io.observe(el));
@@ -4389,10 +4782,10 @@ export function initToolPage(pageCategory) {
   wireSearch('homeSearchInput', 'homeSearchResults');
   wireSearchShortcut();
   const grid = document.querySelector('#toolGrid');
-  // The one category-switcher component (see .category-sidebar in
-  // style.css) — a sticky vertical list on desktop, a horizontal
-  // scrollable chip row on tablet/mobile, same markup either way.
-  const sidebarLinks = document.querySelectorAll('.category-sidebar-link[data-filter]');
+  // The one category-switcher component (see .category-bar in
+  // style.css) — a single horizontal chip row right below the search
+  // bar, above the tool grid, at every viewport width.
+  const sidebarLinks = document.querySelectorAll('.category-bar-link[data-filter]');
 
   if (grid) {
     const keys = pageCategory === 'all'
