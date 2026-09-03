@@ -33,6 +33,12 @@
 
   --motion-fast: 150ms ease;
   --motion-normal: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Part 3's cursor-follow glow — extremely subtle on purpose (a
+     fraction of a percent of opacity), so it reads as ambient warmth
+     rather than a visible spotlight. Dark mode gets a slightly
+     stronger value below since the deep background swallows subtlety
+     more than the light one does. */
+  --cursor-glow-opacity: 0.035;
 
   /* Footer is a deliberately inverse (dark) surface in both themes —
      these stay separate from --bg/--surface/--text rather than
@@ -117,6 +123,7 @@
     --purple-light: rgba(167, 159, 255, 0.14);
     --orange-light: rgba(240, 161, 95, 0.14);
     --gray-light: rgba(255, 255, 255, 0.06);
+    --cursor-glow-opacity: 0.08;
   }
 }
 
@@ -155,6 +162,7 @@
   --purple-light: rgba(167, 159, 255, 0.14);
   --orange-light: rgba(240, 161, 95, 0.14);
   --gray-light: rgba(255, 255, 255, 0.06);
+  --cursor-glow-opacity: 0.08;
 }
 
 /* prefers-reduced-motion also governs the two custom motion tokens
@@ -317,6 +325,14 @@
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73Z'/%3E%3Cpath d='M12 22V12'/%3E%3Cpath d='M12 12 3.5 6.94'/%3E%3Cpath d='m12 12 8.5-5.06'/%3E%3C/svg%3E");
 }
 
+/* "All Tools" glyph — used only by the category sidebar's first entry,
+   which has no single source category of its own to borrow an icon
+   from (unlike PDF/Image/Excel/... which reuse /icons/icon-*.svg). */
+.icon-grid {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E");
+}
+
 /* Sizing for the small inline file/status icons used in preview rows,
    captions and warning lines (replacing the emoji they used to hold). */
 .tp-live-warn .icon,
@@ -359,8 +375,17 @@ a { color: inherit; }
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: background var(--motion-fast), border-color var(--motion-fast);
+  transform: translateY(0);
+  transition: background var(--motion-fast), border-color var(--motion-fast), transform var(--motion-normal);
 }
+
+/* Smart hide/show (wireSmartNav in main.js): hides on scroll-down past
+   a small threshold, reappears the instant the visitor scrolls up even
+   slightly, and always shows again near the top of the page regardless
+   of direction. Pure transform — sticky positioning and document
+   height are completely unaffected, so nothing below the nav ever
+   jumps. */
+.site-header.nav-hidden { transform: translateY(-110%); }
 
 .header-inner {
   max-width: none;
@@ -428,61 +453,100 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-.nav-trigger:hover { background: var(--gray-light); color: var(--red); }
-.nav-trigger::after { content: ' \25BE'; font-size: 0.91rem; }
+.nav-trigger:hover { background: var(--gray-light); color: var(--accent); }
+.nav-trigger::after {
+  content: ' \25BE';
+  display: inline-block;
+  font-size: 0.91rem;
+  transition: transform var(--motion-fast);
+}
 
 /* Home page nav items double as both a direct link (click) and a
    hover dropdown trigger (mega-menu of that category's tools), so it
    uses the same anchor markup as .nav-link plus the dropdown caret. */
-.nav-trigger-link::after { content: ' \25BE'; font-size: 0.91rem; margin-left: 2px; }
-
-.dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px;
-  min-width: 200px;
-  box-shadow: 0 4px 12px rgba(27, 36, 48, 0.15);
-  z-index: 50;
+.nav-trigger-link::after {
+  content: ' \25BE';
+  display: inline-block;
+  font-size: 0.91rem;
+  margin-left: 2px;
+  transition: transform var(--motion-fast);
 }
 
-.nav-item.nav-item-open .dropdown { display: block; }
+.nav-item.nav-item-open .nav-trigger::after,
+.nav-item:focus-within .nav-trigger::after,
+.nav-item.nav-item-open .nav-trigger-link::after,
+.nav-item:focus-within .nav-trigger-link::after {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  display: block;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 10px;
+  min-width: 220px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  /* Always in the DOM/layout, hidden via opacity+visibility rather than
+     display:none — that's what lets open/close animate (fade + a short
+     6px slide) instead of an instant snap. visibility is included in
+     the transition list purely so it flips at the *end* of the fade
+     out, keeping the panel out of tab order and unclickable the moment
+     it's actually invisible — while (crucially) NOT capping the
+     transition-run length, since that's governed by opacity/transform. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity var(--motion-fast), transform var(--motion-fast), visibility var(--motion-fast);
+}
+
+.nav-item.nav-item-open .dropdown,
+.nav-item:focus-within .dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Flipped to the trigger's right edge instead of its left, only when
+   wireNavDropdowns() has measured that the default left-aligned
+   position would overflow past the viewport's right edge (set as a
+   plain class, not a media query, since it depends on which specific
+   trigger opened it, not the screen size alone). */
+.dropdown.dropdown-align-right { left: auto; right: 0; }
 
 .dropdown a {
   display: block;
-  padding: 8px 10px;
+  padding: 10px 12px;
   color: var(--text);
   text-decoration: none;
   font-size: 1.118rem;
-  border-radius: 6px;
+  border-radius: 10px;
   white-space: nowrap;
 }
 
-.dropdown a:hover { background: var(--gray-light); color: var(--red); }
+.dropdown a:hover { background: var(--gray-light); color: var(--accent); }
 
+/* A contained, rounded panel anchored under its own trigger — not a
+   full-viewport-width bar. Column count adapts to how many groups a
+   category actually has (2 for Excel/Word/PPT-sized categories up to
+   Utilities' 8) rather than a fixed 5-wide grid that left mostly-empty
+   columns on smaller categories. */
 .mega-menu {
-  position: fixed;
-  top: 74px;
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-width: none;
-  max-height: calc(100vh - 74px);
+  display: grid;
+  width: max-content;
+  max-width: min(820px, 92vw);
+  max-height: min(560px, calc(100vh - 120px));
   overflow-y: auto;
-  padding: 32px 48px;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 24px 32px;
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  box-shadow: 0 8px 20px rgba(27, 36, 48, 0.1);
+  padding: 20px 22px;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 22px 28px;
 }
-
-.nav-item.nav-item-open .mega-menu { display: grid; }
 
 .mega-menu-section { min-width: 0; }
 
@@ -491,24 +555,34 @@ a { color: inherit; }
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0 0 6px;
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .mega-menu a {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
+  /* flex-start, not center: a couple of tool names (GPA / CGPA
+     Calculator, Base64 Encode/Decode) run long enough in a narrow
+     column to wrap to two lines — center-aligning the icon against
+     that would float it oddly relative to the first line of text. */
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
   color: var(--text);
   text-decoration: none;
   font-size: 1.144rem;
-  border-radius: 6px;
-  white-space: nowrap;
+  line-height: 1.3;
+  border-radius: 10px;
+  /* Wrap rather than clip — nowrap here let long labels overflow their
+     own grid column and visually collide with the next one over. */
+  white-space: normal;
 }
 
-.mega-menu a:hover { background: var(--gray-light); color: var(--red); }
+.mega-menu a img,
+.mega-menu-icons { margin-top: 1px; }
+
+.mega-menu a:hover { background: var(--gray-light); color: var(--accent); }
 .mega-menu a img { width: 20px; height: 20px; flex-shrink: 0; }
 
 /* Small categories' flat dropdown (Excel/Word/PPT) reuses the same
@@ -517,7 +591,7 @@ a { color: inherit; }
    instead of a compact inline badge. */
 .dropdown a img { width: 20px; height: 20px; flex-shrink: 0; vertical-align: middle; }
 .mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.mega-menu-icons .arrow { font-size: 0.91rem; color: var(--text-muted); }
+.mega-menu-icons .arrow { font-size: 0.91rem; color: var(--text-secondary); }
 
 @media (max-width: 1180px) {
   .main-nav { display: none; }
@@ -806,85 +880,156 @@ a { color: inherit; }
   .popular-tool-card { padding: 16px; }
 }
 
-/* ---------- Filter tabs ---------- */
-.filter-tabs {
+/* ---------- Category sidebar ----------
+   The one category-switcher component for the homepage/All Tools and
+   the 6 category pages (replaces the old standalone .filter-tabs pill
+   row — same [data-filter] values, same click handler in main.js, now
+   a single component instead of two). Desktop: a sticky vertical list
+   to the left of the tool grid, GravityWrite-style. Below ~1080px,
+   where there isn't room for a 200px rail beside a multi-column grid,
+   it collapses into a horizontal scrollable chip row instead — same
+   markup, no separate mobile component to keep in sync. */
+.page-with-sidebar {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 1100px;
-  margin: 28px auto 0;
+  align-items: flex-start;
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 0 32px;
 }
 
-.filter-tab {
-  padding: 10px 22px;
-  border-radius: 22px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--text);
-  font-size: 1.326rem;
-  font-weight: 600;
-  cursor: pointer;
+.page-main { flex: 1 1 auto; min-width: 0; }
+
+.category-sidebar {
+  flex: 0 0 200px;
+  position: sticky;
+  top: 96px;
 }
 
-.filter-tab:hover { border-color: var(--red); color: var(--red); }
-.filter-tab:active { border-color: var(--red); color: var(--red); }
-.filter-tab.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.category-sidebar-heading {
+  margin: 0 0 10px;
+  padding: 0 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
 
-/* Below ~700px, 7 pills no longer fit in one row without wrapping into
-   a messy 2-3 row block — scroll them horizontally instead, one clean
-   row, native momentum scrolling, no visible scrollbar. */
-@media (max-width: 700px) {
-  .filter-tabs {
+.category-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: background-color var(--motion-fast), color var(--motion-fast);
+}
+
+.category-sidebar-link .icon,
+.category-sidebar-link img.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.category-sidebar-link:hover { background: var(--gray-light); }
+.category-sidebar-link:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+.category-sidebar-link.active {
+  background: var(--ink);
+  color: var(--white);
+}
+.category-sidebar-link.active .icon { background-color: var(--white); }
+
+@media (min-width: 1081px) {
+  /* Same 3-up count as .tool-grid's own default — this override exists
+     for the margin/padding reset (the sidebar layout doesn't need
+     .tool-grid's normal page-edge padding), not a different column
+     count from the base rule. */
+  .page-with-sidebar .tool-grid { max-width: none; padding: 0; grid-template-columns: repeat(3, 1fr); margin: 24px 0 60px; }
+}
+
+/* Below ~1080px, a sticky 200px rail next to a narrowing grid gets
+   cramped fast — switch the same nav to a horizontal, momentum-scrolled
+   chip row sitting above the grid instead (Part 9's "tablet: horizontal
+   scroll/chips" / "mobile: category drawer/filter control"). */
+@media (max-width: 1080px) {
+  .page-with-sidebar { display: block; padding: 0; max-width: none; }
+  .category-sidebar { position: static; flex: none; margin: 28px 0 0; }
+  .category-sidebar-heading { display: none; }
+  .category-sidebar-nav {
+    flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: flex-start;
+    gap: 8px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
-    margin: 20px auto 0;
-    padding: 2px 20px 6px;
+    padding: 2px 32px 6px;
     scrollbar-width: none;
   }
-  .filter-tabs::-webkit-scrollbar { display: none; }
-  .filter-tab {
+  .category-sidebar-nav::-webkit-scrollbar { display: none; }
+  .category-sidebar-link {
     flex-shrink: 0;
     scroll-snap-align: start;
     padding: 10px 18px;
-    font-size: 1.15rem;
+    border-radius: 22px;
+    border: 1px solid var(--border);
+    background: var(--white);
   }
+  .category-sidebar-link:hover { border-color: var(--red); color: var(--red); background: var(--white); }
+  .category-sidebar-link.active { border-color: var(--ink); }
+}
+
+@media (max-width: 600px) {
+  .category-sidebar-nav { padding: 2px 20px 6px; }
 }
 
 /* ---------- Tool grid ---------- */
-/* Fixed 6 columns (3 rows show by default = 18 cards; see
-   TOOL_GRID_VISIBLE_LIMIT in main.js) — icon + name only, no
-   description text, so the grid stays compact but each tool is still
-   identifiable without hovering. */
+/* 3 columns (3 rows show by default = 18 cards; see
+   TOOL_GRID_VISIBLE_LIMIT in main.js) — same row-card layout and
+   column count as .popular-tool-card above (icon + category label +
+   title + description + arrow), one card system site-wide instead of
+   a separate icon-only grid style. Also what's in effect on the
+   "continue with..." result-page grid, which reuses .tool-grid
+   without a sidebar at all. */
 .tool-grid {
   max-width: none;
   margin: 32px auto 60px;
   padding: 0 32px;
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 
+/* Same row layout as .popular-tool-card above (icon left, category
+   eyebrow + title + description, arrow on the right) — one card system
+   for the whole site instead of two, per the user's explicit call to
+   make every tool card match Popular Tools exactly. */
 .tool-card {
+  /* Falls back to a plain neutral card (the coming-soon / "more tools"
+     tiles have no cat-* class) when --card-accent isn't set below. */
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 16px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 22px 12px;
-  text-align: center;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  transition: box-shadow var(--motion-fast), transform var(--motion-fast), border-color var(--motion-fast);
 }
 
 /* Real pointers only — on touch, :hover can stick after a tap and
@@ -892,9 +1037,11 @@ a { color: inherit; }
    (below) is the touch-appropriate equivalent instead. */
 @media (hover: hover) and (pointer: fine) {
   .tool-card:hover {
-    box-shadow: 0 4px 16px rgba(27, 36, 48, 0.08);
-    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--card-accent, var(--text-secondary)) 45%, var(--border));
   }
+  .tool-card:hover .tool-card-arrow { transform: translateX(3px); }
 }
 
 .tool-card:active {
@@ -902,56 +1049,78 @@ a { color: inherit; }
   transform: scale(0.98);
 }
 
-/* Soft per-category tint, a shade of that category's own brand color —
-   keeps each card readable at a glance even before you spot the icon. */
-.tool-card.cat-pdf { background: #FCEBE9; border-color: #F3C6C0; }
-.tool-card.cat-image { background: #F2EAFC; border-color: #D9C0F5; }
-.tool-card.cat-excel { background: #E7F5EC; border-color: #BDE2CB; }
-.tool-card.cat-word { background: #E9EFFD; border-color: #C1D2F8; }
-.tool-card.cat-ppt { background: #FBEEE1; border-color: #EFCB9E; }
-.tool-card.cat-utilities { background: #F9F0E0; border-color: #E9CA95; }
+/* Card background matches the page background, not a bright white or
+   a solid pastel box — just a whisper of the tool's own category color
+   mixed in (a few percent), enough to read as "this is a PDF tool"
+   at a glance without the card looking like a colored tile. Hover
+   picks up a slightly stronger tint via --card-accent above. */
+.tool-card.cat-pdf { --card-accent: var(--category-pdf); background: color-mix(in srgb, var(--category-pdf) 4%, var(--bg)); }
+.tool-card.cat-image { --card-accent: var(--category-image); background: color-mix(in srgb, var(--category-image) 4%, var(--bg)); }
+.tool-card.cat-excel { --card-accent: var(--category-excel); background: color-mix(in srgb, var(--category-excel) 4%, var(--bg)); }
+.tool-card.cat-word { --card-accent: var(--category-word); background: color-mix(in srgb, var(--category-word) 4%, var(--bg)); }
+.tool-card.cat-ppt { --card-accent: var(--category-ppt); background: color-mix(in srgb, var(--category-ppt) 4%, var(--bg)); }
+.tool-card.cat-utilities { --card-accent: var(--category-utility); background: color-mix(in srgb, var(--category-utility) 4%, var(--bg)); }
 
-/* Dark mode: a pale pastel fill would just look washed-out on a dark
-   page, so cards stay on the plain dark surface and carry their
-   category color as a border/icon tint instead — same idea as light
-   mode (identifiable at a glance), different execution. */
-:root[data-theme="dark"] .tool-card.cat-pdf,
-:root[data-theme="dark"] .tool-card.cat-image,
-:root[data-theme="dark"] .tool-card.cat-excel,
-:root[data-theme="dark"] .tool-card.cat-word,
-:root[data-theme="dark"] .tool-card.cat-ppt,
-:root[data-theme="dark"] .tool-card.cat-utilities {
-  background: var(--surface);
-}
-:root[data-theme="dark"] .tool-card.cat-pdf { border-color: color-mix(in srgb, var(--category-pdf) 35%, var(--border)); }
-:root[data-theme="dark"] .tool-card.cat-image { border-color: color-mix(in srgb, var(--category-image) 35%, var(--border)); }
-:root[data-theme="dark"] .tool-card.cat-excel { border-color: color-mix(in srgb, var(--category-excel) 35%, var(--border)); }
-:root[data-theme="dark"] .tool-card.cat-word { border-color: color-mix(in srgb, var(--category-word) 35%, var(--border)); }
-:root[data-theme="dark"] .tool-card.cat-ppt { border-color: color-mix(in srgb, var(--category-ppt) 35%, var(--border)); }
-:root[data-theme="dark"] .tool-card.cat-utilities { border-color: color-mix(in srgb, var(--category-utility) 35%, var(--border)); }
+/* Dark mode: same idea (page background + a faint tint), just a
+   slightly stronger mix since the dark surface swallows subtlety
+   more than the light one does. */
+:root[data-theme="dark"] .tool-card.cat-pdf { background: color-mix(in srgb, var(--category-pdf) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card.cat-image { background: color-mix(in srgb, var(--category-image) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card.cat-excel { background: color-mix(in srgb, var(--category-excel) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card.cat-word { background: color-mix(in srgb, var(--category-word) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card.cat-ppt { background: color-mix(in srgb, var(--category-ppt) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card.cat-utilities { background: color-mix(in srgb, var(--category-utility) 6%, var(--surface)); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .tool-card.cat-pdf,
-  :root:not([data-theme="light"]) .tool-card.cat-image,
-  :root:not([data-theme="light"]) .tool-card.cat-excel,
-  :root:not([data-theme="light"]) .tool-card.cat-word,
-  :root:not([data-theme="light"]) .tool-card.cat-ppt,
-  :root:not([data-theme="light"]) .tool-card.cat-utilities {
-    background: var(--surface);
-  }
-  :root:not([data-theme="light"]) .tool-card.cat-pdf { border-color: color-mix(in srgb, var(--category-pdf) 35%, var(--border)); }
-  :root:not([data-theme="light"]) .tool-card.cat-image { border-color: color-mix(in srgb, var(--category-image) 35%, var(--border)); }
-  :root:not([data-theme="light"]) .tool-card.cat-excel { border-color: color-mix(in srgb, var(--category-excel) 35%, var(--border)); }
-  :root:not([data-theme="light"]) .tool-card.cat-word { border-color: color-mix(in srgb, var(--category-word) 35%, var(--border)); }
-  :root:not([data-theme="light"]) .tool-card.cat-ppt { border-color: color-mix(in srgb, var(--category-ppt) 35%, var(--border)); }
-  :root:not([data-theme="light"]) .tool-card.cat-utilities { border-color: color-mix(in srgb, var(--category-utility) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-pdf { background: color-mix(in srgb, var(--category-pdf) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card.cat-image { background: color-mix(in srgb, var(--category-image) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card.cat-excel { background: color-mix(in srgb, var(--category-excel) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card.cat-word { background: color-mix(in srgb, var(--category-word) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card.cat-ppt { background: color-mix(in srgb, var(--category-ppt) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card.cat-utilities { background: color-mix(in srgb, var(--category-utility) 6%, var(--surface)); }
+}
+
+.tool-card-body { flex: 1; min-width: 0; }
+
+.tool-card-cat {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
 }
 
 .tool-card h3 {
-  font-size: 1.04rem;
-  margin: 0;
+  font-size: 1.1rem;
+  margin: 0 0 4px;
   font-family: var(--font-display);
   color: var(--text);
   line-height: 1.3;
+}
+
+/* Description under the title — clamped to 2 lines so a longer desc
+   never throws off one card's height without the rest of its grid row
+   (CSS grid still matches row height to the tallest cell either way,
+   this just keeps that tallest cell sane). */
+.tool-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tool-card-arrow {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  transition: transform var(--motion-fast);
 }
 
 .tool-card-hidden { display: none; }
@@ -960,35 +1129,35 @@ a { color: inherit; }
    badge's corner instead of a side-by-side arrow — the arrow is
    hidden here; other contexts (mega-menu, hero suggestions) still use
    the horizontal arrow layout from renderIconBadge(). Single-icon
-   tools (:only-child) are untouched by the overlap rules below. */
+   tools (:only-child) are untouched by the overlap rules below. Sized
+   to match .popular-tool-icon exactly, same reasoning as the card
+   layout above — one icon-badge treatment site-wide. */
 .tool-icon-badge {
   position: relative;
-  display: inline-flex;
+  flex-shrink: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
 }
 
-.tool-icon-badge img { width: 63px; height: 63px; }
+.tool-icon-badge img { width: 28px; height: 28px; }
 .tool-icon-badge .arrow { display: none; }
 
 /* The "to" icon (last) is the base icon; the "from" icon (first)
    overlaps it in front, offset toward the bottom-left corner. Both
    render at the same size so the overlap reads as two same-weight
    stamps rather than one icon with a small badge on it. */
+.tool-icon-badge img:not(:only-child) { width: 24px; height: 24px; }
 .tool-icon-badge img:last-child:not(:only-child) { position: relative; z-index: 1; }
-
-/* The overlap badge hangs below the icon container's own box — push
-   the card's text down so the badge never covers the tool name. */
-.tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 16px; }
 
 .tool-icon-badge img:first-child:not(:only-child) {
   position: absolute;
-  bottom: -18px;
-  left: -18px;
-  width: 63px;
-  height: 63px;
-  border-radius: 16px;
-  border: 5px solid var(--white);
+  bottom: -6px;
+  left: -6px;
+  border-radius: 6px;
+  border: 2px solid var(--white);
   box-shadow: 0 1px 3px rgba(27, 36, 48, 0.2);
   z-index: 2;
 }
@@ -997,7 +1166,11 @@ a { color: inherit; }
    separate button below it) revealing the rest of the tools on click.
    Neutral gray, deliberately not category-tinted, so it reads as a
    distinct "see everything" action rather than another tool. */
-.tool-grid-more-tile { background: var(--gray-light); border-style: dashed; }
+.tool-grid-more-tile {
+  background: var(--gray-light);
+  border-style: dashed;
+  align-items: center;
+}
 
 .tool-grid-more-tile:hover { color: var(--red); }
 .tool-grid-more-tile:hover .tool-grid-more-dots { color: var(--red); }
@@ -1018,28 +1191,17 @@ a { color: inherit; }
   transition: color 0.15s ease;
 }
 
-/* Fewer columns (and a proportionally sized icon) on narrower screens
-   so cards don't get squeezed thinner than the icon badge itself.
-   Tiers: desktop 6-up, tablet (~768px) 3-up, phones 2-up — a real
-   responsive redesign of the grid rather than the same 6-up cards just
-   shrunk down. */
+/* Fewer columns on narrower screens — desktop 3-up (matching Popular
+   Tools' own grid), tablet 2-up, phones 1-up (a single full-width
+   row card per tool, same as Popular Tools collapses to). */
 @media (max-width: 860px) {
-  .tool-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px; }
-  .tool-icon-badge img { width: 54px; height: 54px; }
-  .tool-icon-badge img:first-child:not(:only-child) { bottom: -13px; left: -13px; }
-  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 11px; }
+  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px; }
 }
 
 @media (max-width: 600px) {
-  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px; }
-  /* Two columns leaves each card noticeably wider than the 3-up tablet
-     layout — sized the icon back up a bit so it doesn't look small and
-     lost in the extra room. */
-  .tool-icon-badge img { width: 54px; height: 54px; }
-  .tool-icon-badge img:first-child:not(:only-child) { bottom: -14px; left: -14px; }
-  .tool-icon-badge:has(img:last-child:not(:only-child)) { margin-bottom: 12px; }
-  .tool-card { padding: 18px 10px; }
-  .tool-card h3 { font-size: 0.98rem; }
+  .tool-grid { grid-template-columns: 1fr; gap: 12px; padding: 0 20px; }
+  .tool-card { padding: 16px; }
+  .tool-card h3 { font-size: 1.02rem; }
 }
 
 .coming-soon-badge {
@@ -1139,6 +1301,51 @@ a { color: inherit; }
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z'/%3E%3C/svg%3E");
 }
+
+.icon-volume-x {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cline x1='22' y1='9' x2='16' y2='15'/%3E%3Cline x1='16' y1='9' x2='22' y2='15'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cline x1='22' y1='9' x2='16' y2='15'/%3E%3Cline x1='16' y1='9' x2='22' y2='15'/%3E%3C/svg%3E");
+}
+
+.icon-volume {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cpath d='M15.54 8.46a5 5 0 0 1 0 7.07'/%3E%3Cpath d='M19.07 4.93a10 10 0 0 1 0 14.14'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='11 5 6 9 2 9 2 15 6 15 11 19 11 5'/%3E%3Cpath d='M15.54 8.46a5 5 0 0 1 0 7.07'/%3E%3Cpath d='M19.07 4.93a10 10 0 0 1 0 14.14'/%3E%3C/svg%3E");
+}
+
+/* Same crossfade pattern as the theme icon pair above, but keyed off a
+   JS-toggled .sound-on class (localStorage-backed user choice) instead
+   of the [data-theme] attribute — there's no OS-level "prefers sound"
+   signal to default from, so this one starts muted for everyone until
+   the visitor opts in. */
+.sound-icon-on { opacity: 0; transform: scale(0.6) rotate(-20deg); }
+.sound-icon-off { opacity: 1; transform: scale(1) rotate(0deg); }
+#soundToggleBtn.sound-on .sound-icon-off { opacity: 0; transform: scale(0.6) rotate(20deg); }
+#soundToggleBtn.sound-on .sound-icon-on { opacity: 1; transform: scale(1) rotate(0deg); }
+
+/* ---------- Cursor-follow glow (Part 3) ----------
+   A single fixed element, created once by wireCursorGlow() in main.js
+   and moved with the pointer via a transform (translate, not
+   top/left — stays off the layout/paint-heavy path). Sized well
+   past what's visible so the radial-gradient's soft edge never shows
+   a hard cutoff. Desktop mouse only — wireCursorGlow() never creates
+   it at all on touch devices or when the visitor asked for reduced
+   motion, so there's nothing to disable/re-enable here in CSS, only
+   the opacity fade for when the pointer enters/leaves the window. */
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 560px;
+  height: 560px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--cursor-glow-color, var(--accent)) 0%, transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  will-change: transform;
+}
+.cursor-glow.active { opacity: var(--cursor-glow-opacity); }
 
 /* ---------- Hamburger (mobile only) ---------- */
 .hamburger-btn {
@@ -1675,7 +1882,7 @@ body.tool-result-active #tpDropZone {
   font-size: 1.15rem;
 }
 
-.tp-result-continue-grid { margin: 0; padding: 0; }
+.tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(3, 1fr); }
 
 @media (max-width: 980px) {
   /* Below the two-column breakpoint the workspace stacks to a single
@@ -1695,16 +1902,16 @@ body.tool-result-active #tpDropZone {
   .tp-result-continue { padding: 22px; }
 }
 
-/* Always keep at least 3 of the 6 "Continue to..." tools in the first
-   row, however narrow the screen, so they're reachable without
-   scrolling all the way to the page's bottom — overrides .tool-grid's
-   general 4-col/2-col narrow-screen breakpoints for this grid only. */
+/* Row cards (icon + title + description + arrow) need real width to
+   stay legible, so this follows .tool-grid's own narrow-screen
+   tapering (2-up, then 1-up) rather than forcing 3 columns down to
+   phone widths the way the old icon-only tiles could. */
 @media (max-width: 700px) {
-  .tp-result-continue-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tp-result-continue-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
 }
 
-@media (max-width: 420px) {
-  .tp-result-continue-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 480px) {
+  .tp-result-continue-grid { grid-template-columns: 1fr; gap: 8px; }
   .tp-result-continue { padding: 16px; }
 }
 
@@ -1850,7 +2057,7 @@ body.tool-result-active #tpDropZone {
   .file-card,
   .tp-toast,
   .tool-card,
-  .filter-tab,
+  .category-sidebar-link,
   .tp-dropzone-browse-btn,
   .faq-question::after {
     transition: none !important;

@@ -34,6 +34,14 @@
       <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
     </nav>
     <div class="header-actions">
+      <!-- Hover sounds are a desktop-only, hover-only affordance (see
+           wireHoverSound in main.js) — no point offering this toggle on
+           the mobile menu, where nothing it controls ever plays. Off by
+           default; the visitor has to opt in before any sound plays. -->
+      <button type="button" class="theme-toggle-btn" id="soundToggleBtn" aria-label="Turn on hover sounds" aria-pressed="false">
+        <span class="icon icon-volume-x sound-icon-off" aria-hidden="true"></span>
+        <span class="icon icon-volume sound-icon-on" aria-hidden="true"></span>
+      </button>
       <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Switch to dark theme" aria-pressed="false">
         <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
         <span class="icon icon-moon theme-icon-dark" aria-hidden="true"></span>

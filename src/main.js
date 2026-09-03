@@ -242,22 +242,34 @@ function toolCardHtml(key, hidden) {
   const iconHtml = renderIconBadge(meta.category, meta.iconTo, key);
   const hiddenClass = hidden ? ' tool-card-hidden' : '';
   const catClass = ` cat-${meta.category}`;
+  const catLabel = CATEGORY_LABELS[meta.category] || meta.category;
   if (meta.comingSoon) {
     return `
       <div class="tool-card${catClass} coming-soon${hiddenClass}">
         <div class="tool-icon-badge">${iconHtml}</div>
-        <h3>${meta.label}</h3>
+        <div class="tool-card-body">
+          <span class="tool-card-cat">${catLabel}</span>
+          <h3>${meta.label}</h3>
+          ${meta.desc ? `<p>${meta.desc}</p>` : ''}
+        </div>
       </div>
     `;
   }
   // A real <a href> to the tool's dedicated URL — crawlable and
   // shareable on its own — but the click is still intercepted below so
   // the existing "route to the drop zone if no file is ready yet" flow
-  // keeps working exactly as before for real users.
+  // keeps working exactly as before for real users. Same row layout as
+  // .popular-tool-card (category label, title, description, arrow) —
+  // one card system across the whole site, not a separate style here.
   return `
     <a class="tool-card${catClass}${hiddenClass}" href="${toolUrl(key) || '#'}" data-tool="${key}">
       <div class="tool-icon-badge">${iconHtml}</div>
-      <h3>${meta.label}</h3>
+      <div class="tool-card-body">
+        <span class="tool-card-cat">${catLabel}</span>
+        <h3>${meta.label}</h3>
+        ${meta.desc ? `<p>${meta.desc}</p>` : ''}
+      </div>
+      <span class="icon icon-arrow-right tool-card-arrow" aria-hidden="true"></span>
     </a>
   `;
 }
@@ -276,7 +288,10 @@ function renderToolGrid(containerEl, toolKeys) {
     html += `
       <div class="tool-card tool-grid-more-tile" id="toolGridMore" role="button" tabindex="0" aria-label="Show all tools">
         <div class="tool-icon-badge"><span class="tool-grid-more-dots">⋯</span></div>
-        <h3>Tools</h3>
+        <div class="tool-card-body">
+          <h3>Show all tools</h3>
+          <p>See the rest of this category.</p>
+        </div>
       </div>
     `;
   }
@@ -4090,14 +4105,28 @@ function wireNavDropdowns() {
   items.forEach((item) => {
     let openTimer = null;
     let closeTimer = null;
+    const panel = item.querySelector('.dropdown');
+
+    const openNow = () => {
+      item.classList.add('nav-item-open');
+      // Left-aligned by default; only flip to right-aligned once we can
+      // actually measure that the default position would run off the
+      // right edge of the viewport — a fixed nth-child rule can't do
+      // this correctly since it depends on the trigger's real position
+      // and the panel's real (variable, content-driven) width, not
+      // which page it's on.
+      if (panel) {
+        panel.classList.remove('dropdown-align-right');
+        if (panel.getBoundingClientRect().right > window.innerWidth - 12) {
+          panel.classList.add('dropdown-align-right');
+        }
+      }
+    };
 
     item.addEventListener('mouseenter', () => {
       if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; }
       if (openTimer || item.classList.contains('nav-item-open')) return;
-      openTimer = setTimeout(() => {
-        item.classList.add('nav-item-open');
-        openTimer = null;
-      }, NAV_DROPDOWN_OPEN_DELAY);
+      openTimer = setTimeout(() => { openNow(); openTimer = null; }, NAV_DROPDOWN_OPEN_DELAY);
     });
 
     item.addEventListener('mouseleave', () => {
@@ -4107,6 +4136,209 @@ function wireNavDropdowns() {
         closeTimer = null;
       }, NAV_DROPDOWN_CLOSE_DELAY);
     });
+
+    // Keyboard users: the CSS already opens the panel on :focus-within
+    // (tabbing into it), this just runs the same overflow check so a
+    // keyboard-opened panel doesn't hang off the screen either.
+    item.addEventListener('focusin', openNow);
+  });
+}
+
+// ================= SMART NAV HIDE/SHOW =================
+// Hides the sticky header on scroll-down past a small threshold (out
+// of the way while reading), and brings it back the instant the
+// visitor scrolls up even slightly — no threshold on the way back, per
+// spec, since "I want my nav back" should never feel like it needs a
+// deliberate gesture. Always visible near the top of the page
+// regardless of direction, so the very first scroll never hides it.
+const NAV_HIDE_DOWN_THRESHOLD = 10;
+const NAV_HIDE_MIN_SCROLL = 96;
+
+function wireSmartNav() {
+  const header = document.querySelector('.site-header');
+  if (!header) return;
+  let lastY = window.scrollY;
+  let ticking = false;
+
+  function update() {
+    ticking = false;
+    const y = window.scrollY;
+    const delta = y - lastY;
+    if (y <= NAV_HIDE_MIN_SCROLL) {
+      header.classList.remove('nav-hidden');
+    } else if (delta > NAV_HIDE_DOWN_THRESHOLD) {
+      header.classList.add('nav-hidden');
+      // Nothing should be left floating disconnected from its trigger
+      // once that trigger has scrolled out of view under the hidden nav.
+      document.querySelectorAll('.main-nav .nav-item-open').forEach((el) => el.classList.remove('nav-item-open'));
+    } else if (delta < 0) {
+      header.classList.remove('nav-hidden');
+    }
+    lastY = y;
+  }
+
+  window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  }, { passive: true });
+}
+
+// ================= CURSOR GLOW + CARD TILT (Parts 3 & 11) =================
+// Both are continuous, cursor-position-driven effects, so they share
+// ONE pointermove/mouseout listener pair instead of registering their
+// own — a real cost difference when it fires on every pixel of mouse
+// movement across the whole site. Desktop mouse only: skipped entirely
+// on touch and for prefers-reduced-motion, so neither has a
+// "disabled" state to maintain elsewhere, they simply never wire up.
+const CARD_TILT_MAX_DEG = 1.4;
+const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon), .popular-tool-card';
+// Category classes are named cat-pdf/cat-image/.../cat-utilities — all
+// but "utilities" match a --category-* token name 1:1.
+const GLOW_TOKEN_FOR_CAT = { utilities: 'utility' };
+
+function wirePointerEffects() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+
+  let glow = document.querySelector('.cursor-glow');
+  if (!glow) {
+    glow = document.createElement('div');
+    glow.className = 'cursor-glow';
+    glow.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(glow);
+  }
+
+  let activeCard = null;
+  const resetCard = (card) => { card.style.transform = ''; };
+  let raf = null;
+  let x = 0;
+  let y = 0;
+
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    x = e.clientX;
+    y = e.clientY;
+
+    const card = e.target.closest ? e.target.closest(CARD_TILT_SELECTOR) : null;
+    if (card !== activeCard) {
+      if (activeCard) resetCard(activeCard);
+      activeCard = card;
+    }
+    if (card) {
+      const rect = card.getBoundingClientRect();
+      const px = (e.clientX - rect.left) / rect.width;
+      const py = (e.clientY - rect.top) / rect.height;
+      const rotateY = (px - 0.5) * CARD_TILT_MAX_DEG * 2;
+      const rotateX = (0.5 - py) * CARD_TILT_MAX_DEG * 2;
+      card.style.transform =
+        `perspective(900px) translateY(-3px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+    }
+
+    const catEl = e.target.closest && e.target.closest('[class*="cat-"]');
+    const catMatch = catEl && [...catEl.classList].find((c) => c.startsWith('cat-'));
+    const cat = catMatch ? catMatch.slice(4) : null;
+    glow.style.setProperty(
+      '--cursor-glow-color',
+      cat ? `var(--category-${GLOW_TOKEN_FOR_CAT[cat] || cat})` : 'var(--accent)'
+    );
+    glow.classList.add('active');
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      glow.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      raf = null;
+    });
+  }, { passive: true });
+
+  // No relatedTarget means the pointer left the window entirely (not
+  // just moved between two elements inside it).
+  window.addEventListener('mouseout', (e) => {
+    if (e.relatedTarget) return;
+    glow.classList.remove('active');
+    if (activeCard) { resetCard(activeCard); activeCard = null; }
+  });
+}
+
+// ================= HOVER SOUND (Part 12) =================
+// Off by default for every visitor; persisted per-visitor once they
+// opt in via the header toggle. No AudioContext is created — not even
+// a suspended one — until that toggle click, which is itself the user
+// gesture browsers require before audio can play at all.
+const SOUND_STORAGE_KEY = 'otw-sound';
+let soundEnabled = false;
+let audioCtx = null;
+
+function getSoundEnabled() {
+  try { return localStorage.getItem(SOUND_STORAGE_KEY) === 'on'; } catch (e) { return false; }
+}
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    audioCtx = new Ctx();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// A single soft, short (~80ms) sine blip — not a sample, so there's no
+// asset to load or CSP/host to allow. Quiet by design (peak gain 0.05).
+function playHoverTone() {
+  const ctx = ensureAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(720, now);
+  osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.linearRampToValueAtTime(0.05, now + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.09);
+}
+
+// Delegated on `document` for the same reason as wireCardTilt above —
+// cards come and go under one stable ancestor. `pointerover` (not
+// `mouseenter`, which doesn't bubble) plus a relatedTarget check gives
+// the "don't repeat-trigger while the cursor stays inside one card"
+// behavior for free: it only fires again once the pointer has actually
+// left that card's DOM subtree.
+function wireHoverSound() {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  document.addEventListener('pointerover', (e) => {
+    if (!soundEnabled) return;
+    if (e.pointerType && e.pointerType !== 'mouse') return;
+    const card = e.target.closest ? e.target.closest(CARD_TILT_SELECTOR) : null;
+    if (!card) return;
+    const from = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest(CARD_TILT_SELECTOR) : null;
+    if (card === from) return;
+    playHoverTone();
+  });
+}
+
+function wireSoundToggle() {
+  const btn = document.querySelector('#soundToggleBtn');
+  if (!btn) return;
+  soundEnabled = getSoundEnabled();
+
+  const sync = () => {
+    btn.classList.toggle('sound-on', soundEnabled);
+    btn.setAttribute('aria-pressed', String(soundEnabled));
+    btn.setAttribute('aria-label', soundEnabled ? 'Turn off hover sounds' : 'Turn on hover sounds');
+  };
+  sync();
+
+  btn.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    try { localStorage.setItem(SOUND_STORAGE_KEY, soundEnabled ? 'on' : 'off'); } catch (e) { /* ignore */ }
+    sync();
+    // The click is the user gesture — safe to init/resume audio here,
+    // and playing one tone back confirms the toggle audibly.
+    if (soundEnabled) playHoverTone();
   });
 }
 
@@ -4114,6 +4346,10 @@ function wireNavDropdowns() {
 export function initToolPage(pageCategory) {
   wireThemeToggle();
   wireHamburger();
+  wireSmartNav();
+  wireSoundToggle();
+  wirePointerEffects();
+  wireHoverSound();
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
   wireNavDropdowns();
@@ -4123,7 +4359,10 @@ export function initToolPage(pageCategory) {
   wireSearch('homeSearchInput', 'homeSearchResults');
   wireSearchShortcut();
   const grid = document.querySelector('#toolGrid');
-  const tabs = document.querySelectorAll('.filter-tab');
+  // The one category-switcher component (see .category-sidebar in
+  // style.css) — a sticky vertical list on desktop, a horizontal
+  // scrollable chip row on tablet/mobile, same markup either way.
+  const sidebarLinks = document.querySelectorAll('.category-sidebar-link[data-filter]');
 
   if (grid) {
     const keys = pageCategory === 'all'
@@ -4132,15 +4371,40 @@ export function initToolPage(pageCategory) {
     renderToolGrid(grid, keys);
   }
 
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', () => {
-      tabs.forEach((t) => t.classList.remove('active'));
-      tab.classList.add('active');
-      const cat = tab.dataset.filter;
-      const keys = cat === 'all' ? Object.keys(toolMeta) : categoryTools[cat] || [];
-      renderToolGrid(grid, keys);
-    });
+  // Reflect the page's current category on load regardless of how we
+  // got here — a fresh page load on /pdf marks "PDF" active just as
+  // much as an in-place filter click on the homepage does.
+  sidebarLinks.forEach((link) => {
+    const isCurrent = link.dataset.filter === pageCategory;
+    link.classList.toggle('active', isCurrent);
+    if (isCurrent) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
   });
+
+  // Only the homepage / "All Tools" page re-filters its grid in place —
+  // every category page's sidebar entries are real navigation links
+  // (each category keeps its own indexable URL and unique SEO copy), so
+  // clicking "Word" while on /pdf should just go to /word normally.
+  if (pageCategory === 'all') {
+    sidebarLinks.forEach((tab) => {
+      tab.addEventListener('click', (e) => {
+        e.preventDefault();
+        const cat = tab.dataset.filter;
+        sidebarLinks.forEach((t) => {
+          const active = t.dataset.filter === cat;
+          t.classList.toggle('active', active);
+          if (active) t.setAttribute('aria-current', 'page');
+          else t.removeAttribute('aria-current');
+        });
+        const keys = cat === 'all' ? Object.keys(toolMeta) : categoryTools[cat] || [];
+        renderToolGrid(grid, keys);
+        // A sidebar click can originate well down the page (a tall
+        // Utilities-style tool grid) — scroll back to the top of the
+        // grid so the just-filtered results are actually in view.
+        grid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  }
 
   const params = new URLSearchParams(window.location.search);
   const deepLinkTool = params.get('tool');
@@ -4205,6 +4469,10 @@ export function initToolLandingPage(toolKey) {
 
   wireThemeToggle();
   wireHamburger();
+  wireSmartNav();
+  wireSoundToggle();
+  wirePointerEffects();
+  wireHoverSound();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   wireSearchShortcut();
   renderCategoryNav(meta.category);
