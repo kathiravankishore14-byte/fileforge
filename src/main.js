@@ -4192,7 +4192,7 @@ function wireSmartNav() {
 // on touch and for prefers-reduced-motion, so neither has a
 // "disabled" state to maintain elsewhere, they simply never wire up.
 const CARD_TILT_MAX_DEG = 1.4;
-const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon), .popular-tool-card';
+const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon)';
 // Category classes are named cat-pdf/cat-image/.../cat-utilities — all
 // but "utilities" match a --category-* token name 1:1.
 const GLOW_TOKEN_FOR_CAT = { utilities: 'utility' };
@@ -4320,6 +4320,36 @@ function wireHoverSound() {
   });
 }
 
+// ================= SCROLL REVEAL =================
+// One reusable fade+rise, applied by selector rather than by requiring
+// every page's markup to opt in with a data attribute — the homepage's
+// editorial sections and every generated tool page's .tp-section blocks
+// (Related Tools, How It Works, FAQ) already exist as real elements, so
+// this just watches for them. Triggers once per element (unobserve on
+// intersect) and is a no-op under prefers-reduced-motion, where every
+// target is marked visible immediately instead of observed.
+const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-grid';
+
+function wireScrollReveal() {
+  const targets = document.querySelectorAll(SCROLL_REVEAL_SELECTOR);
+  if (!targets.length) return;
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+    targets.forEach((el) => el.classList.add('reveal-visible'));
+    return;
+  }
+
+  targets.forEach((el) => el.classList.add('reveal'));
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('reveal-visible');
+      io.unobserve(entry.target);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  targets.forEach((el) => io.observe(el));
+}
+
 function wireSoundToggle() {
   const btn = document.querySelector('#soundToggleBtn');
   if (!btn) return;
@@ -4370,6 +4400,8 @@ export function initToolPage(pageCategory) {
       : categoryTools[pageCategory] || [];
     renderToolGrid(grid, keys);
   }
+
+  wireScrollReveal();
 
   // Reflect the page's current category on load regardless of how we
   // got here — a fresh page load on /pdf marks "PDF" active just as
@@ -4477,6 +4509,7 @@ export function initToolLandingPage(toolKey) {
   wireSearchShortcut();
   renderCategoryNav(meta.category);
   wireNavDropdowns();
+  wireScrollReveal();
 
   const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
   if (needsFile) wireToolPageDropZone(toolKey, meta);

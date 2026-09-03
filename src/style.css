@@ -333,6 +333,14 @@
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='3' width='7' height='7' rx='1.5'/%3E%3Crect x='3' y='14' width='7' height='7' rx='1.5'/%3E%3Crect x='14' y='14' width='7' height='7' rx='1.5'/%3E%3C/svg%3E");
 }
 
+/* Simple standalone checkmark — homepage editorial section bullet
+   points (distinct from .icon-badge-check/.icon-shield-check, which
+   both carry their own outer shape). */
+.icon-check {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 12 6 6L20 6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 12 6 6L20 6'/%3E%3C/svg%3E");
+}
+
 /* Sizing for the small inline file/status icons used in preview rows,
    captions and warning lines (replacing the emoji they used to hold). */
 .tp-live-warn .icon,
@@ -748,136 +756,126 @@ a { color: inherit; }
   }
 }
 
-/* ---------- Popular tools ---------- */
-.popular-tools-section {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 56px 32px 8px;
-}
-
-.popular-tools-inner h2 {
-  font-family: var(--font-display);
-  font-size: 1.95rem;
-  color: var(--text);
-  margin: 0 0 6px;
-  text-align: center;
-}
-
-.popular-tools-sub {
-  color: var(--text-muted);
-  font-size: 1.1rem;
-  text-align: center;
-  margin: 0 0 28px;
-}
-
-.popular-tools-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.popular-tool-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 18px;
-  text-decoration: none;
-  color: inherit;
-  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .popular-tool-card:hover {
-    box-shadow: 0 6px 18px rgba(27, 36, 48, 0.1);
-    transform: translateY(-3px);
-    border-color: var(--gray);
-  }
-  .popular-tool-card:hover .popular-tool-arrow { transform: translateX(3px); }
-}
-
-.popular-tool-card:active {
-  box-shadow: 0 2px 8px rgba(27, 36, 48, 0.1);
-  transform: scale(0.99);
-}
-
-.popular-tool-icon {
-  position: relative;
-  flex-shrink: 0;
+/* ---------- Homepage editorial sections ----------
+   Three alternating image/text sections that replace the old Popular
+   Tools grid — each pairs a small custom illustration with a short
+   pitch (local-first processing, instant/no-install, full tool
+   coverage). Scroll-reveal (see .reveal/.reveal-visible + wireScrollReveal
+   in main.js) animates each in once as it enters the viewport. */
+.editorial-section {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
+  gap: 64px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 56px 32px;
 }
 
-.popular-tool-icon img { width: 28px; height: 28px; }
+.editorial-section.editorial-reverse { flex-direction: row-reverse; }
 
-/* Conversion cards (two icons) overlap the "from" icon on the "to"
-   icon's corner instead of a side-by-side arrow — same treatment as
-   .tool-icon-badge on the tool grid cards, scaled down to this card's
-   smaller icon size. Single-icon cards (:only-child) are untouched.
-   Both icons render at equal size so the overlap reads as two
-   same-weight stamps rather than one icon with a small badge on it —
-   the "to" icon sits as the base, the "from" icon overlaps in front. */
-.popular-tool-icon img:not(:only-child) { width: 24px; height: 24px; }
-.popular-tool-icon img:last-child:not(:only-child) { position: relative; z-index: 1; }
-
-.popular-tool-icon img:first-child:not(:only-child) {
-  position: absolute;
-  bottom: -6px;
-  left: -6px;
-  border-radius: 6px;
-  border: 2px solid var(--white);
-  box-shadow: 0 1px 3px rgba(27, 36, 48, 0.2);
-  z-index: 2;
+.editorial-media {
+  flex: 0 0 44%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
 }
 
-.popular-tool-body { flex: 1; min-width: 0; }
+.editorial-media svg { display: block; width: 100%; height: auto; }
 
-.popular-tool-cat {
-  display: block;
-  font-size: 0.76rem;
+.ed-frame { fill: var(--white); stroke: var(--border); stroke-width: 2; }
+.ed-bar { fill: var(--gray-light); }
+.ed-bar-mask { fill: var(--white); opacity: 0; }
+.ed-dot { fill: var(--border); }
+.ed-file { fill: var(--category-pdf); opacity: 0.85; }
+.ed-file-img { fill: var(--category-image); }
+.ed-link { stroke: var(--border); stroke-width: 2; stroke-dasharray: 4 5; }
+.ed-shield { fill: var(--red); }
+.ed-check { stroke: var(--white); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+
+.ed-ring { fill: none; stroke: var(--border); stroke-width: 2; }
+.ed-ring-inner { stroke: var(--red); opacity: 0.35; }
+.ed-bolt { fill: var(--red); }
+.ed-spark { fill: var(--category-utility); }
+
+.ed-spoke { stroke: var(--border); stroke-width: 2; }
+.ed-hub { fill: var(--red); }
+.ed-hub-mark { stroke: var(--white); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.ed-node { stroke: var(--white); stroke-width: 3; }
+.ed-node-pdf { fill: var(--category-pdf); }
+.ed-node-image { fill: var(--category-image); }
+.ed-node-excel { fill: var(--category-excel); }
+.ed-node-word { fill: var(--category-word); }
+.ed-node-ppt { fill: var(--category-ppt); }
+.ed-node-utility { fill: var(--category-utility); }
+
+.editorial-copy { flex: 1 1 auto; min-width: 0; }
+
+.editorial-eyebrow {
+  display: inline-block;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 2px;
+  color: var(--red);
+  margin-bottom: 10px;
 }
 
-.popular-tool-card h3 {
+.editorial-copy h2 {
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: 1.85rem;
+  line-height: 1.2;
   color: var(--text);
-  margin: 0 0 4px;
+  margin: 0 0 14px;
+  text-wrap: balance;
 }
 
-.popular-tool-card p {
-  font-size: 0.95rem;
+.editorial-copy p {
+  font-size: 1.05rem;
+  line-height: 1.6;
   color: var(--text-muted);
+  margin: 0 0 18px;
+  max-width: 46ch;
+}
+
+.editorial-points {
+  list-style: none;
   margin: 0;
-  line-height: 1.4;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.popular-tool-arrow {
+.editorial-points li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.editorial-points .icon {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  margin-top: 4px;
-  color: var(--text-muted);
-  transition: transform 0.2s ease;
+  width: 20px;
+  height: 20px;
+  color: var(--red);
+  background: color-mix(in srgb, var(--red) 14%, transparent);
+  border-radius: 50%;
+  padding: 4px;
+  box-sizing: content-box;
 }
 
 @media (max-width: 860px) {
-  .popular-tools-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 600px) {
-  .popular-tools-section { padding: 40px 20px 4px; }
-  .popular-tools-grid { grid-template-columns: 1fr; gap: 12px; }
-  .popular-tool-card { padding: 16px; }
+  .editorial-section, .editorial-section.editorial-reverse {
+    flex-direction: column;
+    gap: 28px;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .editorial-media { flex: none; width: 100%; max-width: 380px; }
+  .editorial-copy p { margin-left: auto; margin-right: auto; }
+  .editorial-points { align-items: center; }
 }
 
 /* ---------- Category sidebar ----------
@@ -952,11 +950,11 @@ a { color: inherit; }
 .category-sidebar-link.active .icon { background-color: var(--white); }
 
 @media (min-width: 1081px) {
-  /* Same 3-up count as .tool-grid's own default — this override exists
+  /* Same 2-up count as .tool-grid's own default — this override exists
      for the margin/padding reset (the sidebar layout doesn't need
      .tool-grid's normal page-edge padding), not a different column
      count from the base rule. */
-  .page-with-sidebar .tool-grid { max-width: none; padding: 0; grid-template-columns: repeat(3, 1fr); margin: 24px 0 60px; }
+  .page-with-sidebar .tool-grid { max-width: none; padding: 0; grid-template-columns: repeat(2, 1fr); margin: 24px 0 60px; }
 }
 
 /* Below ~1080px, a sticky 200px rail next to a narrowing grid gets
@@ -996,36 +994,35 @@ a { color: inherit; }
 }
 
 /* ---------- Tool grid ---------- */
-/* 3 columns (3 rows show by default = 18 cards; see
-   TOOL_GRID_VISIBLE_LIMIT in main.js) — same row-card layout and
-   column count as .popular-tool-card above (icon + category label +
-   title + description + arrow), one card system site-wide instead of
-   a separate icon-only grid style. Also what's in effect on the
-   "continue with..." result-page grid, which reuses .tool-grid
-   without a sidebar at all. */
+/* 2 columns — cards run roughly 2x their original footprint (bigger
+   icon badge, bigger type, a guaranteed 2-line description), so half
+   as many fit per row. Also what's in effect on the "continue with..."
+   result-page grid and the static Related Tools grid on individual
+   tool pages, which both reuse .tool-grid. */
 .tool-grid {
   max-width: none;
   margin: 32px auto 60px;
   padding: 0 32px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
 }
 
-/* Same row layout as .popular-tool-card above (icon left, category
-   eyebrow + title + description, arrow on the right) — one card system
-   for the whole site instead of two, per the user's explicit call to
-   make every tool card match Popular Tools exactly. */
+/* Plain white card — icon, category eyebrow, title, a 2-line
+   description, and an arrow, at roughly double the original card's
+   scale. One card system for the whole site: this same class renders
+   every tool-grid card, the "continue with..." result-page grid, and
+   the static Related Tools cards on individual tool pages. */
 .tool-card {
   /* Falls back to a plain neutral card (the coming-soon / "more tools"
      tiles have no cat-* class) when --card-accent isn't set below. */
   background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 24px;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 18px;
+  gap: 24px;
+  padding: 32px;
   text-decoration: none;
   color: inherit;
   cursor: pointer;
@@ -1049,65 +1046,54 @@ a { color: inherit; }
   transform: scale(0.98);
 }
 
-/* Card background matches the page background, not a bright white or
-   a solid pastel box — just a whisper of the tool's own category color
-   mixed in (a few percent), enough to read as "this is a PDF tool"
-   at a glance without the card looking like a colored tile. Hover
-   picks up a slightly stronger tint via --card-accent above. */
-.tool-card.cat-pdf { --card-accent: var(--category-pdf); background: color-mix(in srgb, var(--category-pdf) 4%, var(--bg)); }
-.tool-card.cat-image { --card-accent: var(--category-image); background: color-mix(in srgb, var(--category-image) 4%, var(--bg)); }
-.tool-card.cat-excel { --card-accent: var(--category-excel); background: color-mix(in srgb, var(--category-excel) 4%, var(--bg)); }
-.tool-card.cat-word { --card-accent: var(--category-word); background: color-mix(in srgb, var(--category-word) 4%, var(--bg)); }
-.tool-card.cat-ppt { --card-accent: var(--category-ppt); background: color-mix(in srgb, var(--category-ppt) 4%, var(--bg)); }
-.tool-card.cat-utilities { --card-accent: var(--category-utility); background: color-mix(in srgb, var(--category-utility) 4%, var(--bg)); }
+/* Every card sits on a plain white surface — the category shows up in
+   the eyebrow label, the icon, and the hover border tint (--card-accent)
+   below, not in the card's own background. */
+.tool-card.cat-pdf { --card-accent: var(--category-pdf); }
+.tool-card.cat-image { --card-accent: var(--category-image); }
+.tool-card.cat-excel { --card-accent: var(--category-excel); }
+.tool-card.cat-word { --card-accent: var(--category-word); }
+.tool-card.cat-ppt { --card-accent: var(--category-ppt); }
+.tool-card.cat-utilities { --card-accent: var(--category-utility); }
 
-/* Dark mode: same idea (page background + a faint tint), just a
-   slightly stronger mix since the dark surface swallows subtlety
-   more than the light one does. */
-:root[data-theme="dark"] .tool-card.cat-pdf { background: color-mix(in srgb, var(--category-pdf) 6%, var(--surface)); }
-:root[data-theme="dark"] .tool-card.cat-image { background: color-mix(in srgb, var(--category-image) 6%, var(--surface)); }
-:root[data-theme="dark"] .tool-card.cat-excel { background: color-mix(in srgb, var(--category-excel) 6%, var(--surface)); }
-:root[data-theme="dark"] .tool-card.cat-word { background: color-mix(in srgb, var(--category-word) 6%, var(--surface)); }
-:root[data-theme="dark"] .tool-card.cat-ppt { background: color-mix(in srgb, var(--category-ppt) 6%, var(--surface)); }
-:root[data-theme="dark"] .tool-card.cat-utilities { background: color-mix(in srgb, var(--category-utility) 6%, var(--surface)); }
+:root[data-theme="dark"] .tool-card { background: var(--surface); }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .tool-card.cat-pdf { background: color-mix(in srgb, var(--category-pdf) 6%, var(--surface)); }
-  :root:not([data-theme="light"]) .tool-card.cat-image { background: color-mix(in srgb, var(--category-image) 6%, var(--surface)); }
-  :root:not([data-theme="light"]) .tool-card.cat-excel { background: color-mix(in srgb, var(--category-excel) 6%, var(--surface)); }
-  :root:not([data-theme="light"]) .tool-card.cat-word { background: color-mix(in srgb, var(--category-word) 6%, var(--surface)); }
-  :root:not([data-theme="light"]) .tool-card.cat-ppt { background: color-mix(in srgb, var(--category-ppt) 6%, var(--surface)); }
-  :root:not([data-theme="light"]) .tool-card.cat-utilities { background: color-mix(in srgb, var(--category-utility) 6%, var(--surface)); }
+  :root:not([data-theme="light"]) .tool-card { background: var(--surface); }
 }
 
 .tool-card-body { flex: 1; min-width: 0; }
 
 .tool-card-cat {
   display: block;
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
 .tool-card h3 {
-  font-size: 1.1rem;
-  margin: 0 0 4px;
+  font-size: 1.55rem;
+  margin: 0 0 10px;
   font-family: var(--font-display);
   color: var(--text);
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
 /* Description under the title — clamped to 2 lines so a longer desc
    never throws off one card's height without the rest of its grid row
    (CSS grid still matches row height to the tallest cell either way,
-   this just keeps that tallest cell sane). */
+   this just keeps that tallest cell sane), and given a min-height so
+   even a short one-line description still reserves the full 2-line
+   block — every card in a row lines up the same height regardless of
+   description length. */
 .tool-card p {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.6;
+  min-height: calc(1.6em * 2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1116,9 +1102,9 @@ a { color: inherit; }
 
 .tool-card-arrow {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
-  margin-top: 4px;
+  width: 26px;
+  height: 26px;
+  margin-top: 8px;
   color: var(--text-muted);
   transition: transform var(--motion-fast);
 }
@@ -1129,34 +1115,35 @@ a { color: inherit; }
    badge's corner instead of a side-by-side arrow — the arrow is
    hidden here; other contexts (mega-menu, hero suggestions) still use
    the horizontal arrow layout from renderIconBadge(). Single-icon
-   tools (:only-child) are untouched by the overlap rules below. Sized
-   to match .popular-tool-icon exactly, same reasoning as the card
-   layout above — one icon-badge treatment site-wide. */
+   tools (:only-child) are untouched by the overlap rules below. One
+   icon-badge treatment site-wide, at roughly double its original size. */
 .tool-icon-badge {
   position: relative;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  background: var(--gray-light);
 }
 
-.tool-icon-badge img { width: 28px; height: 28px; }
+.tool-icon-badge img { width: 52px; height: 52px; }
 .tool-icon-badge .arrow { display: none; }
 
 /* The "to" icon (last) is the base icon; the "from" icon (first)
    overlaps it in front, offset toward the bottom-left corner. Both
    render at the same size so the overlap reads as two same-weight
    stamps rather than one icon with a small badge on it. */
-.tool-icon-badge img:not(:only-child) { width: 24px; height: 24px; }
+.tool-icon-badge img:not(:only-child) { width: 44px; height: 44px; }
 .tool-icon-badge img:last-child:not(:only-child) { position: relative; z-index: 1; }
 
 .tool-icon-badge img:first-child:not(:only-child) {
   position: absolute;
-  bottom: -6px;
-  left: -6px;
-  border-radius: 6px;
+  bottom: -8px;
+  left: -8px;
+  border-radius: 8px;
   border: 2px solid var(--white);
   box-shadow: 0 1px 3px rgba(27, 36, 48, 0.2);
   z-index: 2;
@@ -1170,6 +1157,7 @@ a { color: inherit; }
   background: var(--gray-light);
   border-style: dashed;
   align-items: center;
+  justify-content: center;
 }
 
 .tool-grid-more-tile:hover { color: var(--red); }
@@ -1179,29 +1167,31 @@ a { color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 64px;
+  height: 64px;
   border-radius: 28%;
   background: var(--white);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 1.5rem;
+  font-size: 2rem;
   line-height: 1;
   letter-spacing: 1px;
   transition: color 0.15s ease;
 }
 
-/* Fewer columns on narrower screens — desktop 3-up (matching Popular
-   Tools' own grid), tablet 2-up, phones 1-up (a single full-width
-   row card per tool, same as Popular Tools collapses to). */
-@media (max-width: 860px) {
-  .tool-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 20px; }
+/* Fewer columns on narrower screens — 2x-size cards only have room for
+   2-up down to tablet width, then a single full-width row card per
+   tool on phones. */
+@media (max-width: 900px) {
+  .tool-grid { grid-template-columns: 1fr; gap: 16px; padding: 0 20px; }
 }
 
 @media (max-width: 600px) {
-  .tool-grid { grid-template-columns: 1fr; gap: 12px; padding: 0 20px; }
-  .tool-card { padding: 16px; }
-  .tool-card h3 { font-size: 1.02rem; }
+  .tool-card { padding: 22px; gap: 18px; }
+  .tool-card h3 { font-size: 1.25rem; }
+  .tool-icon-badge { width: 64px; height: 64px; }
+  .tool-icon-badge img { width: 40px; height: 40px; }
+  .tool-icon-badge img:not(:only-child) { width: 34px; height: 34px; }
 }
 
 .coming-soon-badge {
@@ -1882,7 +1872,7 @@ body.tool-result-active #tpDropZone {
   font-size: 1.15rem;
 }
 
-.tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(3, 1fr); }
+.tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(2, 1fr); }
 
 @media (max-width: 980px) {
   /* Below the two-column breakpoint the workspace stacks to a single
@@ -1904,14 +1894,13 @@ body.tool-result-active #tpDropZone {
 
 /* Row cards (icon + title + description + arrow) need real width to
    stay legible, so this follows .tool-grid's own narrow-screen
-   tapering (2-up, then 1-up) rather than forcing 3 columns down to
-   phone widths the way the old icon-only tiles could. */
-@media (max-width: 700px) {
-  .tp-result-continue-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+   tapering (2x-size cards only fit 1-up below ~900px) rather than
+   forcing multiple columns down to phone widths. */
+@media (max-width: 900px) {
+  .tp-result-continue-grid { grid-template-columns: 1fr; gap: 12px; }
 }
 
 @media (max-width: 480px) {
-  .tp-result-continue-grid { grid-template-columns: 1fr; gap: 8px; }
   .tp-result-continue { padding: 16px; }
 }
 
@@ -2058,11 +2047,13 @@ body.tool-result-active #tpDropZone {
   .tp-toast,
   .tool-card,
   .category-sidebar-link,
+  .tp-dropzone,
   .tp-dropzone-browse-btn,
   .faq-question::after {
     transition: none !important;
   }
   .tool-card:active { transform: none; }
+  .tp-dropzone.drag-active { transform: none; }
   * { scroll-behavior: auto !important; }
 }
 
@@ -3092,20 +3083,31 @@ body.tool-result-active #tpDropZone {
 
 .tp-dropzone {
   position: relative;
-  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  max-width: 920px;
   margin: 0 auto 44px;
   padding: 40px 24px;
   text-align: center;
   background: var(--white);
   border: 3px dashed var(--blue);
-  border-radius: 20px;
+  border-radius: 28px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
-.tp-dropzone:hover, .tp-dropzone.drag-active {
+.tp-dropzone:hover {
   background: var(--blue-light);
   border-color: var(--red);
+}
+
+.tp-dropzone.drag-active {
+  background: var(--blue-light);
+  border-color: var(--red);
+  transform: scale(1.01);
 }
 
 .tp-dropzone input[type="file"] {
@@ -3168,7 +3170,7 @@ body.tool-result-active #tpDropZone {
 }
 
 .tp-related { max-width: none; }
-.tp-related-grid { max-width: 900px; margin: 0 auto; grid-template-columns: repeat(3, 1fr); }
+.tp-related-grid { max-width: 980px; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
 
 .tp-how-list {
   margin: 0;
@@ -3183,12 +3185,60 @@ body.tool-result-active #tpDropZone {
 
 .tp-how-list li::marker { color: var(--red); font-weight: 700; }
 
+@media (max-width: 760px) {
+  .tp-related-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 700px) {
-  .tp-related-grid { grid-template-columns: repeat(2, 1fr); }
-  .tp-dropzone { padding: 28px 18px; margin-bottom: 32px; }
+  .tp-dropzone { min-height: 260px; padding: 28px 18px; margin-bottom: 32px; }
 }
 
 @media (max-width: 480px) {
-  .tp-dropzone { padding: 24px 18px; margin: 0 auto 28px; }
+  .tp-dropzone { min-height: 260px; padding: 24px 18px; margin: 0 auto 28px; }
   .tp-dropzone-browse-btn { width: 100%; max-width: 280px; }
+}
+
+/* ---------- Scroll reveal ----------
+   A reusable, IntersectionObserver-driven fade+rise, wired up by
+   wireScrollReveal() in main.js against a fixed set of section-level
+   selectors (editorial sections, .tp-section blocks, use-case rows) —
+   see that function for the exact list. .reveal is added by JS right
+   before observing, so a visitor without JS (or one whose browser
+   lacks IntersectionObserver) simply sees the finished page with no
+   hidden content and no dependency on script execution. Triggers once
+   per element, then stops observing it. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s cubic-bezier(.22, .61, .36, 1), transform 0.6s cubic-bezier(.22, .61, .36, 1);
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Media panels rise in with a touch of scale instead of a plain
+   translate, so the two halves of each editorial section don't read
+   as identical motion. */
+.editorial-media.reveal { transform: translateY(20px) scale(0.96); }
+
+/* The tool grid reveals its cards with a light per-column stagger
+   (by position within each row of 2) rather than all at once — a
+   cheap way to make a whole page of cards feel considered without
+   tracking per-card state in JS. */
+.tool-grid.reveal .tool-card { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.tool-grid.reveal-visible .tool-card { opacity: 1; transform: none; }
+.tool-grid.reveal-visible .tool-card:nth-child(2n+1) { transition-delay: 0ms; }
+.tool-grid.reveal-visible .tool-card:nth-child(2n+2) { transition-delay: 80ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.reveal-visible,
+  .tool-grid.reveal .tool-card,
+  .tool-grid.reveal-visible .tool-card {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

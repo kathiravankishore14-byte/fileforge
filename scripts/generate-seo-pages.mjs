@@ -179,14 +179,24 @@ function relatedToolsHtml(key, meta) {
     const rMeta = toolMeta[rk];
     const rSlug = TOOL_SLUGS[rk];
     if (!rSlug) return '';
+    const catLabel = categoryLabels[rMeta.category] || rMeta.category;
+    // Same row-card markup as toolCardHtml() in main.js (icon, category
+    // eyebrow, title, description, arrow) — one card system across the
+    // whole site, runtime-rendered grids and these statically-generated
+    // Related Tools sections alike.
     return `
       <a class="tool-card cat-${rMeta.category}" href="/${rSlug}">
         <div class="tool-icon-badge">${toolIconBadgeHtml(rk, rMeta)}</div>
-        <h3>${esc(rMeta.label)}</h3>
+        <div class="tool-card-body">
+          <span class="tool-card-cat">${esc(catLabel)}</span>
+          <h3>${esc(rMeta.label)}</h3>
+          ${rMeta.desc ? `<p>${esc(rMeta.desc)}</p>` : ''}
+        </div>
+        <span class="icon icon-arrow-right tool-card-arrow" aria-hidden="true"></span>
       </a>`;
   }).join('');
   return `
-    <section class="tp-section tp-related">
+    <section class="tp-section tp-related" data-reveal>
       <h2>Related Tools</h2>
       <div class="tool-grid tp-related-grid">${cards}</div>
     </section>`;
@@ -203,7 +213,7 @@ function faqHtml(faq) {
           <p class="faq-answer">${esc(f.a)}</p>
         </details>`).join('');
   return `
-    <section class="tp-section faq-section" id="faq">
+    <section class="tp-section faq-section" id="faq" data-reveal>
       <div class="faq-inner">
         <h2>Frequently Asked Questions</h2>
         <div class="faq-list">${items}</div>
@@ -214,7 +224,7 @@ function faqHtml(faq) {
 function stepsHtml(steps) {
   const items = steps.map((s) => `<li>${esc(s)}</li>`).join('');
   return `
-    <section class="tp-section tp-how">
+    <section class="tp-section tp-how" data-reveal>
       <h2>How It Works</h2>
       <ol class="tp-how-list">${items}</ol>
     </section>`;

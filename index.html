@@ -41,66 +41,96 @@
       </div>
     </section>
 
-    <section class="popular-tools-section" aria-labelledby="popularToolsHeading">
-      <div class="popular-tools-inner">
-        <h2 id="popularToolsHeading">Popular tools</h2>
-        <p class="popular-tools-sub">Quick access to the tools people use most.</p>
-        <div class="popular-tools-grid">
-          <a class="popular-tool-card" href="/resize-image">
-            <div class="popular-tool-icon"><img src="/icons/icon-tool-resize.svg" alt="" width="28" height="28" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">Image</span>
-              <h3>Resize Image</h3>
-              <p>Resize JPG, PNG and WebP images quickly.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="popular-tool-card" href="/merge-pdf">
-            <div class="popular-tool-icon"><img src="/icons/icon-tool-pdfmerge.svg" alt="" width="28" height="28" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">PDF</span>
-              <h3>Merge PDF</h3>
-              <p>Combine multiple PDF files into one document.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="popular-tool-card" href="/pdf-to-word">
-            <div class="popular-tool-icon"><img src="/icons/icon-pdf.svg" alt="" width="20" height="20" /><img src="/icons/icon-word.svg" alt="" width="20" height="20" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">PDF</span>
-              <h3>PDF to Word</h3>
-              <p>Convert PDF content into an editable Word file.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="popular-tool-card" href="/compress-image">
-            <div class="popular-tool-icon"><img src="/icons/icon-tool-compress.svg" alt="" width="28" height="28" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">Image</span>
-              <h3>Compress Image</h3>
-              <p>Reduce image file size while preserving useful quality.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="popular-tool-card" href="/qr-code-generator">
-            <div class="popular-tool-icon"><img src="/icons/icon-tool-qrcode.svg" alt="" width="28" height="28" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">Utilities</span>
-              <h3>QR Code Generator</h3>
-              <p>Create QR codes instantly in your browser.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-          <a class="popular-tool-card" href="/excel-to-pdf">
-            <div class="popular-tool-icon"><img src="/icons/icon-excel.svg" alt="" width="20" height="20" /><img src="/icons/icon-pdf.svg" alt="" width="20" height="20" /></div>
-            <div class="popular-tool-body">
-              <span class="popular-tool-cat">Excel</span>
-              <h3>Excel to PDF</h3>
-              <p>Convert spreadsheets into PDF files.</p>
-            </div>
-            <span class="icon icon-arrow-right popular-tool-arrow" aria-hidden="true"></span>
-          </a>
-        </div>
+    <section class="editorial-section">
+      <div class="editorial-media">
+        <svg viewBox="0 0 480 360" role="img" aria-labelledby="editorialLocalTitle">
+          <title id="editorialLocalTitle">A browser window holding a shield, with file icons kept inside it</title>
+          <rect class="ed-frame" x="48" y="52" width="384" height="256" rx="18" />
+          <rect class="ed-bar" x="48" y="52" width="384" height="34" rx="18" />
+          <rect class="ed-bar-mask" x="48" y="68" width="384" height="18" />
+          <circle class="ed-dot" cx="72" cy="69" r="5" />
+          <circle class="ed-dot" cx="90" cy="69" r="5" />
+          <circle class="ed-dot" cx="108" cy="69" r="5" />
+          <g class="ed-file ed-file-pdf" transform="translate(108,150) rotate(-8)">
+            <rect width="56" height="70" rx="8" />
+            <path d="M40 0 L56 16 H40 Z" opacity="0.55" />
+          </g>
+          <g class="ed-file ed-file-img" transform="translate(300,158) rotate(9)">
+            <rect width="56" height="70" rx="8" />
+            <path d="M40 0 L56 16 H40 Z" opacity="0.55" />
+          </g>
+          <line class="ed-link" x1="164" y1="180" x2="206" y2="200" />
+          <line class="ed-link" x1="316" y1="188" x2="274" y2="200" />
+          <g class="ed-shield">
+            <path d="M240 148 L276 162 V196 C276 224 260 244 240 254 C220 244 204 224 204 196 V162 Z" />
+            <path class="ed-check" d="M223 200 L235 212 L259 186" fill="none" />
+          </g>
+        </svg>
+      </div>
+      <div class="editorial-copy">
+        <span class="editorial-eyebrow">Local-first</span>
+        <h2>Everything happens on your device</h2>
+        <p>Every tool runs as JavaScript directly in your browser. Your files are read, processed, and written back out without ever touching a server — so nothing is uploaded, and nothing is stored anywhere but your own machine.</p>
+        <ul class="editorial-points">
+          <li><span class="icon icon-check" aria-hidden="true"></span> No upload step, ever</li>
+          <li><span class="icon icon-check" aria-hidden="true"></span> Works offline once the page has loaded</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="editorial-section editorial-reverse">
+      <div class="editorial-media">
+        <svg viewBox="0 0 480 360" role="img" aria-labelledby="editorialSpeedTitle">
+          <title id="editorialSpeedTitle">A bolt inside concentric speed rings</title>
+          <circle class="ed-ring ed-ring-outer" cx="240" cy="180" r="132" />
+          <circle class="ed-ring ed-ring-mid" cx="240" cy="180" r="96" />
+          <circle class="ed-ring ed-ring-inner" cx="240" cy="180" r="60" />
+          <path class="ed-bolt" d="M254 122 L206 194 H236 L226 244 L278 166 H246 Z" />
+          <circle class="ed-spark" cx="120" cy="108" r="6" />
+          <circle class="ed-spark" cx="368" cy="120" r="5" />
+          <circle class="ed-spark" cx="384" cy="240" r="6" />
+          <circle class="ed-spark" cx="96" cy="252" r="5" />
+        </svg>
+      </div>
+      <div class="editorial-copy">
+        <span class="editorial-eyebrow">No installs, no waiting</span>
+        <h2>Open a link and it's already working</h2>
+        <p>There's nothing to download and nothing to configure. Every tool loads in a second and starts processing the moment you drop a file — no account, no plugin, no queue to wait behind.</p>
+        <ul class="editorial-points">
+          <li><span class="icon icon-check" aria-hidden="true"></span> Instant results, no server round-trip</li>
+          <li><span class="icon icon-check" aria-hidden="true"></span> Runs the same on desktop and mobile</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="editorial-section">
+      <div class="editorial-media">
+        <svg viewBox="0 0 480 360" role="img" aria-labelledby="editorialAllToolsTitle">
+          <title id="editorialAllToolsTitle">Category icons arranged around a central hub</title>
+          <line class="ed-spoke" x1="240" y1="180" x2="240" y2="88" />
+          <line class="ed-spoke" x1="240" y1="180" x2="322" y2="132" />
+          <line class="ed-spoke" x1="240" y1="180" x2="322" y2="228" />
+          <line class="ed-spoke" x1="240" y1="180" x2="240" y2="272" />
+          <line class="ed-spoke" x1="240" y1="180" x2="158" y2="228" />
+          <line class="ed-spoke" x1="240" y1="180" x2="158" y2="132" />
+          <circle class="ed-hub" cx="240" cy="180" r="30" />
+          <path class="ed-hub-mark" d="M228 180 L238 190 L254 168" fill="none" />
+          <circle class="ed-node ed-node-pdf" cx="240" cy="88" r="24" />
+          <circle class="ed-node ed-node-image" cx="322" cy="132" r="24" />
+          <circle class="ed-node ed-node-excel" cx="322" cy="228" r="24" />
+          <circle class="ed-node ed-node-word" cx="240" cy="272" r="24" />
+          <circle class="ed-node ed-node-ppt" cx="158" cy="228" r="24" />
+          <circle class="ed-node ed-node-utility" cx="158" cy="132" r="24" />
+        </svg>
+      </div>
+      <div class="editorial-copy">
+        <span class="editorial-eyebrow">One platform, every format</span>
+        <h2>PDF, image, Excel, Word and PowerPoint tools in one place</h2>
+        <p>63+ tools cover the everyday file work people actually do — converting, compressing, merging, and editing — so you stop hunting for a different site for every format.</p>
+        <ul class="editorial-points">
+          <li><span class="icon icon-check" aria-hidden="true"></span> One consistent tool for every task</li>
+          <li><span class="icon icon-check" aria-hidden="true"></span> Free to use, with no per-tool signup</li>
+        </ul>
       </div>
     </section>
 
