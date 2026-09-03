@@ -1,25 +1,168 @@
 :root {
-  --ink: #1B2430;
-  --paper: #F7F7F5;
-  --white: #FFFFFF;
-  --border: #E5E5E2;
-  --text: #1B2430;
-  --text-muted: #6B7280;
-  --red: #E24B4A;
-  --red-dark: #C43837;
+  /* ============================================================
+     DESIGN TOKENS — light theme (default). These semantic names are
+     the source of truth; everything below them in this block is the
+     set of names the rest of this file already used (270+ times)
+     before theming existed, kept as aliases so none of that had to
+     change. Dark mode (further down) only ever redeclares the
+     semantic tokens in this first group — every alias re-resolves
+     automatically because CSS custom properties are looked up live,
+     not substituted once at declaration time. ============================================================ */
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --header-bg: rgba(255, 255, 255, 0.72);
+  --text: #111827;
+  --text-secondary: #6B7280;
+  --border: #E7EBF0;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 1px rgba(17, 24, 39, 0.03);
+  --shadow-md: 0 10px 28px rgba(17, 24, 39, 0.08), 0 2px 8px rgba(17, 24, 39, 0.04);
+  --accent: #E24B4A;
+  --accent-dark: #C43837;
+
+  --category-pdf: #E24B4A;
+  --category-image: #7F77DD;
+  --category-excel: #639922;
+  --category-word: #378ADD;
+  --category-ppt: #D97B3F;
+  --category-utility: #EF9F27;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+
+  --motion-fast: 150ms ease;
+  --motion-normal: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Footer is a deliberately inverse (dark) surface in both themes —
+     these stay separate from --bg/--surface/--text rather than
+     aliasing them, and only shift subtly between themes. */
+  --footer-bg: #1B2430;
+  --footer-text: #C9CDD3;
+  --footer-text-muted: #9CA3AF;
+  --footer-border: #2C3644;
+  --footer-heading: #FFFFFF;
+
+  /* ---------- Legacy names — identical values, kept for every
+     existing var() usage already in this file. ---------- */
+  --ink: var(--text);
+  --paper: var(--bg);
+  --white: var(--surface);
+  --text-muted: var(--text-secondary);
+  --red: var(--category-pdf);
+  --red-dark: var(--accent-dark);
   --red-light: #FCEBEB;
-  --blue: #378ADD;
+  --blue: var(--category-word);
+  --blue-dark: #2A6FB8;
   --blue-light: #E6F1FB;
-  --green: #639922;
+  --green: var(--category-excel);
+  --green-dark: #1E8E5A;
   --green-light: #EAF3DE;
-  --amber: #EF9F27;
+  --amber: var(--category-utility);
   --amber-light: #FAEEDA;
-  --purple: #7F77DD;
+  --purple: var(--category-image);
   --purple-light: #EEEDFE;
+  --orange: var(--category-ppt);
+  --orange-light: #FBEEE1;
   --gray: #888780;
   --gray-light: #F1EFE8;
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
+}
+
+/* ============================================================
+   DESIGN TOKENS — dark theme. Two ways in: the visitor's OS
+   preference (zero JS — this media query alone already themes the
+   whole page correctly on first paint) and an explicit choice stored
+   in localStorage and applied via the [data-theme] attribute (see
+   partials/_header.html's inline pre-paint script and
+   wireThemeToggle() in src/main.js). The explicit attribute always
+   wins over the OS media query in both directions — that's what the
+   `:not([data-theme="light"])` guard and the later
+   `[data-theme="dark"]` block together achieve.
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0B0F17;
+    --surface: #111722;
+    --surface-elevated: #161D2C;
+    --header-bg: rgba(11, 15, 23, 0.72);
+    --text: #F3F5F8;
+    --text-secondary: #9099AC;
+    --border: #232B3D;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.35);
+    --accent: #FF6B68;
+    --accent-dark: #FF8280;
+
+    --category-pdf: #FF6B68;
+    --category-image: #A79FFF;
+    --category-excel: #8FCB4A;
+    --category-word: #5FA8F0;
+    --category-ppt: #F0A15F;
+    --category-utility: #FFC24D;
+
+    --footer-bg: #080B12;
+    --footer-text: #C9CDD3;
+    --footer-text-muted: #7C8598;
+    --footer-border: #1D2432;
+    --footer-heading: #FFFFFF;
+
+    --red-light: rgba(255, 107, 104, 0.14);
+    --blue-light: rgba(95, 168, 240, 0.14);
+    --blue-dark: #7FBBFA;
+    --green-light: rgba(143, 203, 74, 0.14);
+    --green-dark: #6FD69B;
+    --amber-light: rgba(255, 194, 77, 0.14);
+    --purple-light: rgba(167, 159, 255, 0.14);
+    --orange-light: rgba(240, 161, 95, 0.14);
+    --gray-light: rgba(255, 255, 255, 0.06);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0B0F17;
+  --surface: #111722;
+  --surface-elevated: #161D2C;
+  --header-bg: rgba(11, 15, 23, 0.72);
+  --text: #F3F5F8;
+  --text-secondary: #9099AC;
+  --border: #232B3D;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.35);
+  --accent: #FF6B68;
+  --accent-dark: #FF8280;
+
+  --category-pdf: #FF6B68;
+  --category-image: #A79FFF;
+  --category-excel: #8FCB4A;
+  --category-word: #5FA8F0;
+  --category-ppt: #F0A15F;
+  --category-utility: #FFC24D;
+
+  --footer-bg: #080B12;
+  --footer-text: #C9CDD3;
+  --footer-text-muted: #7C8598;
+  --footer-border: #1D2432;
+  --footer-heading: #FFFFFF;
+
+  --red-light: rgba(255, 107, 104, 0.14);
+  --blue-light: rgba(95, 168, 240, 0.14);
+  --blue-dark: #7FBBFA;
+  --green-light: rgba(143, 203, 74, 0.14);
+  --green-dark: #6FD69B;
+  --amber-light: rgba(255, 194, 77, 0.14);
+  --purple-light: rgba(167, 159, 255, 0.14);
+  --orange-light: rgba(240, 161, 95, 0.14);
+  --gray-light: rgba(255, 255, 255, 0.06);
+}
+
+/* prefers-reduced-motion also governs the two custom motion tokens
+   themselves, so anything that transitions purely via var(--motion-*)
+   is automatically instant for a visitor who asked for less motion,
+   with no per-component override needed. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-normal: 0ms; }
 }
 
 * { box-sizing: border-box; }
@@ -197,18 +340,7 @@
 body {
   margin: 0;
   font-family: var(--font-body);
-  /* Sky-blue backdrop for the whole site. Fixed px stops so it fades to
-     a soft near-white blue within the first ~900px and then holds that
-     tone for the rest of the page, however long — keeps every page's
-     content readable no matter how far you scroll. */
-  background: linear-gradient(
-    180deg,
-    #378ADD 0px,
-    #6FAEE8 200px,
-    #BFE3F7 480px,
-    #E6F1FB 720px,
-    #F5FAFE 900px
-  );
+  background: var(--bg);
   color: var(--text);
   line-height: 1.5;
 }
@@ -219,14 +351,15 @@ a { color: inherit; }
 
 /* ---------- Header ---------- */
 .site-header {
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--header-bg);
   backdrop-filter: blur(16px) saturate(160%);
   -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid var(--border);
   padding: 20px 0;
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
 }
 
 .header-inner {
@@ -394,765 +527,6 @@ a { color: inherit; }
   .site-header { padding: 14px 0; }
   .header-inner { padding: 0 20px; }
   .logo { font-size: 1.55rem; }
-}
-
-/* ---------- Hero drop zone ---------- */
-.hero-drop-wrap {
-  max-width: none;
-  margin: 0 auto;
-  padding: 32px 32px 0;
-}
-
-@media (max-width: 480px) {
-  .hero-drop-wrap { padding: 20px 20px 0; }
-  .hero-drop-zone { min-height: 200px; gap: 12px; }
-  .hero-drop-browse-btn { width: 100%; max-width: 280px; }
-}
-
-/* The shared "drop any file here, we'll find the right tool" box (plus
-   the featured-tools banner above it) only makes sense on pages that
-   cover MANY tools at once — the homepage and the 6 category pages.
-   Every dedicated tool landing page (generated by
-   scripts/generate-seo-pages.mjs, marked with this body class) already
-   has its own tool-specific hero and drop zone right below the nav, so
-   this generic one is hidden there to avoid showing two upload boxes
-   stacked on top of each other. */
-body.tool-landing-page .hero-drop-wrap {
-  display: none;
-}
-
-/* ---------- Featured-tools banner (replaces the old search box) ---------- */
-.ffh-banner {
-  /* Full-bleed: stretches past .hero-drop-wrap's own 32px side padding
-     so it touches the true left/right edges of the page, same height
-     as before. No border-radius/side borders — a rounded or bordered
-     edge sitting flush against the viewport edge reads as a visual
-     glitch rather than a clean edge-to-edge bar. */
-  position: relative;
-  width: calc(100% + 64px);
-  margin: -32px -32px 12px;
-  height: 52px;
-  overflow: hidden;
-  background: var(--white);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.ffh-banner-track {
-  display: flex;
-  height: 100%;
-  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.ffh-banner-slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 44px 0 18px;
-  text-decoration: none;
-  color: var(--text);
-  font-size: 1.196rem;
-  font-weight: 600;
-}
-
-.ffh-banner-slide:hover { background: var(--blue-light); }
-.ffh-banner-slide img { width: 26px; height: 26px; flex-shrink: 0; }
-.ffh-banner-slide .ffh-banner-sub { color: var(--text-muted); font-weight: 500; font-size: 1rem; }
-
-/* min-width:0 lets a flex child actually shrink below its content size —
-   without it, text-overflow:ellipsis below has no room to ever kick in. */
-.ffh-banner-text { min-width: 0; }
-
-/* Below ~640px the full "label: description" line no longer fits on the
-   banner's one fixed-height (52px) row — it used to wrap to a second
-   line and get clipped/overlapped by the dots. Truncate with an ellipsis
-   instead of wrapping, and drop the (redundant on a small screen)
-   description entirely so what's left is still meaningful on its own. */
-@media (max-width: 640px) {
-  .ffh-banner-slide { padding: 0 36px 0 14px; gap: 8px; font-size: 1.08rem; }
-  .ffh-banner-text {
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .ffh-banner-slide .ffh-banner-sub { display: none; }
-}
-
-/* .ffh-banner's edge-to-edge bleed above is hardcoded to offset the
-   desktop/tablet 32px .hero-drop-wrap padding — recalculated here to
-   match the 20px padding set at this same breakpoint, otherwise it
-   overshoots the viewport by 12px on each side and causes horizontal
-   scroll on phones. (Placed after the base .ffh-banner rule so it
-   actually wins the cascade at equal specificity.) */
-@media (max-width: 480px) {
-  .ffh-banner { width: calc(100% + 40px); margin: -20px -20px 12px; }
-}
-
-.ffh-banner-dots {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 5px;
-}
-
-.ffh-banner-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border);
-  transition: background 0.2s ease;
-}
-
-.ffh-banner-dot.active { background: var(--blue); }
-
-.awaiting-tool-hint {
-  text-align: center;
-  margin-top: 12px;
-  font-size: 1.196rem;
-}
-
-.awaiting-tool-hint button {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 1.196rem;
-}
-
-.hero-drop-row {
-  display: flex;
-  /* flex-start (not stretch): the drop zone has its own fixed
-     min-height and must not be force-stretched to match the taller
-     suggestion panel next to it, otherwise it grows the moment the
-     panel appears even though its own min-height never changed. */
-  align-items: flex-start;
-  /* Centered so the lone drop zone sits in the middle of the row while
-     idle (the suggestion panel is display:none and takes up no space).
-     Once the suggestion panel appears beside it, the two 50%-basis boxes
-     together fill the row's full width anyway, so this has no visible
-     effect then — they naturally read as a left box + right box pair. */
-  justify-content: center;
-  gap: 20px;
-}
-
-.hero-drop-zone {
-  /* Constant size at all times — matches what used to be the "compact"
-     (post-drop) size, so the box no longer resizes/jumps when the
-     suggestion panel appears. The suggestion panel simply fills the
-     rest of the row beside it once it has something to show. */
-  position: relative;
-  flex: 0 1 50%;
-  min-width: 0;
-  /* Fixed (not min-) height, plus overflow:hidden as a backstop — the
-     box must never grow no matter what's inside it (single file, a
-     multi-file list, a long filename, ...). The preview content below
-     is sized to fit within this instead of pushing it taller. */
-  height: 320px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-  background: var(--white);
-  border: 3px dashed var(--blue);
-  border-radius: 20px;
-  cursor: pointer;
-  padding: 32px;
-  text-align: center;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.hero-drop-zone:hover, .hero-drop-zone.drag-active { background: var(--blue-light); border-color: var(--blue-dark); }
-
-.hero-drop-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
-}
-
-.hero-drop-idle {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-}
-
-.hero-drop-icon { width: 34px; height: 34px; color: var(--blue); }
-
-/* Touch users don't drag-and-drop — this is the dominant, unmissable
-   action; the box itself stays clickable/droppable too (desktop, and
-   any touch device that does support drag). */
-.hero-drop-browse-btn {
-  padding: 13px 30px;
-  background: var(--red);
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 1.05rem;
-  min-height: 46px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.hero-drop-browse-btn:hover { background: var(--red-dark); }
-.hero-drop-browse-btn:active { background: var(--red-dark); }
-
-/* ---------- Analyzing state (shown briefly right after a drop) ---------- */
-.hero-analyzing {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  max-width: 260px;
-}
-
-.hero-analyzing-icons {
-  position: relative;
-  width: 64px;
-  height: 64px;
-}
-
-.hero-analyzing-doc { display: block; color: var(--blue); }
-.hero-analyzing-doc .icon { width: 42px; height: 42px; }
-
-.hero-analyzing-glass {
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  color: var(--text-muted);
-  animation: heroScan 1.1s ease-in-out infinite;
-}
-.hero-analyzing-glass .icon { width: 27px; height: 27px; }
-
-@keyframes heroScan {
-  0%, 100% { transform: translate(0, 0) rotate(-8deg); }
-  50% { transform: translate(26px, 20px) rotate(8deg); }
-}
-
-.hero-analyzing-text { font-weight: 600; color: var(--blue); font-size: 1.196rem; margin: 0; }
-
-/* ---------- Preview state (drop zone content after upload) ---------- */
-.hero-preview {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  /* Fills whatever vertical space the (now fixed-height) drop zone
-     has, rather than sizing to its own content — that's what lets the
-     thumb below shrink to fit instead of forcing the box to grow. */
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.hero-file-badge {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  background: var(--red);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.9rem;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(27, 36, 48, 0.25);
-  z-index: 1;
-}
-
-/* Removes the file currently shown large in the preview. Always
-   anchored top-left so it never collides with the count badge, which
-   is always top-right. */
-.hero-file-remove-btn {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  background: var(--text);
-  color: #fff;
-  border: 2px solid var(--white);
-  font-weight: 700;
-  font-size: 0.85rem;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 6px rgba(27, 36, 48, 0.25);
-  cursor: pointer;
-  z-index: 2;
-  line-height: 1;
-  padding: 0;
-}
-
-.hero-file-remove-btn:hover { background: var(--red); }
-
-/* Per-file list shown once more than one file is queued, so each file
-   can be removed individually rather than only clearing everything. */
-.hero-file-list {
-  width: 100%;
-  max-height: 118px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.hero-file-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--gray-light);
-  border-radius: 10px;
-  padding: 6px 8px 6px 10px;
-}
-
-.hero-file-row-icon { font-size: 1rem; flex-shrink: 0; }
-
-.hero-file-row-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.92rem;
-  color: var(--text);
-  text-align: left;
-}
-
-.hero-file-row-remove {
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 0.9rem;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hero-file-row-remove:hover { background: var(--red); color: #fff; }
-
-/* Anchored directly to the thumb/icon box (not the whole preview
-   column) so the badge stays pinned to its corner regardless of how
-   wide the filename text below makes the column. Sized to fill
-   whatever vertical space is left in the (fixed-height) box — capped
-   at 75% width so it still reads as the dominant thing in the box —
-   instead of a fixed width/aspect-ratio that could force the box
-   taller than its fixed height. */
-.hero-preview-thumb-wrap, .hero-preview-icon {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  max-width: 75%;
-  aspect-ratio: 1 / 1;
-}
-
-.hero-preview-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  display: block;
-}
-
-.hero-preview-icon {
-  border-radius: 14px;
-  background: var(--gray-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.hero-preview-icon > .icon {
-  width: clamp(32px, 9vw, 112px);
-  height: clamp(32px, 9vw, 112px);
-  color: var(--text-muted);
-}
-
-.hero-preview .batch-warning { width: 100%; box-sizing: border-box; }
-
-.hero-preview-name {
-  font-weight: 600;
-  color: var(--text);
-  margin: 0;
-  text-align: center;
-  word-break: break-word;
-  max-width: 100%;
-  font-size: 1.144rem;
-}
-
-.hero-preview-count-note { font-size: 1.04rem; color: var(--text-muted); margin: 0; }
-
-.hero-add-more-btn {
-  margin-top: 2px;
-  padding: 8px 18px;
-  border-radius: 20px;
-  border: 1px solid var(--blue);
-  background: var(--white);
-  color: var(--blue);
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 1.04rem;
-}
-
-.hero-add-more-btn:hover { background: var(--blue-light); }
-
-.hero-clear-btn {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 0.95rem;
-}
-
-/* ---------- Suggestion panel beside the (now compact) drop zone ----------
-   Styled as a speech bubble — the mascot "asking" which tool you want,
-   even though he stays put in his corner. A tail on the right edge
-   points back toward him (only on pages where he's shown — see the
-   tool-landing-page override below). */
-.hero-suggest-panel {
-  display: none;
-  position: relative;
-  /* Same footprint as the drop zone beside it (flex 0 1 50% + fixed
-     320px height) so the two boxes read as a matched pair. Content is
-     sized to always fit within this box — no scrolling — and overflow
-     stays visible so the tail (below) is never clipped. */
-  flex: 0 1 50%;
-  min-width: 0;
-  height: 320px;
-  overflow: visible;
-  flex-direction: column;
-  gap: 7px;
-  justify-content: center;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 18px 22px;
-  box-shadow: 0 10px 28px rgba(27, 36, 48, 0.12);
-}
-
-.hero-suggest-panel.visible { display: flex; }
-
-/* Tail on the right edge, pointing toward the mascot's fixed spot in
-   the corner — he's the one "asking", not the drop zone. --tail-top is
-   set by updateSuggestTailPosition() in main.js so the tail tracks the
-   mascot's actual screen position (which stays fixed) as the page
-   scrolls, instead of sitting at one static height. 30px is just the
-   pre-JS fallback. */
-.hero-suggest-panel::before, .hero-suggest-panel::after {
-  content: "";
-  position: absolute;
-  right: -15px;
-  top: var(--tail-top, 30px);
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 13px 0 13px 16px;
-}
-.hero-suggest-panel::before { border-color: transparent transparent transparent var(--border); }
-.hero-suggest-panel::after { right: -13px; border-color: transparent transparent transparent var(--white); }
-
-.hero-suggest-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0 0 1px;
-}
-
-.hero-suggest-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--gray-light);
-  border: 1px solid transparent;
-  border-radius: 12px;
-  padding: 9px 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: box-shadow 0.15s ease, transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.hero-suggest-card:hover {
-  background: var(--white);
-  box-shadow: 0 4px 14px rgba(27, 36, 48, 0.1);
-  transform: translateY(-1px);
-  border-color: var(--blue);
-}
-
-.hero-suggest-card img { width: 26px; height: 26px; flex-shrink: 0; }
-
-.hero-suggest-label { font-weight: 700; font-size: 1.04rem; color: var(--text); line-height: 1.25; }
-.hero-suggest-desc { font-size: 0.9rem; color: var(--text-muted); margin-top: 1px; line-height: 1.25; }
-
-.hero-suggest-card.hero-suggest-more {
-  border-style: dashed;
-  border-color: var(--border);
-  background: transparent;
-  justify-content: center;
-  text-align: center;
-  padding: 8px 14px;
-  font-size: 0.95rem;
-}
-
-.hero-drop-icons {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.hero-drop-icons img { width: 48px; height: 58px; opacity: 0.85; }
-
-.hero-drop-text {
-  color: var(--blue);
-  font-weight: 700;
-  font-size: 2.08rem;
-  margin: 0;
-  pointer-events: none;
-  text-wrap: balance;
-}
-
-/* Desktop keeps the drag/drop instruction; touch/small screens show a
-   tap-oriented instruction instead — the Browse button below is the
-   actual primary action either way, this is just the wording above it.
-   Both variants live in the DOM and CSS toggles which is visible, so
-   there's no duplicated upload logic to keep in sync. */
-.drop-text-mobile { display: none; }
-
-@media (max-width: 640px) {
-  .hero-drop-text { font-size: 1.3rem; }
-  .drop-text-desktop { display: none; }
-  .drop-text-mobile { display: inline; }
-}
-
-.hero-drop-subtext {
-  color: var(--text-muted);
-  font-weight: 500;
-  font-size: 0.95rem;
-  margin: 0;
-  pointer-events: none;
-}
-
-.hero-drop-zone input[type="file"] {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-/* ---------- Hero mascot widget ---------- */
-.ffh-widget {
-  /* Fixed to the viewport (not the page): he stays on screen in the
-     same spot as you scroll, on every page, instead of scrolling away
-     with the rest of the content. Sits outside the hero-drop-wrap in
-     the DOM for exactly this reason. A soft white halo (::before)
-     keeps him readable whether he's floating over the sky, a tool
-     grid, or the dark footer. */
-  position: fixed;
-  right: 18px;
-  bottom: 18px;
-  width: 170px;
-  height: 210px;
-  z-index: 40;
-  cursor: pointer;
-}
-
-.ffh-widget::before {
-  content: "";
-  position: absolute;
-  inset: -14px;
-  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 72%);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Fixed sky layer: sits behind everything, in the viewport, on every
-   page — this is what makes the clouds feel like part of the whole
-   site's background rather than boxed into one widget. */
-.ffh-sky-clouds {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-}
-.ffh-sky-cloud {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 999px;
-  filter: blur(0.5px);
-}
-.ffh-sky-cloud::before, .ffh-sky-cloud::after {
-  content: "";
-  position: absolute;
-  background: inherit;
-  border-radius: 999px;
-}
-.sc1 { width: 150px; height: 50px; top: 10%; left: 6%; animation: ffhSkyDrift 55s linear infinite; }
-.sc1::before { width: 76px; height: 76px; top: -38px; left: 18px; }
-.sc1::after { width: 60px; height: 60px; top: -28px; left: 76px; }
-.sc2 { width: 110px; height: 38px; top: 20%; left: 58%; animation: ffhSkyDrift 70s linear infinite reverse; }
-.sc2::before { width: 56px; height: 56px; top: -28px; left: 12px; }
-.sc2::after { width: 46px; height: 46px; top: -22px; left: 50px; }
-.sc3 { width: 90px; height: 32px; top: 32%; left: 28%; animation: ffhSkyDrift 46s linear infinite; }
-.sc3::before { width: 46px; height: 46px; top: -22px; left: 10px; }
-.sc3::after { width: 38px; height: 38px; top: -18px; left: 42px; }
-.sc4 { width: 100px; height: 34px; top: 6%; left: 84%; animation: ffhSkyDrift 62s linear infinite reverse; }
-.sc4::before { width: 50px; height: 50px; top: -25px; left: 12px; }
-.sc4::after { width: 40px; height: 40px; top: -20px; left: 46px; }
-.sc5 { width: 70px; height: 26px; top: 46%; left: 8%; animation: ffhSkyDrift 50s linear infinite; }
-.sc5::before { width: 36px; height: 36px; top: -18px; left: 8px; }
-.sc5::after { width: 28px; height: 28px; top: -14px; left: 34px; }
-.sc6 { width: 130px; height: 44px; top: 58%; left: 72%; animation: ffhSkyDrift 66s linear infinite reverse; }
-.sc6::before { width: 66px; height: 66px; top: -33px; left: 16px; }
-.sc6::after { width: 52px; height: 52px; top: -26px; left: 66px; }
-.sc7 { width: 84px; height: 30px; top: 78%; left: 20%; animation: ffhSkyDrift 58s linear infinite; }
-.sc7::before { width: 42px; height: 42px; top: -21px; left: 10px; }
-.sc7::after { width: 34px; height: 34px; top: -16px; left: 40px; }
-.sc8 { width: 96px; height: 32px; top: 68%; left: 46%; animation: ffhSkyDrift 74s linear infinite reverse; }
-.sc8::before { width: 48px; height: 48px; top: -24px; left: 12px; }
-.sc8::after { width: 38px; height: 38px; top: -19px; left: 44px; }
-.sc9 { width: 60px; height: 22px; top: 14%; left: 40%; animation: ffhSkyDrift 42s linear infinite; }
-.sc9::before { width: 30px; height: 30px; top: -15px; left: 6px; }
-.sc9::after { width: 24px; height: 24px; top: -12px; left: 28px; }
-@keyframes ffhSkyDrift {
-  from { transform: translateX(-30px); }
-  to { transform: translateX(30px); }
-}
-
-.ffh-hero-wrap {
-  position: absolute;
-  bottom: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-  animation: ffhBob 3.2s ease-in-out infinite;
-  z-index: 2;
-}
-@keyframes ffhBob {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-8px); }
-}
-
-.ffh-shadow {
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  width: 90px;
-  height: 14px;
-  background: rgba(20, 40, 20, 0.22);
-  border-radius: 50%;
-  transform: translateX(-50%);
-  filter: blur(2px);
-  animation: ffhShadowPulse 3.2s ease-in-out infinite;
-}
-@keyframes ffhShadowPulse {
-  0%, 100% { transform: translateX(-50%) scaleX(1); }
-  50% { transform: translateX(-50%) scaleX(0.9); }
-}
-
-.ffh-hero-svg { display: block; width: 210px; height: auto; overflow: visible; }
-
-.ffh-cape {
-  animation: ffhSway 2.6s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: 50% 0%;
-}
-@keyframes ffhSway {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(3deg); }
-}
-
-.ffh-hair {
-  animation: ffhWind 2.2s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: bottom center;
-}
-@keyframes ffhWind {
-  0%, 100% { transform: rotate(-2deg) skewX(-1deg); }
-  50% { transform: rotate(3deg) skewX(2deg); }
-}
-
-.ffh-pupil { transition: none; }
-.ffh-eyelid {
-  transform: scaleY(0);
-  transform-box: fill-box;
-  transform-origin: top;
-}
-
-.ffh-arm-group { transform-box: view-box; }
-#ffhArmL { transform-origin: 105px 195px; }
-#ffhArmR { transform-origin: 235px 195px; }
-#ffhArmR.ffh-waving-now {
-  animation: ffhWaveHand 0.5s ease-in-out 3;
-  transform-origin: 235px 195px;
-}
-@keyframes ffhWaveHand {
-  0%, 100% { transform: rotate(-100deg); }
-  50% { transform: rotate(-70deg); }
-}
-.ffh-arm-group.ffh-lowering { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-#ffhHeadGroup { transform-box: view-box; transform-origin: 170px 128px; }
-#ffhBodyGroup { transform-box: view-box; transform-origin: 170px 245px; }
-
-@media (max-width: 860px) {
-  .hero-drop-row { flex-direction: column; }
-  /* Both boxes drop the desktop's fixed 320px height here and size to
-     their own content instead — on desktop that fixed height is what
-     keeps them a "matched pair" side by side, but stacked on mobile it
-     was clipping/overflowing the suggestion panel's text (title + up to
-     3 cards + the "see all" link easily runs past 320px) since
-     overflow:visible let content spill outside the box rather than
-     grow it. min-height keeps the idle drop zone from looking
-     collapsed/thin; the drop zone also switches to overflow:visible so
-     a long multi-file list can't get clipped the same way. Sized this
-     way, both boxes end up matching each other again — each just fits
-     what it actually contains. */
-  .hero-drop-zone { flex: 0 0 auto; height: auto; min-height: 220px; overflow: visible; padding: 24px 20px; }
-  /* .hero-drop-content and .hero-preview normally rely on the drop
-     zone's fixed height (height:100% / flex:1 1 auto against a
-     known-height ancestor) to fill it — with the drop zone now
-     auto-height above, that 100% would otherwise resolve to 0 and
-     collapse everything inside it. */
-  .hero-drop-content { height: auto; padding: 6px 0; }
-  .hero-suggest-panel.visible { flex: 0 0 auto; height: auto; margin-top: 16px; }
-  /* Mascot removed entirely on mobile — on a narrow screen he's a fixed
-     corner overlay competing with real content (tap targets, text) on
-     an already-long stacked page, without the room to be the fun
-     "companion" touch he is on desktop. */
-  .ffh-widget { display: none; }
-  /* The suggestion panel's tail (::before/::after) points at the
-     mascot's fixed corner — with him gone on mobile it would just be a
-     stray triangle pointing at nothing, so it's hidden too. */
-  .hero-suggest-panel::before, .hero-suggest-panel::after { display: none; }
 }
 
 /* ---------- Hero ---------- */
@@ -1537,6 +911,41 @@ body.tool-landing-page .hero-drop-wrap {
 .tool-card.cat-ppt { background: #FBEEE1; border-color: #EFCB9E; }
 .tool-card.cat-utilities { background: #F9F0E0; border-color: #E9CA95; }
 
+/* Dark mode: a pale pastel fill would just look washed-out on a dark
+   page, so cards stay on the plain dark surface and carry their
+   category color as a border/icon tint instead — same idea as light
+   mode (identifiable at a glance), different execution. */
+:root[data-theme="dark"] .tool-card.cat-pdf,
+:root[data-theme="dark"] .tool-card.cat-image,
+:root[data-theme="dark"] .tool-card.cat-excel,
+:root[data-theme="dark"] .tool-card.cat-word,
+:root[data-theme="dark"] .tool-card.cat-ppt,
+:root[data-theme="dark"] .tool-card.cat-utilities {
+  background: var(--surface);
+}
+:root[data-theme="dark"] .tool-card.cat-pdf { border-color: color-mix(in srgb, var(--category-pdf) 35%, var(--border)); }
+:root[data-theme="dark"] .tool-card.cat-image { border-color: color-mix(in srgb, var(--category-image) 35%, var(--border)); }
+:root[data-theme="dark"] .tool-card.cat-excel { border-color: color-mix(in srgb, var(--category-excel) 35%, var(--border)); }
+:root[data-theme="dark"] .tool-card.cat-word { border-color: color-mix(in srgb, var(--category-word) 35%, var(--border)); }
+:root[data-theme="dark"] .tool-card.cat-ppt { border-color: color-mix(in srgb, var(--category-ppt) 35%, var(--border)); }
+:root[data-theme="dark"] .tool-card.cat-utilities { border-color: color-mix(in srgb, var(--category-utility) 35%, var(--border)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tool-card.cat-pdf,
+  :root:not([data-theme="light"]) .tool-card.cat-image,
+  :root:not([data-theme="light"]) .tool-card.cat-excel,
+  :root:not([data-theme="light"]) .tool-card.cat-word,
+  :root:not([data-theme="light"]) .tool-card.cat-ppt,
+  :root:not([data-theme="light"]) .tool-card.cat-utilities {
+    background: var(--surface);
+  }
+  :root:not([data-theme="light"]) .tool-card.cat-pdf { border-color: color-mix(in srgb, var(--category-pdf) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-image { border-color: color-mix(in srgb, var(--category-image) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-excel { border-color: color-mix(in srgb, var(--category-excel) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-word { border-color: color-mix(in srgb, var(--category-word) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-ppt { border-color: color-mix(in srgb, var(--category-ppt) 35%, var(--border)); }
+  :root:not([data-theme="light"]) .tool-card.cat-utilities { border-color: color-mix(in srgb, var(--category-utility) 35%, var(--border)); }
+}
+
 .tool-card h3 {
   font-size: 1.04rem;
   margin: 0;
@@ -1666,6 +1075,71 @@ body.tool-landing-page .hero-drop-wrap {
 .breadcrumbs a { color: var(--text-muted); text-decoration: none; }
 .breadcrumbs a:hover { text-decoration: underline; }
 
+/* ---------- Theme toggle ---------- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.mobile-menu-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-toggle-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+
+.theme-toggle-btn:hover { color: var(--text); border-color: var(--text-secondary); }
+.theme-toggle-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.theme-toggle-btn .icon {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  transition: opacity var(--motion-fast), transform var(--motion-fast);
+}
+
+/* Sun shows (and moon hides) in light mode; the toggle in the header
+   partial always renders both icons — this is a pure CSS crossfade
+   keyed off the same [data-theme] attribute the rest of the page
+   themes from, so there's zero layout shift and no JS needed just to
+   swap the glyph. */
+.theme-icon-dark { opacity: 0; transform: scale(0.6) rotate(-40deg); }
+.theme-icon-light { opacity: 1; transform: scale(1) rotate(0deg); }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-light { opacity: 0; transform: scale(0.6) rotate(40deg); }
+  :root:not([data-theme="light"]) .theme-icon-dark { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+:root[data-theme="dark"] .theme-icon-light { opacity: 0; transform: scale(0.6) rotate(40deg); }
+:root[data-theme="dark"] .theme-icon-dark { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.icon-sun {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3C/svg%3E");
+}
+
+.icon-moon {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z'/%3E%3C/svg%3E");
+}
+
 /* ---------- Hamburger (mobile only) ---------- */
 .hamburger-btn {
   display: none;
@@ -1786,6 +1260,8 @@ body.tool-landing-page .hero-drop-wrap {
   border-radius: 10px;
   font-size: 1.404rem;
   font-family: var(--font-body);
+  background-color: var(--surface);
+  color: var(--text);
   /* Inline SVG icon — no extra request, no icon-font dependency. */
   background-repeat: no-repeat;
   background-position: 16px center;
@@ -2108,11 +1584,7 @@ body.tool-landing-page .hero-drop-wrap {
    place of the hero/upload UI, so the header nav and footer stay visible
    around it instead of everything living behind a dimmed overlay. */
 body.tool-result-active .hero,
-body.tool-result-active .hero-drop-wrap,
-body.tool-result-active .hero-suggest-panel,
-body.tool-result-active .awaiting-tool-hint,
-body.tool-result-active #tpDropZone,
-body.tool-result-active #ffhWidget {
+body.tool-result-active #tpDropZone {
   display: none !important;
 }
 
@@ -2379,7 +1851,6 @@ body.tool-result-active #ffhWidget {
   .tp-toast,
   .tool-card,
   .filter-tab,
-  .hero-drop-browse-btn,
   .tp-dropzone-browse-btn,
   .faq-question::after {
     transition: none !important;
@@ -3246,10 +2717,11 @@ body.tool-result-active #ffhWidget {
 
 /* ---------- Footer ---------- */
 .site-footer {
-  background: var(--ink);
-  color: #C9CDD3;
+  background: var(--footer-bg);
+  color: var(--footer-text);
   margin-top: 60px;
   padding: 44px 24px 20px;
+  transition: background var(--motion-fast);
 }
 
 .footer-inner {
@@ -3273,7 +2745,7 @@ body.tool-result-active #ffhWidget {
   font-family: var(--font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--footer-heading);
   text-decoration: none;
   margin-bottom: 12px;
 }
@@ -3281,7 +2753,7 @@ body.tool-result-active #ffhWidget {
 .footer-tagline {
   font-size: 1.05rem;
   line-height: 1.55;
-  color: #9CA3AF;
+  color: var(--footer-text-muted);
   margin: 0 0 16px;
 }
 
@@ -3293,8 +2765,8 @@ body.tool-result-active #ffhWidget {
   gap: 5px;
   font-size: 0.86rem;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid #2C3644;
-  color: #C9CDD3;
+  border: 1px solid var(--footer-border);
+  color: var(--footer-text);
   padding: 5px 11px;
   border-radius: 20px;
   white-space: nowrap;
@@ -3305,7 +2777,7 @@ body.tool-result-active #ffhWidget {
 .footer-col { flex: 1 1 140px; }
 
 .footer-col h4 {
-  color: #fff;
+  color: var(--footer-heading);
   font-family: var(--font-display);
   font-size: 1.365rem;
   margin: 0 0 12px;
@@ -3313,7 +2785,7 @@ body.tool-result-active #ffhWidget {
 
 .footer-col a {
   display: block;
-  color: #C9CDD3;
+  color: var(--footer-text);
   text-decoration: none;
   font-size: 1.235rem;
   /* Padding (not just margin) so the clickable box itself is taller —
@@ -3322,7 +2794,7 @@ body.tool-result-active #ffhWidget {
   margin-bottom: 2px;
 }
 
-.footer-col a:hover { color: #fff; }
+.footer-col a:hover { color: var(--footer-heading); }
 
 .footer-bottom {
   display: flex;
@@ -3331,8 +2803,8 @@ body.tool-result-active #ffhWidget {
   flex-wrap: wrap;
   gap: 14px;
   font-size: 1.014rem;
-  color: #6B7280;
-  border-top: 1px solid #2C3644;
+  color: var(--footer-text-muted);
+  border-top: 1px solid var(--footer-border);
   padding-top: 20px;
   max-width: 1500px;
   margin: 0 auto;
@@ -3441,6 +2913,15 @@ body.tool-result-active #ffhWidget {
 .tp-dropzone-icon { display: block; width: 32px; height: 32px; margin: 0 auto 10px; color: var(--blue); }
 .tp-dropzone-text { font-size: 1.235rem; font-weight: 700; color: var(--text); margin: 0; }
 .tp-dropzone-formats { font-size: 1rem; color: var(--text-muted); margin: 8px 0 0; }
+
+/* Desktop shows the drag/drop instruction; touch/small screens show a
+   tap-oriented instruction instead — the Browse button is the actual
+   primary action either way, this only swaps the wording above it. */
+.drop-text-mobile { display: none; }
+@media (max-width: 640px) {
+  .drop-text-desktop { display: none; }
+  .drop-text-mobile { display: inline; }
+}
 
 /* The dropzone's own click-to-browse handler fires for any click inside
    it (see wireToolPageDropZone), so this button needs no extra JS — it's

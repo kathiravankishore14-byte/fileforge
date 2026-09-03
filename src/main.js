@@ -306,49 +306,12 @@ function renderToolGrid(containerEl, toolKeys) {
 function handleToolCardClick(toolKey, card) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
-  clearResultPage(); // starting a new tool from anywhere restores the hero/dropzone if a result page was showing
-
-  // noFile tools and Compare PDF (needs two distinct named slots) still open their own modal directly
-  if (meta.noFile || toolKey === 'pdfcompare') {
-    openToolModal(toolKey, card);
-    return;
-  }
-
-  // If a file is already sitting ready (carried from a previous drop), just proceed
-  if (!meta.multiFile && pendingHeroFile && validateFileType(pendingHeroFile, meta.accept)) {
-    openToolModal(toolKey, card);
-    return;
-  }
-
-  // Otherwise: point them at the big drop zone — used for both single files and starting a multi-file batch
-  awaitingToolKey = toolKey;
-  awaitingExistingFiles = meta.multiFile ? [] : null;
-  updateHeroDropZoneLabel();
-  const dropWrap = document.querySelector('#heroDropZone');
-  if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function updateHeroDropZoneLabel() {
-  // If a specific tool just got requested (e.g. from a tool card) while the
-  // drop zone was showing analyzing/preview content from an unrelated
-  // earlier drop, snap it back to the plain idle state first so the
-  // "drop your file for X" hint has somewhere to render.
-  if (awaitingToolKey && !document.querySelector('.hero-drop-text')) {
-    resetHeroUploadFlow();
-  }
-  const textEl = document.querySelector('.hero-drop-text');
-  const hintEl = document.querySelector('#awaitingToolHint');
-  if (!textEl) return;
-  if (awaitingToolKey && toolMeta[awaitingToolKey]) {
-    const count = awaitingExistingFiles ? awaitingExistingFiles.length : 0;
-    textEl.textContent = count > 0
-      ? `Drop another file for ${toolMeta[awaitingToolKey].label} (${count} added so far)`
-      : `Drop your file here for ${toolMeta[awaitingToolKey].label}`;
-    if (hintEl) hintEl.style.display = 'block';
-  } else {
-    textEl.textContent = "Drop any file here to get started, we'll find the right tool";
-    if (hintEl) hintEl.style.display = 'none';
-  }
+  clearResultPage(); // starting a new tool from anywhere restores a clean grid if a result page was showing
+  // openToolModal is the single source of truth for what happens next:
+  // opens in place if the tool needs no file (or one is already ready),
+  // otherwise sends the visitor to that tool's own dedicated page, which
+  // has its own upload panel.
+  openToolModal(toolKey, card);
 }
 
 // ================= MODAL CORE =================
@@ -359,8 +322,6 @@ let currentToolKey = null;
 let lastFocusedElement = null;
 let pendingHeroFile = null;
 let renderGeneration = 0;
-let awaitingToolKey = null;
-let awaitingExistingFiles = null;
 
 const backdrop = document.querySelector('#modalBackdrop');
 const modalTitle = document.querySelector('#modalTitle');
@@ -380,11 +341,12 @@ function openToolModal(toolKey, triggerEl, initialMultiFiles) {
   const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
 
   if (needsFile && !hasReadySingleFile && !hasReadyMultiFiles) {
-    awaitingToolKey = toolKey;
-    awaitingExistingFiles = meta.multiFile ? [] : null;
-    updateHeroDropZoneLabel();
-    const dropWrap = document.querySelector('#heroDropZone');
-    if (dropWrap) dropWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // No shared upload zone lives on this page (homepage/category pages
+    // only show search + the tool grid) — send the visitor to the
+    // tool's own dedicated page, which has its own upload panel right
+    // below the fold.
+    const url = toolUrl(toolKey);
+    if (url) window.location.href = url;
     return;
   }
 
@@ -3760,394 +3722,6 @@ function renderMultiFileTool(initialFiles) {
   });
 }
 
-function detectCategoryFromFile(file) {
-  const name = file.name.toLowerCase();
-  if (name.endsWith('.heic') || name.endsWith('.heif') || file.type.startsWith('image/')) return 'image';
-  if (name.endsWith('.docx')) return 'word';
-  if (name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv')) return 'excel';
-  if (name.endsWith('.pdf')) return 'pdf';
-  if (name.endsWith('.pptx')) return 'ppt';
-  return null;
-}
-
-function wireHeroDropZone() {
-  const dz = document.querySelector('#heroDropZone');
-  if (!dz) return;
-  const input = document.querySelector('#heroFileInput');
-  const cancelBtn = document.querySelector('#cancelAwaitingTool');
-
-  // The file input covers the whole box (see CSS) and stays in the DOM the
-  // entire time — only #heroDropContent's innerHTML gets swapped between
-  // idle/analyzing/preview states, so this listener never needs rewiring.
-  dz.addEventListener('click', (e) => {
-    if (e.target === input) return;
-    // The Browse button is deliberately part of the same click-to-open
-    // area (not a separate handler) — it re-renders on every reset, so
-    // delegating through the drop zone's own stable listener means it
-    // never needs to be individually re-wired.
-    if (e.target.closest('#heroBrowseBtn')) { input.click(); return; }
-    if (e.target.closest('button, a')) return;
-    input.click();
-  });
-  dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-active'); });
-  dz.addEventListener('dragleave', () => dz.classList.remove('drag-active'));
-  dz.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dz.classList.remove('drag-active');
-    if (e.dataTransfer.files.length) routeHeroFiles(Array.from(e.dataTransfer.files));
-  });
-  input.addEventListener('change', (e) => {
-    if (e.target.files.length) routeHeroFiles(Array.from(e.target.files));
-    input.value = '';
-  });
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', () => {
-      awaitingToolKey = null;
-      updateHeroDropZoneLabel();
-    });
-  }
-
-  // Below 860px the drop zone and suggestion panel stack instead of
-  // sitting side by side, so nothing here naturally keeps them the same
-  // height any more (desktop just fixes both to 320px). Re-run the
-  // equalizer on resize/orientation-change so the pair stays matched
-  // even if the browser is resized while the suggestion panel is open.
-  let alignResizeRaf = null;
-  window.addEventListener('resize', () => {
-    if (alignResizeRaf) return;
-    alignResizeRaf = requestAnimationFrame(() => {
-      alignResizeRaf = null;
-      alignHeroBoxHeights();
-    });
-  });
-}
-
-// Keeps the drop zone and the suggestion "speech bubble" panel the same
-// height once both are showing on mobile (see wireHeroDropZone's resize
-// listener and the end of renderHeroSuggestions). Desktop already fixes
-// both to 320px in CSS, so this only needs to do anything on narrow
-// screens where they're stacked and each sizes to its own content.
-function alignHeroBoxHeights() {
-  const dz = document.querySelector('#heroDropZone');
-  const panel = document.querySelector('#heroSuggestPanel');
-  if (!dz || !panel || !panel.classList.contains('visible')) return;
-  if (window.innerWidth > 860) {
-    dz.style.minHeight = '';
-    panel.style.minHeight = '';
-    return;
-  }
-  dz.style.minHeight = '';
-  panel.style.minHeight = '';
-  const target = Math.max(dz.offsetHeight, panel.offsetHeight);
-  dz.style.minHeight = `${target}px`;
-  panel.style.minHeight = `${target}px`;
-}
-
-async function routeHeroFiles(files) {
-  if (!files || !files.length) return;
-
-  // If a specific tool is waiting for this drop, go straight there —
-  // same as before, just now accepts several files in one go too.
-  if (awaitingToolKey && toolMeta[awaitingToolKey]) {
-    const meta = toolMeta[awaitingToolKey];
-    const toolKey = awaitingToolKey;
-
-    if (meta.multiFile) {
-      const valid = files.filter((f) => {
-        if (!validateFileType(f, meta.accept)) { showTypeRejection(meta.label, meta.accept); return false; }
-        return true;
-      });
-      if (!valid.length) return;
-      awaitingExistingFiles = [...(awaitingExistingFiles || []), ...valid];
-      awaitingToolKey = null;
-      const filesToOpen = awaitingExistingFiles;
-      awaitingExistingFiles = null;
-      updateHeroDropZoneLabel();
-      openToolModal(toolKey, null, filesToOpen);
-      return;
-    }
-
-    const file = files[0];
-    if (!validateFileType(file, meta.accept)) {
-      showTypeRejection(meta.label, meta.accept);
-      return;
-    }
-    awaitingToolKey = null;
-    pendingHeroFile = file;
-    updateHeroDropZoneLabel();
-    openToolModal(toolKey);
-    return;
-  }
-
-  // Otherwise: no tool picked yet — run the inline analyze → suggest flow.
-  analyzeAndSuggestHeroFiles(files);
-}
-
-// ================= HERO PREDICT-THE-TOOL FLOW =================
-// Files dropped with no specific tool already chosen accumulate here.
-// { file, category } — category comes from detectCategoryFromFile.
-let heroFiles = [];
-
-const HERO_CATEGORY_ICON_CLASS = { pdf: 'icon-file', word: 'icon-file-text', excel: 'icon-sheet', ppt: 'icon-presentation', image: 'icon-image' };
-const heroCategoryIconHtml = (category) => `<span class="icon ${HERO_CATEGORY_ICON_CLASS[category] || 'icon-folder'}" aria-hidden="true"></span>`;
-
-// Default 3 suggested tools per category, tuned separately for a single
-// file vs. several files of the same type (e.g. multiple PDFs bumps
-// Merge PDF to the top instead of a single-file-oriented tool).
-const HERO_SUGGEST_CONFIG = {
-  pdf: { single: ['pdfcompress', 'pdftoword', 'pdfrotate'], multi: ['pdfmerge', 'pdfrotate', 'pdfcompress'] },
-  image: { single: ['resize', 'compress', 'crop'], multi: ['collagemaker', 'pdf', 'imagetoppt'] },
-  word: { single: ['wordtopdf', 'wordtoexcel', 'wordtotext'], multi: ['wordtopdf', 'wordtoexcel', 'wordtotext'] },
-  excel: { single: ['exceltopdf', 'exceltocsv'], multi: ['exceltopdf', 'exceltocsv'] },
-  ppt: { single: ['ppttotext'], multi: ['ppttotext'] },
-};
-
-function analyzeAndSuggestHeroFiles(newFiles) {
-  const recognized = [];
-  newFiles.forEach((file) => {
-    const cat = detectCategoryFromFile(file);
-    if (cat) recognized.push({ file, category: cat });
-  });
-  if (!recognized.length) {
-    alert("We couldn't recognize that file type. Try browsing a category above instead.");
-    return;
-  }
-  heroFiles = [...heroFiles, ...recognized];
-  showHeroAnalyzing();
-  setTimeout(renderHeroSuggestions, 1100);
-}
-
-function showHeroAnalyzing() {
-  const dz = document.querySelector('#heroDropZone');
-  const content = document.querySelector('#heroDropContent');
-  if (!dz || !content) return;
-  dz.classList.add('compact');
-  content.innerHTML = `
-    <div class="hero-analyzing">
-      <div class="hero-analyzing-icons">
-        <span class="hero-analyzing-doc"><span class="icon icon-file" aria-hidden="true"></span></span>
-        <span class="hero-analyzing-glass"><span class="icon icon-search" aria-hidden="true"></span></span>
-      </div>
-      <p class="hero-analyzing-text">Analyzing file type…</p>
-      <div class="progress-bar-track"><div class="progress-bar-fill" id="heroProgressFill"></div></div>
-    </div>
-  `;
-  const fill = document.querySelector('#heroProgressFill');
-  if (fill) {
-    fill.style.transition = 'width 1s ease';
-    requestAnimationFrame(() => { fill.style.width = '100%'; });
-  }
-}
-
-function resetHeroUploadFlow() {
-  heroFiles = [];
-  const dz = document.querySelector('#heroDropZone');
-  const content = document.querySelector('#heroDropContent');
-  const panel = document.querySelector('#heroSuggestPanel');
-  if (dz) { dz.classList.remove('compact'); dz.style.minHeight = ''; }
-  if (panel) { panel.classList.remove('visible'); panel.innerHTML = ''; panel.style.minHeight = ''; }
-  if (content) {
-    content.innerHTML = `
-      <div class="hero-drop-idle" id="heroDropIdle">
-        <span class="icon icon-upload hero-drop-icon" aria-hidden="true"></span>
-        <p class="hero-drop-text">
-          <span class="drop-text-desktop">Drag your file here</span>
-          <span class="drop-text-mobile">Choose a file</span>
-        </p>
-        <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
-        <p class="hero-drop-subtext">PDF · JPG · PNG · WEBP · DOCX · XLSX · PPTX</p>
-      </div>
-    `;
-  }
-}
-
-// Removes a single file (by its index in heroFiles) from the hero
-// upload flow — used by both the single-file thumb's "✕" and the
-// per-row "✕" in the multi-file list. Falls back to a full reset once
-// the last file is removed.
-function removeHeroFile(index) {
-  heroFiles.splice(index, 1);
-  if (!heroFiles.length) {
-    resetHeroUploadFlow();
-  } else {
-    renderHeroSuggestions();
-  }
-}
-
-function renderHeroSuggestions() {
-  const dz = document.querySelector('#heroDropZone');
-  const content = document.querySelector('#heroDropContent');
-  const panel = document.querySelector('#heroSuggestPanel');
-  if (!dz || !content || !panel || !heroFiles.length) return;
-
-  dz.classList.add('compact');
-
-  const cats = [...new Set(heroFiles.map((f) => f.category))];
-  const countByCat = {};
-  heroFiles.forEach((f) => { countByCat[f.category] = (countByCat[f.category] || 0) + 1; });
-  const dominant = cats.reduce((a, b) => (countByCat[b] > countByCat[a] ? b : a), cats[0]);
-  const isMulti = heroFiles.length > 1;
-  const latest = heroFiles[heroFiles.length - 1];
-
-  const badgeHtml = heroFiles.length > 1 ? `<span class="hero-file-badge">${heroFiles.length}</span>` : '';
-  const latestIndex = heroFiles.length - 1;
-  const removeBtnHtml = `<button type="button" class="hero-file-remove-btn" data-remove-index="${latestIndex}" aria-label="Remove this file" title="Remove this file">✕</button>`;
-  const fileListHtml = heroFiles.length > 1 ? `
-    <div class="hero-file-list">
-      ${heroFiles.map((f, i) => `
-        <div class="hero-file-row">
-          <span class="hero-file-row-icon">${heroCategoryIconHtml(f.category)}</span>
-          <span class="hero-file-row-name">${f.file.name}</span>
-          <button type="button" class="hero-file-row-remove" data-remove-index="${i}" aria-label="Remove ${f.file.name}" title="Remove this file">✕</button>
-        </div>
-      `).join('')}
-    </div>
-  ` : '';
-  content.innerHTML = `
-    <div class="hero-preview">
-      ${latest.file.type.startsWith('image/')
-        ? `<div class="hero-preview-thumb-wrap"><img class="hero-preview-thumb" src="${URL.createObjectURL(latest.file)}" />${badgeHtml}${removeBtnHtml}</div>`
-        : `<div class="hero-preview-icon">${heroCategoryIconHtml(latest.category)}${badgeHtml}${removeBtnHtml}</div>`}
-      <p class="hero-preview-name">${heroFiles.length > 1 ? `${heroFiles.length} files selected` : latest.file.name}</p>
-      ${cats.length > 1 ? `<div class="batch-warning"><span class="icon icon-alert-triangle" aria-hidden="true"></span> These files span more than one category (${cats.map((c) => CATEGORY_LABELS[c] || c).join(', ')}); suggestions below are based on the most common type.</div>` : ''}
-      ${fileListHtml}
-      <button type="button" class="hero-add-more-btn" id="heroAddMoreFilesBtn">+ Add more files</button>
-      <button type="button" class="hero-clear-btn" id="heroClearFilesBtn">Start over</button>
-    </div>
-  `;
-  document.querySelector('#heroAddMoreFilesBtn').addEventListener('click', () => {
-    document.querySelector('#heroFileInput').click();
-  });
-  document.querySelector('#heroClearFilesBtn').addEventListener('click', () => resetHeroUploadFlow());
-  content.querySelectorAll('[data-remove-index]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      removeHeroFile(Number(btn.dataset.removeIndex));
-    });
-  });
-
-  const config = HERO_SUGGEST_CONFIG[dominant];
-  const matchingFiles = heroFiles.filter((f) => f.category === dominant).map((f) => f.file);
-  const suggestedKeys = (config ? (isMulti ? config.multi : config.single) : [])
-    .filter((k) => toolMeta[k] && !toolMeta[k].comingSoon)
-    .slice(0, 3);
-
-  const cardsHtml = suggestedKeys.map((key) => {
-    const meta = toolMeta[key];
-    return `
-      <div class="hero-suggest-card" data-suggest-tool="${key}">
-        ${renderIconBadge(meta.category, meta.iconTo, key)}
-        <div>
-          <div class="hero-suggest-label">${meta.label}</div>
-          <div class="hero-suggest-desc">${meta.desc}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  const moreLink = pageUrlMap[dominant] || '#';
-  const moreLabel = CATEGORY_LABELS[dominant] || dominant;
-
-  panel.innerHTML = `
-    <p class="hero-suggest-title">Which tool would you like to use?</p>
-    ${cardsHtml}
-    <a class="hero-suggest-card hero-suggest-more" href="${moreLink}">See all ${moreLabel} tools →</a>
-  `;
-  panel.classList.add('visible');
-
-  panel.querySelectorAll('[data-suggest-tool]').forEach((card) => {
-    card.addEventListener('click', () => {
-      const key = card.dataset.suggestTool;
-      const meta = toolMeta[key];
-      if (!meta) return;
-      const validForTool = matchingFiles.filter((f) => validateFileType(f, meta.accept));
-      if (meta.multiFile) {
-        openToolModal(key, card, validForTool.length ? validForTool : matchingFiles);
-      } else {
-        pendingHeroFile = validForTool[0] || matchingFiles[0];
-        openToolModal(key, card);
-      }
-    });
-  });
-
-  updateSuggestTailPosition();
-  alignHeroBoxHeights();
-}
-
-// ================= SUGGESTION-BUBBLE TAIL TRACKING =================
-// The suggestion panel's speech-bubble tail should always point at the
-// mascot, who is fixed to the viewport corner. As the page scrolls the
-// panel moves but the mascot doesn't, so the tail's position *within*
-// the panel has to be recomputed continuously — this keeps it level
-// ("in parallel") with the mascot at any scroll depth.
-let suggestTailRaf = null;
-
-function updateSuggestTailPosition() {
-  const widget = document.querySelector('#ffhWidget');
-  const panel = document.querySelector('#heroSuggestPanel');
-  if (!widget || !panel || !panel.classList.contains('visible')) return;
-  const widgetRect = widget.getBoundingClientRect();
-  const panelRect = panel.getBoundingClientRect();
-  if (!panelRect.height) return;
-  // Aim roughly at the mascot's chest/speech-bubble height, not his feet.
-  const mascotY = widgetRect.top + widgetRect.height * 0.32;
-  let tailTop = mascotY - panelRect.top;
-  // Keep the tail on the flat part of the panel's right edge, clear of
-  // the 24px rounded corners (plus the triangle's own ~13px half-height)
-  // — otherwise it clips into the curve and looks jagged/detached
-  // instead of a smooth, properly-seated speech-bubble tail.
-  const cornerClearance = 40;
-  const clampMin = cornerClearance;
-  const clampMax = panelRect.height - cornerClearance;
-  tailTop = Math.max(clampMin, Math.min(clampMax, tailTop));
-  panel.style.setProperty('--tail-top', `${tailTop}px`);
-}
-
-function requestSuggestTailUpdate() {
-  if (suggestTailRaf) return;
-  suggestTailRaf = requestAnimationFrame(() => {
-    suggestTailRaf = null;
-    updateSuggestTailPosition();
-  });
-}
-
-function wireSuggestTailTracking() {
-  window.addEventListener('scroll', requestSuggestTailUpdate, { passive: true });
-  window.addEventListener('resize', requestSuggestTailUpdate);
-}
-
-function storePendingHeroFile(file) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        sessionStorage.setItem('pendingHeroFile', JSON.stringify({
-          name: file.name, type: file.type, dataUrl: reader.result,
-        }));
-      } catch {
-        // file too large for sessionStorage — degrade gracefully, no carry-over
-      }
-      resolve();
-    };
-    reader.onerror = () => resolve();
-    reader.readAsDataURL(file);
-  });
-}
-
-async function loadPendingHeroFile() {
-  const raw = sessionStorage.getItem('pendingHeroFile');
-  if (!raw) return;
-  sessionStorage.removeItem('pendingHeroFile');
-  try {
-    const { name, type, dataUrl } = JSON.parse(raw);
-    const res = await fetch(dataUrl);
-    const blob = await res.blob();
-    pendingHeroFile = new File([blob], name, { type });
-  } catch {
-    pendingHeroFile = null;
-  }
-}
-
 // Cloudflare's static-asset routing (html_handling: auto-trailing-slash,
 // the default) auto-serves these extensionless URLs from the matching
 // *.html file and 307-redirects the .html form to this one — so these
@@ -4291,111 +3865,58 @@ function wireHamburger() {
   });
 }
 
-// ================= HERO MASCOT WIDGET =================
-function wireHeroMascot() {
-  const widget = document.querySelector('#ffhWidget');
-  const eyeL = document.querySelector('#ffhEyeL');
-  const eyeR = document.querySelector('#ffhEyeR');
-  const pupilL = document.querySelector('#ffhPupilL');
-  const pupilR = document.querySelector('#ffhPupilR');
-  const headGroup = document.querySelector('#ffhHeadGroup');
-  const headCircle = document.querySelector('#ffhHeadCircle');
-  const armLGroup = document.querySelector('#ffhArmL');
-  const armRGroup = document.querySelector('#ffhArmR');
-  const heroWrap = document.querySelector('#ffhHeroWrap');
-  const speechBubble = document.querySelector('#ffhSpeechBubble');
-  const eyelidL = document.querySelector('#ffhEyelidL');
-  const eyelidR = document.querySelector('#ffhEyelidR');
-  const hint = document.querySelector('#ffhHint');
-  if (!widget || !eyeL || !eyeR || !headGroup || !headCircle) return;
+// ================= THEME (LIGHT / DARK) =================
+// The actual pre-paint theme decision (saved choice, else OS
+// preference) already ran synchronously in partials/_header.html,
+// before any of this module even loads — this only wires the visible
+// toggle button(s) so a visitor can override that choice, and keeps
+// every toggle button on the page (desktop nav + mobile menu) in sync
+// with each other and with the OS, for the rest of the session.
+const THEME_STORAGE_KEY = 'otw-theme';
 
-  const maxPupilOffset = 4.5;
-  let isWaving = false;
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.querySelectorAll('.theme-toggle-btn').forEach((btn) => {
+    const isDark = theme === 'dark';
+    btn.setAttribute('aria-pressed', String(isDark));
+    btn.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+  });
+}
 
-  [pupilL, pupilR].forEach((p) => {
-    p.setAttribute('data-base-cx', p.getAttribute('cx'));
-    p.setAttribute('data-base-cy', p.getAttribute('cy'));
+function wireThemeToggle() {
+  const buttons = document.querySelectorAll('.theme-toggle-btn');
+  if (!buttons.length) return;
+
+  // Reflect whatever the pre-paint inline script already decided (it
+  // only sets the attribute, not aria-pressed/aria-label on buttons
+  // that didn't exist yet at that point).
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  applyTheme(current);
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch {
+        // Privacy mode / storage disabled — the choice just won't
+        // persist across visits; still applies for this one.
+      }
+    });
   });
 
-  function moveEye(eyeEl, pupilEl, mouseX, mouseY) {
-    const rect = eyeEl.getBoundingClientRect();
-    const eyeCenterX = rect.left + rect.width / 2;
-    const eyeCenterY = rect.top + rect.height / 2;
-    const dx = mouseX - eyeCenterX;
-    const dy = mouseY - eyeCenterY;
-    const angle = Math.atan2(dy, dx);
-    const distance = Math.min(Math.hypot(dx, dy) / 18, maxPupilOffset);
-    const baseCx = parseFloat(pupilEl.getAttribute('data-base-cx'));
-    const baseCy = parseFloat(pupilEl.getAttribute('data-base-cy'));
-    pupilEl.setAttribute('cx', baseCx + Math.cos(angle) * distance);
-    pupilEl.setAttribute('cy', baseCy + Math.sin(angle) * distance);
+  // A visitor who never manually chose a theme should keep following
+  // their OS setting live (e.g. their system switches to dark at
+  // sunset) — but the moment they click a toggle, that manual choice
+  // wins from then on and this listener stops overriding it.
+  let userOverrode = false;
+  try { userOverrode = localStorage.getItem(THEME_STORAGE_KEY) !== null; } catch { /* ignore */ }
+  if (!userOverrode && window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      let stillFollowingOs = true;
+      try { stillFollowingOs = localStorage.getItem(THEME_STORAGE_KEY) === null; } catch { /* ignore */ }
+      if (stillFollowingOs) applyTheme(e.matches ? 'dark' : 'light');
+    });
   }
-
-  function updateFullBodyTracking(mouseX, mouseY) {
-    if (isWaving) return;
-    const headRect = headCircle.getBoundingClientRect();
-    const charCenterX = headRect.left + headRect.width / 2;
-    const charCenterY = headRect.top + headRect.height / 2 + 40;
-    const dx = mouseX - charCenterX;
-    const dy = mouseY - charCenterY;
-    const headMaxAngle = 10;
-    const headAngle = Math.max(-headMaxAngle, Math.min(headMaxAngle, (dx / 300) * headMaxAngle));
-    const headTiltY = Math.max(-6, Math.min(6, (dy / 300) * 6));
-    headGroup.style.transform = `rotate(${headAngle.toFixed(2)}deg) translateY(${headTiltY.toFixed(2)}px)`;
-  }
-
-  function handlePointerMove(x, y) {
-    moveEye(eyeL, pupilL, x, y);
-    moveEye(eyeR, pupilR, x, y);
-    updateFullBodyTracking(x, y);
-  }
-
-  window.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
-  window.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    if (touch) handlePointerMove(touch.clientX, touch.clientY);
-  });
-
-  function blink() {
-    if (!isWaving && eyelidL && eyelidR) {
-      [eyelidL, eyelidR].forEach((el) => {
-        el.style.transition = 'transform 0.09s cubic-bezier(0.4, 0, 1, 1)';
-        el.style.transform = 'scaleY(1)';
-      });
-      setTimeout(() => {
-        [eyelidL, eyelidR].forEach((el) => {
-          el.style.transition = 'transform 0.14s cubic-bezier(0, 0, 0.2, 1)';
-          el.style.transform = 'scaleY(0)';
-        });
-      }, 90 + Math.random() * 40);
-    }
-    setTimeout(blink, 2400 + Math.random() * 3200);
-  }
-  setTimeout(blink, 1800);
-
-  function waveHello() {
-    if (isWaving) return;
-    isWaving = true;
-    // Mouth stays neutral throughout — no smiling, on proximity or here.
-    if (speechBubble) speechBubble.classList.add('show');
-    if (hint) hint.style.opacity = '0';
-    armRGroup.style.transform = 'rotate(-100deg)';
-    armRGroup.classList.add('ffh-waving-now');
-    setTimeout(() => {
-      armRGroup.classList.remove('ffh-waving-now');
-      armRGroup.classList.add('ffh-lowering');
-      requestAnimationFrame(() => {
-        armRGroup.style.transform = 'rotate(-18deg)';
-      });
-      if (speechBubble) speechBubble.classList.remove('show');
-      if (hint) hint.style.opacity = '';
-      setTimeout(() => {
-        armRGroup.classList.remove('ffh-lowering');
-        isWaving = false;
-      }, 400);
-    }, 1500);
-  }
-  widget.addEventListener('click', waveHello);
 }
 
 // ================= CATEGORY-SPECIFIC HEADER NAV =================
@@ -4558,44 +4079,6 @@ function renderCategoryNav(category) {
   // indexable URL (toolUrl(k)) and navigate normally.
 }
 
-// ================= FEATURED TOOLS BANNER (replaces search box) =================
-const FEATURED_TOOL_KEYS = ['pdfmerge', 'bgremove', 'resize', 'wordtopdf', 'compress', 'qrcode', 'pdfcompress', 'aisummarizer'];
-const FEATURED_SLIDE_INTERVAL = 4000;
-
-function wireFeaturedBanner() {
-  const banner = document.querySelector('#ffhBanner');
-  const track = document.querySelector('#ffhBannerTrack');
-  const dotsEl = document.querySelector('#ffhBannerDots');
-  if (!banner || !track || !dotsEl) return;
-
-  const keys = FEATURED_TOOL_KEYS.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon);
-  if (!keys.length) return;
-
-  track.innerHTML = keys.map((key) => {
-    const meta = toolMeta[key];
-    const href = toolUrl(key) || `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
-    return `
-      <a class="ffh-banner-slide" href="${href}">
-        ${renderIconBadge(meta.category, meta.iconTo, key)}
-        <span class="ffh-banner-text">${meta.label}: <span class="ffh-banner-sub">${meta.desc}</span></span>
-      </a>
-    `;
-  }).join('');
-
-  dotsEl.innerHTML = keys.map((_, i) => `<span class="ffh-banner-dot${i === 0 ? ' active' : ''}"></span>`).join('');
-  const dots = dotsEl.querySelectorAll('.ffh-banner-dot');
-
-  let index = 0;
-  function goTo(i) {
-    index = (i + keys.length) % keys.length;
-    track.style.transform = `translateX(-${index * 100}%)`;
-    dots.forEach((d, di) => d.classList.toggle('active', di === index));
-  }
-  let timer = setInterval(() => goTo(index + 1), FEATURED_SLIDE_INTERVAL);
-  banner.addEventListener('mouseenter', () => clearInterval(timer));
-  banner.addEventListener('mouseleave', () => { timer = setInterval(() => goTo(index + 1), FEATURED_SLIDE_INTERVAL); });
-}
-
 // Hover-intent for the nav dropdowns/mega-menus: wait a beat before
 // opening so brushing past the nav on the way somewhere else doesn't
 // pop a dropdown open. Closes a little faster than it opens.
@@ -4629,11 +4112,8 @@ function wireNavDropdowns() {
 
 // ================= PAGE INIT =================
 export function initToolPage(pageCategory) {
-  wireHeroDropZone();
+  wireThemeToggle();
   wireHamburger();
-  wireHeroMascot();
-  wireFeaturedBanner();
-  wireSuggestTailTracking();
   if (pageCategory !== 'all') renderCategoryNav(pageCategory);
   else populateHomeCategoryDropdowns();
   wireNavDropdowns();
@@ -4642,7 +4122,6 @@ export function initToolPage(pageCategory) {
   // no-ops elsewhere since the elements won't exist).
   wireSearch('homeSearchInput', 'homeSearchResults');
   wireSearchShortcut();
-  loadPendingHeroFile();
   const grid = document.querySelector('#toolGrid');
   const tabs = document.querySelectorAll('.filter-tab');
 
@@ -4724,6 +4203,7 @@ export function initToolLandingPage(toolKey) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
 
+  wireThemeToggle();
   wireHamburger();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   wireSearchShortcut();
@@ -4733,18 +4213,16 @@ export function initToolLandingPage(toolKey) {
   const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
   if (needsFile) wireToolPageDropZone(toolKey, meta);
 
-  loadPendingHeroFile().then(() => {
-    const hasReadyFile = pendingHeroFile && validateFileType(pendingHeroFile, meta.accept);
-    // No-file tools (generators/calculators) and Compare PDF can open
-    // immediately — nothing to wait on. File-based tools only auto-open
-    // if a valid file already carried over from elsewhere on the site;
-    // otherwise the on-page drop zone above stays visible and waiting,
-    // which is exactly the "clear upload zone above the fold" state a
-    // fresh visitor from search should land on.
-    if (!needsFile || hasReadyFile) {
-      openToolModal(toolKey);
-    }
-  });
+  // No-file tools (generators/calculators) and Compare PDF can open
+  // immediately — nothing to wait on. File-based tools only auto-open
+  // if a valid file is already ready (e.g. carried over via a tool
+  // card's fast path); otherwise the on-page drop zone above stays
+  // visible and waiting, which is exactly the "clear upload zone above
+  // the fold" state a fresh visitor from search should land on.
+  const hasReadyFile = pendingHeroFile && validateFileType(pendingHeroFile, meta.accept);
+  if (!needsFile || hasReadyFile) {
+    openToolModal(toolKey);
+  }
 
   const openBtn = document.querySelector('#tpOpenToolBtn');
   if (openBtn) {

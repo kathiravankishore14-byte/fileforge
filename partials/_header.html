@@ -1,14 +1,24 @@
-<div class="ffh-sky-clouds" aria-hidden="true">
-  <div class="ffh-sky-cloud sc1"></div>
-  <div class="ffh-sky-cloud sc2"></div>
-  <div class="ffh-sky-cloud sc3"></div>
-  <div class="ffh-sky-cloud sc4"></div>
-  <div class="ffh-sky-cloud sc5"></div>
-  <div class="ffh-sky-cloud sc6"></div>
-  <div class="ffh-sky-cloud sc7"></div>
-  <div class="ffh-sky-cloud sc8"></div>
-  <div class="ffh-sky-cloud sc9"></div>
-</div>
+<script>
+  // Applies the visitor's theme choice (or their OS preference, on a
+  // first visit) before the header/hero below paints, so there's no
+  // flash of the wrong theme. Kept tiny and synchronous on purpose —
+  // this is the one bit of inline JS on the page, and the Worker
+  // nonces every <script> tag (inline or external) automatically, so
+  // it runs under CSP with no 'unsafe-inline' needed.
+  (function () {
+    try {
+      var saved = localStorage.getItem('otw-theme');
+      var theme = saved === 'light' || saved === 'dark'
+        ? saved
+        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {
+      // localStorage/matchMedia unavailable (privacy mode, very old
+      // browser) — the CSS prefers-color-scheme media query below
+      // still picks a sensible default with zero JS.
+    }
+  })();
+</script>
 
 <header class="site-header">
   <div class="header-inner">
@@ -23,9 +33,15 @@
       <a href="/ppt" class="nav-link"><img src="/icons/icon-ppt.svg" class="nav-icon" width="22" height="22" alt="" /> PowerPoint</a>
       <a href="/other-tools" class="nav-link"><img src="/icons/icon-utilities.svg" class="nav-icon" width="22" height="22" alt="" /> Utilities</a>
     </nav>
-    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenuPanel">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="header-actions">
+      <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="Switch to dark theme" aria-pressed="false">
+        <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
+        <span class="icon icon-moon theme-icon-dark" aria-hidden="true"></span>
+      </button>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenuPanel">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -33,7 +49,13 @@
   <div class="mobile-menu-panel" id="mobileMenuPanel" role="dialog" aria-modal="true" aria-label="Site menu">
     <div class="mobile-menu-header">
       <span class="logo"><span class="logo-mark">⌁</span> OnlineToolsWeb</span>
-      <button class="modal-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
+      <div class="mobile-menu-header-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtnMobile" aria-label="Switch to dark theme" aria-pressed="false">
+          <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
+          <span class="icon icon-moon theme-icon-dark" aria-hidden="true"></span>
+        </button>
+        <button class="modal-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
+      </div>
     </div>
     <div class="mobile-search-wrap">
       <input type="text" id="mobileSearchInput" class="site-search-input" placeholder="Search all tools..." role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="mobileSearchResults" />
@@ -58,99 +80,3 @@
   </div>
 </div>
 
-<!-- Fixed corner mascot: intentionally OUTSIDE the hero-drop-wrap flow.
-     position:fixed (see style.css) keeps him on screen in the same spot
-     as you scroll, on every page, instead of scrolling away with the
-     page content like a normal element would. -->
-<div class="ffh-widget" id="ffhWidget">
-  <div class="ffh-hero-wrap" id="ffhHeroWrap">
-    <div class="ffh-shadow"></div>
-    <svg class="ffh-hero-svg" viewBox="0 0 340 420">
-      <g class="ffh-cape">
-        <path d="M 122 192 Q 60 250 90 340 Q 140 305 170 300 Q 148 250 152 195 Z" fill="#0D0D0D"/>
-        <path d="M 218 192 Q 280 250 250 340 Q 200 305 170 300 Q 192 250 188 195 Z" fill="#1A1A1A"/>
-      </g>
-      <rect x="138" y="290" width="26" height="70" rx="10" fill="#F5B800"/>
-      <rect x="176" y="290" width="26" height="70" rx="10" fill="#F5B800"/>
-      <rect x="132" y="350" width="38" height="26" rx="8" fill="#1A1A1A"/>
-      <rect x="170" y="350" width="38" height="26" rx="8" fill="#1A1A1A"/>
-      <g id="ffhBodyGroup">
-        <rect x="118" y="190" width="104" height="110" rx="36" fill="#F5B800"/>
-        <rect x="118" y="270" width="104" height="16" rx="8" fill="#1A1A1A"/>
-        <rect x="158" y="266" width="24" height="24" rx="6" fill="#1A1A1A"/>
-        <polygon points="174.0,216.0 158.0,244.8 167.6,244.8 162.8,264.0 182.0,233.6 171.6,233.6" fill="#1A1A1A"/>
-      </g>
-      <g id="ffhArmL" class="ffh-arm-group" style="transform: rotate(18deg);">
-        <rect x="90" y="195" width="30" height="76" rx="15" fill="#F5B800"/>
-        <circle cx="105" cy="294" r="17" fill="#E8B888"/>
-      </g>
-      <g id="ffhArmR" class="ffh-arm-group" style="transform: rotate(-18deg);">
-        <rect x="220" y="195" width="30" height="76" rx="15" fill="#F5B800"/>
-        <circle cx="235" cy="294" r="17" fill="#E8B888"/>
-      </g>
-      <rect x="155" y="168" width="30" height="26" fill="#E8B888"/>
-      <g id="ffhHeadGroup">
-        <circle id="ffhHeadCircle" cx="170" cy="128" r="58" fill="#E8B888"/>
-        <circle cx="114" cy="130" r="10" fill="#E8B888"/>
-        <circle cx="226" cy="130" r="10" fill="#E8B888"/>
-        <g class="ffh-hair">
-          <path d="M 108 115 Q 100 82 122 72 Q 132 52 152 66 Q 165 48 178 64 Q 192 52 203 74 Q 222 84 232 115 Q 220 90 202 98 Q 192 80 172 90 Q 152 80 142 98 Q 124 90 108 115 Z" fill="#3A2A1A"/>
-        </g>
-        <path d="M 118 118 Q 118 100 145 100 Q 160 100 165 116 Q 170 108 175 116 Q 180 100 195 100 Q 222 100 222 118 Q 222 132 195 130 Q 178 129 170 118 Q 162 129 145 130 Q 118 132 118 118 Z" fill="#1A1A1A"/>
-        <ellipse id="ffhEyeL" cx="145" cy="118" rx="13" ry="15" fill="white"/>
-        <ellipse id="ffhEyeR" cx="195" cy="118" rx="13" ry="15" fill="white"/>
-        <circle id="ffhPupilL" class="ffh-pupil" cx="145" cy="118" r="6.5" fill="#2A2A2A"/>
-        <circle id="ffhPupilR" class="ffh-pupil" cx="195" cy="118" r="6.5" fill="#2A2A2A"/>
-        <rect id="ffhEyelidL" class="ffh-eyelid" x="130" y="102" width="30" height="34" rx="13" fill="#1A1A1A"/>
-        <rect id="ffhEyelidR" class="ffh-eyelid" x="180" y="102" width="30" height="34" rx="13" fill="#1A1A1A"/>
-        <path d="M 130 96 Q 145 88 158 96" stroke="#1A1A1A" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <path d="M 182 96 Q 195 88 210 96" stroke="#1A1A1A" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <path id="ffhMouthNormal" d="M 150 150 Q 170 163 190 150" stroke="#8A5A3A" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <g id="ffhMouthBig" style="display:none;">
-          <ellipse cx="170" cy="155" rx="21" ry="7" fill="#8B3A3A"/>
-          <path d="M 149 154 Q 170 148 191 154 Q 189 161 170 162 Q 151 161 149 154 Z" fill="white"/>
-          <line x1="163" y1="154.5" x2="163" y2="160.5" stroke="#E0DCD5" stroke-width="0.7"/>
-          <line x1="177" y1="154.5" x2="177" y2="160.5" stroke="#E0DCD5" stroke-width="0.7"/>
-        </g>
-        <ellipse cx="130" cy="140" rx="9" ry="6" fill="#F0938A" opacity="0.5"/>
-        <ellipse cx="210" cy="140" rx="9" ry="6" fill="#F0938A" opacity="0.5"/>
-      </g>
-    </svg>
-  </div>
-</div>
-
-<div class="hero-drop-wrap">
-  <!-- Rotating "featured tools" banner — replaces the old search box.
-       Same slot/size, cycles a handful of popular tools with a short
-       slide transition. Site search still lives in the mobile menu. -->
-  <div class="ffh-banner" id="ffhBanner">
-    <div class="ffh-banner-track" id="ffhBannerTrack"></div>
-    <div class="ffh-banner-dots" id="ffhBannerDots"></div>
-  </div>
-
-  <div class="hero-drop-row">
-    <div class="hero-drop-zone" id="heroDropZone">
-      <input type="file" id="heroFileInput" multiple />
-      <!-- Only this wrapper's innerHTML gets swapped between
-           idle/analyzing/preview states — #heroFileInput above stays
-           put the whole time so its listeners never need rewiring. -->
-      <div class="hero-drop-content" id="heroDropContent">
-        <div class="hero-drop-idle" id="heroDropIdle">
-          <span class="icon icon-upload hero-drop-icon" aria-hidden="true"></span>
-          <p class="hero-drop-text">
-            <span class="drop-text-desktop">Drag your file here</span>
-            <span class="drop-text-mobile">Choose a file</span>
-          </p>
-          <button type="button" class="hero-drop-browse-btn" id="heroBrowseBtn">Browse files</button>
-          <p class="hero-drop-subtext">PDF · JPG · PNG · WEBP · DOCX · XLSX · PPTX</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="hero-suggest-panel" id="heroSuggestPanel"></div>
-  </div>
-
-  <p class="awaiting-tool-hint" id="awaitingToolHint" style="display:none;">
-    <button type="button" id="cancelAwaitingTool">← Choose a different tool</button>
-  </p>
-</div>
