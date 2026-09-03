@@ -1690,15 +1690,10 @@ function renderSingleFileConfig() {
         showErrorState(`Couldn't remove the background: ${err && err.message ? err.message : err}`);
         return;
       }
-      // Soften the raw AI mask's edge before showing it — segmentation
-      // masks tend to be near-binary (fully opaque or fully transparent),
-      // which reads as a harsh, slightly jagged cutout line, especially on
-      // hair/fur. A very small blur of ONLY the alpha channel smooths that
-      // transition without eating into real detail. Never lets a failure
-      // here block the tool — worst case, the un-softened cutout is used.
-      try {
-        cutoutBlob = await featherCutoutEdges(cutoutBlob);
-      } catch (featherErr) { /* use the un-softened cutout */ }
+      // Edge refinement (a guided filter against the original photo) now
+      // happens inside removeBackgroundOrmbg itself, using the full-
+      // resolution image as its guide — doing it here on the already-
+      // composited, lower-detail cutout would be too late to help.
       showBgRemoveTouchUpState(cutoutBlob, currentFile);
     });
   }
@@ -3373,6 +3368,101 @@ function preprocessForOrmbg(img) {
   return out;
 }
 
+// Bilinear resize of a single-channel Float32Array. Used to bring the
+// model's low-resolution mask up to the photo's native resolution in full
+// float precision, ahead of the guided filter below — an 8-bit canvas
+// roundtrip here would throw away exactly the precision that filter uses.
+function bilinearResizeFloat32(src, srcW, srcH, dstW, dstH) {
+  const out = new Float32Array(dstW * dstH);
+  const xRatio = srcW / dstW, yRatio = srcH / dstH;
+  for (let y = 0; y < dstH; y++) {
+    const sy = (y + 0.5) * yRatio - 0.5;
+    const y0 = Math.max(0, Math.min(srcH - 1, Math.floor(sy)));
+    const y1 = Math.min(srcH - 1, y0 + 1);
+    const fy = Math.max(0, Math.min(1, sy - y0));
+    for (let x = 0; x < dstW; x++) {
+      const sx = (x + 0.5) * xRatio - 0.5;
+      const x0 = Math.max(0, Math.min(srcW - 1, Math.floor(sx)));
+      const x1 = Math.min(srcW - 1, x0 + 1);
+      const fx = Math.max(0, Math.min(1, sx - x0));
+      const v00 = src[y0 * srcW + x0], v01 = src[y0 * srcW + x1];
+      const v10 = src[y1 * srcW + x0], v11 = src[y1 * srcW + x1];
+      const top = v00 + (v01 - v00) * fx;
+      const bottom = v10 + (v11 - v10) * fx;
+      out[y * dstW + x] = top + (bottom - top) * fy;
+    }
+  }
+  return out;
+}
+
+// Box blur via a summed-area table (integral image) — O(w*h) to build,
+// then O(1) per output pixel regardless of radius. The building block the
+// guided filter below is made of; not useful on its own here.
+function boxBlurFloat32(src, w, h, radius) {
+  if (radius <= 0) return src.slice();
+  const integral = new Float64Array((w + 1) * (h + 1));
+  for (let y = 0; y < h; y++) {
+    let rowSum = 0;
+    const rowBase = (y + 1) * (w + 1);
+    const prevRowBase = y * (w + 1);
+    for (let x = 0; x < w; x++) {
+      rowSum += src[y * w + x];
+      integral[rowBase + x + 1] = integral[prevRowBase + x + 1] + rowSum;
+    }
+  }
+  const out = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) {
+    const y0 = Math.max(0, y - radius), y1 = Math.min(h - 1, y + radius);
+    for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - radius), x1 = Math.min(w - 1, x + radius);
+      const sum = integral[(y1 + 1) * (w + 1) + (x1 + 1)]
+        - integral[y0 * (w + 1) + (x1 + 1)]
+        - integral[(y1 + 1) * (w + 1) + x0]
+        + integral[y0 * (w + 1) + x0];
+      out[y * w + x] = sum / ((y1 - y0 + 1) * (x1 - x0 + 1));
+    }
+  }
+  return out;
+}
+
+// Edge-aware upsampling of a low-resolution alpha mask against a
+// high-resolution guide image — the guided filter (He, Sun & Tang, 2010),
+// the standard technique for exactly this "small mask, big photo"
+// mismatch. Unlike a plain blur or resize, it snaps the mask boundary back
+// onto real luminance edges in the guide image, so a jagged low-res
+// silhouette becomes a crisp one that actually follows real hair/shoulder
+// edges in the source photo, instead of the mask's own coarse grid.
+function guidedFilterAlpha(guide, alpha, w, h, radius, eps) {
+  const guideSq = new Float32Array(w * h);
+  const guideAlpha = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    guideSq[i] = guide[i] * guide[i];
+    guideAlpha[i] = guide[i] * alpha[i];
+  }
+  const meanI = boxBlurFloat32(guide, w, h, radius);
+  const meanP = boxBlurFloat32(alpha, w, h, radius);
+  const corrI = boxBlurFloat32(guideSq, w, h, radius);
+  const corrIP = boxBlurFloat32(guideAlpha, w, h, radius);
+
+  const n = w * h;
+  const a = new Float32Array(n);
+  const b = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const varI = corrI[i] - meanI[i] * meanI[i];
+    const covIP = corrIP[i] - meanI[i] * meanP[i];
+    a[i] = covIP / (varI + eps);
+    b[i] = meanP[i] - a[i] * meanI[i];
+  }
+  const meanA = boxBlurFloat32(a, w, h, radius);
+  const meanB = boxBlurFloat32(b, w, h, radius);
+
+  const out = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    out[i] = meanA[i] * guide[i] + meanB[i];
+  }
+  return out;
+}
+
 async function removeBackgroundOrmbg(file, onProgress) {
   const ort = await import('onnxruntime-web');
   const session = await getOrmbgSession(onProgress);
@@ -3399,26 +3489,11 @@ async function removeBackgroundOrmbg(file, onProgress) {
     if (raw[i] > max) max = raw[i];
   }
   const alreadyProbabilities = min >= -0.001 && max <= 1.001;
-  const toAlpha = (v) => {
-    const p = alreadyProbabilities ? v : 1 / (1 + Math.exp(-v));
-    return Math.max(0, Math.min(255, Math.round(p * 255)));
-  };
-
-  const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = maskW; maskCanvas.height = maskH;
-  const maskCtx = maskCanvas.getContext('2d');
-  const maskImageData = maskCtx.createImageData(maskW, maskH);
+  const maskProbabilities = new Float32Array(maskW * maskH);
   for (let i = 0; i < maskW * maskH; i++) {
-    const alpha = toAlpha(raw[i]);
-    maskImageData.data[i * 4] = alpha;
-    maskImageData.data[i * 4 + 1] = alpha;
-    maskImageData.data[i * 4 + 2] = alpha;
-    maskImageData.data[i * 4 + 3] = 255;
+    maskProbabilities[i] = alreadyProbabilities ? raw[i] : 1 / (1 + Math.exp(-raw[i]));
   }
-  maskCtx.putImageData(maskImageData, 0, 0);
 
-  // Composite: the original photo at its native resolution, with the mask
-  // (bilinearly upscaled via drawImage) applied as the alpha channel.
   const outW = img.naturalWidth, outH = img.naturalHeight;
   const outCanvas = document.createElement('canvas');
   outCanvas.width = outW; outCanvas.height = outH;
@@ -3426,73 +3501,36 @@ async function removeBackgroundOrmbg(file, onProgress) {
   outCtx.drawImage(img, 0, 0, outW, outH);
   const outImageData = outCtx.getImageData(0, 0, outW, outH);
 
-  const scaledMaskCanvas = document.createElement('canvas');
-  scaledMaskCanvas.width = outW; scaledMaskCanvas.height = outH;
-  const scaledMaskCtx = scaledMaskCanvas.getContext('2d');
-  scaledMaskCtx.imageSmoothingEnabled = true;
-  scaledMaskCtx.imageSmoothingQuality = 'high'; // the mask was only ever computed at 1024x1024 — a high-quality upscale here avoids blocky, stair-stepped edges on larger photos
-  scaledMaskCtx.drawImage(maskCanvas, 0, 0, outW, outH);
-  const scaledMaskData = scaledMaskCtx.getImageData(0, 0, outW, outH).data;
+  // The mask only exists at ORMBG_INPUT_SIZE (1024x1024) — a plain resize
+  // up to the photo's real resolution just interpolates that low-res
+  // mask's own blocky edges, which is what reads as a jagged, unconvincing
+  // cutout on anything larger than about 1024px. A guided filter (He et
+  // al.) instead uses the full-resolution photo itself as a guide, snapping
+  // the mask boundary back onto real edges in the photo — hair strands,
+  // the sharp line of a shoulder — that the low-res mask alone can't
+  // represent. This runs entirely in Canvas/JS, no extra model or network
+  // request.
+  const upsampledMask = bilinearResizeFloat32(maskProbabilities, maskW, maskH, outW, outH);
+  const guideLuma = new Float32Array(outW * outH);
+  for (let i = 0; i < outW * outH; i++) {
+    guideLuma[i] = (
+      outImageData.data[i * 4] * 0.299 +
+      outImageData.data[i * 4 + 1] * 0.587 +
+      outImageData.data[i * 4 + 2] * 0.114
+    ) / 255;
+  }
+  // Window radius scales with how far the mask had to be upsampled — a
+  // photo close to 1024px needs only a small window, a much larger one
+  // needs a proportionally larger window to actually reach real edges.
+  const guideRadius = Math.max(2, Math.round((Math.max(outW, outH) / ORMBG_INPUT_SIZE) * 4));
+  const refinedMask = guidedFilterAlpha(guideLuma, upsampledMask, outW, outH, guideRadius, 1e-3);
 
   for (let i = 0; i < outW * outH; i++) {
-    outImageData.data[i * 4 + 3] = scaledMaskData[i * 4];
+    outImageData.data[i * 4 + 3] = Math.max(0, Math.min(255, Math.round(refinedMask[i] * 255)));
   }
   outCtx.putImageData(outImageData, 0, 0);
 
   return new Promise((resolve) => outCanvas.toBlob(resolve, 'image/png'));
-}
-
-// Softens the hard, near-binary edge a segmentation mask leaves around the
-// cutout subject — a small blur applied ONLY to the alpha channel (color
-// pixels are untouched), so hair/fur/soft edges don't read as a harsh
-// jagged line. Deliberately subtle: large enough to anti-alias, small
-// enough not to eat into real detail.
-//
-// The mask itself is only ever computed at ORMBG_INPUT_SIZE (1024px) and
-// then upscaled — so on a photo much larger than that, its real edge
-// resolution is coarser than the output image's pixel grid. A fixed blur
-// radius barely registers on a large photo but over-softens a small one,
-// so the radius scales with how far the mask was actually upscaled.
-async function featherCutoutEdges(blob, radiusPx = null) {
-  const img = await loadImageFromBlob(blob);
-  const w = img.naturalWidth, h = img.naturalHeight;
-  if (radiusPx == null) {
-    radiusPx = Math.max(1, (Math.max(w, h) / ORMBG_INPUT_SIZE) * 1.1);
-  }
-
-  const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
-  const imgData = ctx.getImageData(0, 0, w, h);
-
-  // Copy the alpha channel out into its own grayscale image...
-  const alphaCanvas = document.createElement('canvas');
-  alphaCanvas.width = w; alphaCanvas.height = h;
-  const actx = alphaCanvas.getContext('2d');
-  const alphaData = actx.createImageData(w, h);
-  for (let i = 0; i < imgData.data.length; i += 4) {
-    const a = imgData.data[i + 3];
-    alphaData.data[i] = a; alphaData.data[i + 1] = a; alphaData.data[i + 2] = a; alphaData.data[i + 3] = 255;
-  }
-  actx.putImageData(alphaData, 0, 0);
-
-  // ...blur that grayscale copy...
-  const blurCanvas = document.createElement('canvas');
-  blurCanvas.width = w; blurCanvas.height = h;
-  const bctx = blurCanvas.getContext('2d');
-  bctx.filter = `blur(${radiusPx}px)`;
-  bctx.drawImage(alphaCanvas, 0, 0);
-  const blurredAlpha = bctx.getImageData(0, 0, w, h);
-
-  // ...and write the blurred values back as the new alpha channel, leaving
-  // every RGB color pixel exactly as the model produced it.
-  for (let i = 0; i < imgData.data.length; i += 4) {
-    imgData.data[i + 3] = blurredAlpha.data[i];
-  }
-  ctx.putImageData(imgData, 0, 0);
-
-  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
 }
 
 // ================= AI SUMMARIZER =================
