@@ -20,6 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   </head>
   <body data-tool-category="utilities">
+    <canvas class="particle-field" aria-hidden="true"></canvas>
     <!--HEADER-->
 
     <section class="hero">
@@ -28,6 +29,7 @@
 
       <div class="home-search-wrap site-search-wrap category-search-wrap">
         <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search utility tools..." aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <button type="button" class="site-search-btn" data-search-btn="homeSearchInput" aria-label="Search"><span class="icon icon-search" aria-hidden="true"></span></button>
         <div id="homeSearchResults" class="search-results-list" role="listbox"></div>
       </div>
     </section>

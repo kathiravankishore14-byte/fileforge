@@ -7,7 +7,7 @@
     "oldUrl": "/image?tool=resize",
     "title": "Resize Image Online Free | OnlineToolsWeb",
     "h1": "Resize Image Online",
-    "description": "Set exact pixel dimensions for any photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Set exact pixel dimensions for any photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "compress",
@@ -17,7 +17,7 @@
     "oldUrl": "/image?tool=compress",
     "title": "Compress Image Online Free | OnlineToolsWeb",
     "h1": "Compress Image Online",
-    "description": "Shrink file size with a quality slider. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Shrink file size with a quality slider. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "crop",
@@ -27,7 +27,7 @@
     "oldUrl": "/image?tool=crop",
     "title": "Crop Image Online Free | OnlineToolsWeb",
     "h1": "Crop Image Online",
-    "description": "Trim an image down to the area you need. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Trim an image down to the area you need. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdf",
@@ -37,7 +37,7 @@
     "oldUrl": "/image?tool=pdf",
     "title": "Convert to PDF Online Free | OnlineToolsWeb",
     "h1": "Convert to PDF Online",
-    "description": "Turn one or more images into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn one or more images into a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "imagetoexcel",
@@ -47,7 +47,7 @@
     "oldUrl": "/image?tool=imagetoexcel",
     "title": "Image to Excel Online Free | OnlineToolsWeb",
     "h1": "Image to Excel Online",
-    "description": "Extract tabular data from a photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract tabular data from a photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "imagetoppt",
@@ -57,7 +57,7 @@
     "oldUrl": "/image?tool=imagetoppt",
     "title": "Image to PPT Online Free | OnlineToolsWeb",
     "h1": "Image to PPT Online",
-    "description": "Place one or more images onto slides. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Place one or more images onto slides. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "convertformat",
@@ -67,7 +67,7 @@
     "oldUrl": "/image?tool=convertformat",
     "title": "Convert Image Format Online Free | OnlineToolsWeb",
     "h1": "Convert Image Format Online",
-    "description": "Switch between JPG, PNG, and WebP. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Switch between JPG, PNG, and WebP. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "rotateflip",
@@ -77,7 +77,7 @@
     "oldUrl": "/image?tool=rotateflip",
     "title": "Rotate / Flip Image Online Free | OnlineToolsWeb",
     "h1": "Rotate / Flip Image Online",
-    "description": "Fix orientation or mirror a photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Fix orientation or mirror a photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "watermarkimage",
@@ -87,7 +87,7 @@
     "oldUrl": "/image?tool=watermarkimage",
     "title": "Watermark Image Online Free | OnlineToolsWeb",
     "h1": "Watermark Image Online",
-    "description": "Stamp text across a photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Stamp text across a photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "bgremove",
@@ -96,8 +96,8 @@
     "slug": "remove-background",
     "oldUrl": "/image?tool=bgremove",
     "title": "Remove Background Online Free | OnlineToolsWeb",
-    "h1": "Remove Image Background — Free & Automatic",
-    "description": "AI cutout, no green screen needed. Free, private, and runs right in your browser — no upload, no signup."
+    "h1": "Remove Image Background: Free & Automatic",
+    "description": "AI cutout, no green screen needed. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "colorpalette",
@@ -107,7 +107,7 @@
     "oldUrl": "/image?tool=colorpalette",
     "title": "Color Palette Extractor Online Free | OnlineToolsWeb",
     "h1": "Color Palette Extractor Online",
-    "description": "Pull the dominant colors from a photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Pull the dominant colors from a photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "socialresize",
@@ -117,7 +117,7 @@
     "oldUrl": "/image?tool=socialresize",
     "title": "Social Media Resize Online Free | OnlineToolsWeb",
     "h1": "Social Media Resize Online",
-    "description": "Preset sizes for Instagram, YouTube, and more. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Preset sizes for Instagram, YouTube, and more. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "grayscale",
@@ -127,7 +127,7 @@
     "oldUrl": "/image?tool=grayscale",
     "title": "Grayscale Converter Online Free | OnlineToolsWeb",
     "h1": "Grayscale Converter Online",
-    "description": "Convert a photo to black and white. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert a photo to black and white. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "sepia",
@@ -137,7 +137,7 @@
     "oldUrl": "/image?tool=sepia",
     "title": "Sepia / Vintage Filter Online Free | OnlineToolsWeb",
     "h1": "Sepia / Vintage Filter Online",
-    "description": "Give a photo a warm, aged tone. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Give a photo a warm, aged tone. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "blurimage",
@@ -147,7 +147,7 @@
     "oldUrl": "/image?tool=blurimage",
     "title": "Blur Image Online Free | OnlineToolsWeb",
     "h1": "Blur Image Online",
-    "description": "Soften part or all of a photo. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Soften part or all of a photo. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "heictojpg",
@@ -157,7 +157,7 @@
     "oldUrl": "/image?tool=heictojpg",
     "title": "HEIC to JPG Online Free | OnlineToolsWeb",
     "h1": "HEIC to JPG Online",
-    "description": "Convert iPhone photos to a universal format. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert iPhone photos to a universal format. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "memecreator",
@@ -167,7 +167,7 @@
     "oldUrl": "/image?tool=memecreator",
     "title": "Meme Creator Online Free | OnlineToolsWeb",
     "h1": "Meme Creator Online",
-    "description": "Add top and bottom caption text. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Add top and bottom caption text. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "collagemaker",
@@ -177,7 +177,7 @@
     "oldUrl": "/image?tool=collagemaker",
     "title": "Collage Maker Online Free | OnlineToolsWeb",
     "h1": "Collage Maker Online",
-    "description": "Combine several photos into a grid. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Combine several photos into a grid. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "wordtoexcel",
@@ -187,7 +187,7 @@
     "oldUrl": "/word?tool=wordtoexcel",
     "title": "Word to Excel Online Free | OnlineToolsWeb",
     "h1": "Word to Excel Online",
-    "description": "Pull tables from a Word doc into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Pull tables from a Word doc into a spreadsheet. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "wordtopdf",
@@ -197,7 +197,7 @@
     "oldUrl": "/word?tool=wordtopdf",
     "title": "Word to PDF Online Free | OnlineToolsWeb",
     "h1": "Word to PDF Online",
-    "description": "Turn a DOCX file into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn a DOCX file into a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "wordtotext",
@@ -207,7 +207,7 @@
     "oldUrl": "/word?tool=wordtotext",
     "title": "Word to Text Online Free | OnlineToolsWeb",
     "h1": "Word to Text Online",
-    "description": "Extract plain text from a Word doc. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract plain text from a Word doc. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "exceltopdf",
@@ -217,7 +217,7 @@
     "oldUrl": "/excel?tool=exceltopdf",
     "title": "Excel to PDF Online Free | OnlineToolsWeb",
     "h1": "Excel to PDF Online",
-    "description": "Convert a spreadsheet into a PDF table. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert a spreadsheet into a PDF table. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "exceltocsv",
@@ -227,7 +227,7 @@
     "oldUrl": "/excel?tool=exceltocsv",
     "title": "Excel to CSV Online Free | OnlineToolsWeb",
     "h1": "Excel to CSV Online",
-    "description": "Export a sheet as plain CSV. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Export a sheet as plain CSV. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfmerge",
@@ -237,7 +237,7 @@
     "oldUrl": "/pdf?tool=pdfmerge",
     "title": "Merge PDFs Online Free | OnlineToolsWeb",
     "h1": "Merge PDFs Online",
-    "description": "Combine PDFs in the order you choose. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Combine PDFs in the order you choose. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfrotate",
@@ -247,7 +247,7 @@
     "oldUrl": "/pdf?tool=pdfrotate",
     "title": "Rotate PDF Pages Online Free | OnlineToolsWeb",
     "h1": "Rotate PDF Pages Online",
-    "description": "Rotate every page in a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Rotate every page in a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfpagenumbers",
@@ -257,7 +257,7 @@
     "oldUrl": "/pdf?tool=pdfpagenumbers",
     "title": "Add Page Numbers Online Free | OnlineToolsWeb",
     "h1": "Add Page Numbers Online",
-    "description": "Stamp page numbers onto a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Stamp page numbers onto a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfextract",
@@ -267,7 +267,7 @@
     "oldUrl": "/pdf?tool=pdfextract",
     "title": "Extract Pages Online Free | OnlineToolsWeb",
     "h1": "Extract Pages Online",
-    "description": "Pull specific pages into a new PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Pull specific pages into a new PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfdelete",
@@ -277,7 +277,7 @@
     "oldUrl": "/pdf?tool=pdfdelete",
     "title": "Delete Pages Online Free | OnlineToolsWeb",
     "h1": "Delete Pages Online",
-    "description": "Remove specific pages from a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Remove specific pages from a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfwatermark",
@@ -287,7 +287,7 @@
     "oldUrl": "/pdf?tool=pdfwatermark",
     "title": "Watermark PDF Online Free | OnlineToolsWeb",
     "h1": "Watermark PDF Online",
-    "description": "Stamp text across every page. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Stamp text across every page. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfsplit",
@@ -297,7 +297,7 @@
     "oldUrl": "/pdf?tool=pdfsplit",
     "title": "Split PDF Online Free | OnlineToolsWeb",
     "h1": "Split PDF Online",
-    "description": "Break a PDF into separate files by page range. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Break a PDF into separate files by page range. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfcompress",
@@ -307,7 +307,7 @@
     "oldUrl": "/pdf?tool=pdfcompress",
     "title": "Compress PDF Online Free | OnlineToolsWeb",
     "h1": "Compress PDF Online",
-    "description": "Shrink file size by recompressing images and trimming unused data — text and vectors stay untouched. No upload, no signup — runs in your browser."
+    "description": "Shrink file size by recompressing images and trimming unused data. Text and vectors stay untouched. No upload, no signup, runs in your browser."
   },
   {
     "key": "pdftoword",
@@ -317,7 +317,7 @@
     "oldUrl": "/pdf?tool=pdftoword",
     "title": "PDF to Word Online Free | OnlineToolsWeb",
     "h1": "PDF to Word Online",
-    "description": "Extract text into an editable Word document. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract text into an editable Word document. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdftoexcel",
@@ -327,7 +327,7 @@
     "oldUrl": "/pdf?tool=pdftoexcel",
     "title": "PDF to Excel Online Free | OnlineToolsWeb",
     "h1": "PDF to Excel Online",
-    "description": "Pull tabular data into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Pull tabular data into a spreadsheet. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdftojpg",
@@ -337,7 +337,7 @@
     "oldUrl": "/pdf?tool=pdftojpg",
     "title": "PDF to JPG Online Free | OnlineToolsWeb",
     "h1": "PDF to JPG Online",
-    "description": "Export every page as an image. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Export every page as an image. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdftoppt",
@@ -347,7 +347,7 @@
     "oldUrl": "/pdf?tool=pdftoppt",
     "title": "PDF to PowerPoint Online Free | OnlineToolsWeb",
     "h1": "PDF to PowerPoint Online",
-    "description": "Turn each page into a slide. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn each page into a slide. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfprotect",
@@ -357,7 +357,7 @@
     "oldUrl": "/pdf?tool=pdfprotect",
     "title": "Protect PDF Online Free | OnlineToolsWeb",
     "h1": "Protect PDF Online",
-    "description": "Add a password to a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Add a password to a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfcrop",
@@ -367,7 +367,7 @@
     "oldUrl": "/pdf?tool=pdfcrop",
     "title": "Crop PDF Online Free | OnlineToolsWeb",
     "h1": "Crop PDF Online",
-    "description": "Trim the margins of every page. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Trim the margins of every page. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfunlock",
@@ -377,7 +377,7 @@
     "oldUrl": "/pdf?tool=pdfunlock",
     "title": "Unlock PDF Online Free | OnlineToolsWeb",
     "h1": "Unlock PDF Online",
-    "description": "Remove a password you already know. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Remove a password you already know. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdftomarkdown",
@@ -387,7 +387,7 @@
     "oldUrl": "/pdf?tool=pdftomarkdown",
     "title": "PDF to Markdown Online Free | OnlineToolsWeb",
     "h1": "PDF to Markdown Online",
-    "description": "Convert pages into basic Markdown text. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert pages into basic Markdown text. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfsign",
@@ -397,7 +397,7 @@
     "oldUrl": "/pdf?tool=pdfsign",
     "title": "Sign PDF Online Free | OnlineToolsWeb",
     "h1": "Sign PDF Online",
-    "description": "Draw a signature and place it on a page. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Draw a signature and place it on a page. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfedit",
@@ -407,7 +407,7 @@
     "oldUrl": "/pdf?tool=pdfedit",
     "title": "Edit PDF Online Free | OnlineToolsWeb",
     "h1": "Edit PDF Online",
-    "description": "Add, cover, and replace text or images on any page. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Add, cover, and replace text or images on any page. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "scantopdf",
@@ -417,7 +417,7 @@
     "oldUrl": "/pdf?tool=scantopdf",
     "title": "Scan to PDF Online Free | OnlineToolsWeb",
     "h1": "Scan to PDF Online",
-    "description": "Capture pages with your camera. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Capture pages with your camera. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "pdfcompare",
@@ -427,7 +427,7 @@
     "oldUrl": "/pdf?tool=pdfcompare",
     "title": "Compare PDF Online Free | OnlineToolsWeb",
     "h1": "Compare PDF Online",
-    "description": "See text differences between two PDFs. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "See text differences between two PDFs. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "ppttotext",
@@ -437,7 +437,7 @@
     "oldUrl": "/ppt?tool=ppttotext",
     "title": "PPT to Text Online Free | OnlineToolsWeb",
     "h1": "PPT to Text Online",
-    "description": "Extract all text from a slide deck. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract all text from a slide deck. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "texttoppt",
@@ -447,7 +447,7 @@
     "oldUrl": "/other-tools?tool=texttoppt",
     "title": "Text to PPT Online Free | OnlineToolsWeb",
     "h1": "Text to PPT Online",
-    "description": "Turn pasted text into slides. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn pasted text into slides. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "textopdf",
@@ -457,7 +457,7 @@
     "oldUrl": "/other-tools?tool=textopdf",
     "title": "Text to PDF Online Free | OnlineToolsWeb",
     "h1": "Text to PDF Online",
-    "description": "Turn pasted text into a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn pasted text into a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "wordcounter",
@@ -467,7 +467,7 @@
     "oldUrl": "/other-tools?tool=wordcounter",
     "title": "Word Counter Online Free | OnlineToolsWeb",
     "h1": "Word Counter Online",
-    "description": "Count words and characters instantly. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Count words and characters instantly. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "caseconverter",
@@ -477,7 +477,7 @@
     "oldUrl": "/other-tools?tool=caseconverter",
     "title": "Case Converter Online Free | OnlineToolsWeb",
     "h1": "Case Converter Online",
-    "description": "Switch between upper, lower, and title case. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Switch between upper, lower, and title case. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "qrcode",
@@ -487,7 +487,7 @@
     "oldUrl": "/other-tools?tool=qrcode",
     "title": "QR Code Generator Online Free | OnlineToolsWeb",
     "h1": "QR Code Generator Online",
-    "description": "Turn a link or text into a QR code. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Turn a link or text into a QR code. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "passwordgen",
@@ -497,7 +497,7 @@
     "oldUrl": "/other-tools?tool=passwordgen",
     "title": "Password Generator Online Free | OnlineToolsWeb",
     "h1": "Password Generator Online",
-    "description": "Create a strong random password. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Create a strong random password. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "jsonformatter",
@@ -507,7 +507,7 @@
     "oldUrl": "/other-tools?tool=jsonformatter",
     "title": "JSON Formatter Online Free | OnlineToolsWeb",
     "h1": "JSON Formatter Online",
-    "description": "Pretty-print and validate JSON. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Pretty-print and validate JSON. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "base64",
@@ -517,7 +517,7 @@
     "oldUrl": "/other-tools?tool=base64",
     "title": "Base64 Encode/Decode Online Free | OnlineToolsWeb",
     "h1": "Base64 Encode/Decode Online",
-    "description": "Convert text to and from Base64. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert text to and from Base64. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "loremipsum",
@@ -527,7 +527,7 @@
     "oldUrl": "/other-tools?tool=loremipsum",
     "title": "Lorem Ipsum Generator Online Free | OnlineToolsWeb",
     "h1": "Lorem Ipsum Generator Online",
-    "description": "Generate placeholder paragraphs. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Generate placeholder paragraphs. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "unitconverter",
@@ -537,7 +537,7 @@
     "oldUrl": "/other-tools?tool=unitconverter",
     "title": "Unit Converter Online Free | OnlineToolsWeb",
     "h1": "Unit Converter Online",
-    "description": "Convert length, weight, and temperature. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Convert length, weight, and temperature. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "gpacalculator",
@@ -547,7 +547,7 @@
     "oldUrl": "/other-tools?tool=gpacalculator",
     "title": "GPA / CGPA Calculator Online Free | OnlineToolsWeb",
     "h1": "GPA / CGPA Calculator Online",
-    "description": "Calculate your grade point average. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Calculate your grade point average. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "citationgen",
@@ -557,7 +557,7 @@
     "oldUrl": "/other-tools?tool=citationgen",
     "title": "Citation Generator Online Free | OnlineToolsWeb",
     "h1": "Citation Generator Online",
-    "description": "Format a source in APA, MLA, or Chicago. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Format a source in APA, MLA, or Chicago. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "randomgen",
@@ -567,7 +567,7 @@
     "oldUrl": "/other-tools?tool=randomgen",
     "title": "Random Generator Online Free | OnlineToolsWeb",
     "h1": "Random Generator Online",
-    "description": "Generate a random number or string. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Generate a random number or string. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "zipfiles",
@@ -577,7 +577,7 @@
     "oldUrl": "/other-tools?tool=zipfiles",
     "title": "Zip Files Online Free | OnlineToolsWeb",
     "h1": "Zip Files Online",
-    "description": "Bundle multiple files into one archive. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Bundle multiple files into one archive. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "unzipfiles",
@@ -587,7 +587,7 @@
     "oldUrl": "/other-tools?tool=unzipfiles",
     "title": "Unzip Archive Online Free | OnlineToolsWeb",
     "h1": "Unzip Archive Online",
-    "description": "Extract files from a zip archive. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract files from a zip archive. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "invoicegen",
@@ -597,7 +597,7 @@
     "oldUrl": "/other-tools?tool=invoicegen",
     "title": "Invoice Generator Online Free | OnlineToolsWeb",
     "h1": "Invoice Generator Online",
-    "description": "Build and download a simple invoice. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Build and download a simple invoice. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "resumebuilder",
@@ -607,7 +607,7 @@
     "oldUrl": "/other-tools?tool=resumebuilder",
     "title": "Resume Builder Online Free | OnlineToolsWeb",
     "h1": "Resume Builder Online",
-    "description": "Build and download a simple resume. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Build and download a simple resume. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "htmltopdf",
@@ -617,7 +617,7 @@
     "oldUrl": "/other-tools?tool=htmltopdf",
     "title": "HTML to PDF Online Free | OnlineToolsWeb",
     "h1": "HTML to PDF Online",
-    "description": "Paste HTML code and export it as a PDF. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Paste HTML code and export it as a PDF. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "htmltoexcel",
@@ -627,7 +627,7 @@
     "oldUrl": "/other-tools?tool=htmltoexcel",
     "title": "HTML to Excel Online Free | OnlineToolsWeb",
     "h1": "HTML to Excel Online",
-    "description": "Extract tables from HTML into a spreadsheet. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Extract tables from HTML into a spreadsheet. Free, private, and runs right in your browser: no upload, no signup."
   },
   {
     "key": "aisummarizer",
@@ -637,6 +637,6 @@
     "oldUrl": "/other-tools?tool=aisummarizer",
     "title": "Content Paraphraser Online Free | OnlineToolsWeb",
     "h1": "Content Paraphraser Online",
-    "description": "Reword and condense text privately, right in your browser. Free, private, and runs right in your browser — no upload, no signup."
+    "description": "Reword and condense text privately, right in your browser. Free, private, and runs right in your browser: no upload, no signup."
   }
 ]

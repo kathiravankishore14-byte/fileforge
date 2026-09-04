@@ -120,7 +120,7 @@ const toolMeta = {
     // words, with our own product's actual differentiator (touch-up
     // brush + background swap, both free) called out explicitly.
     heroCopy: {
-      h1: 'Remove Image Background — Free & Automatic',
+      h1: 'Remove Image Background: Free & Automatic',
       intro: 'One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds, then compare it against the original with a slider and swap in a new background color or image before you download. Nothing leaves your browser.',
     },
     useCases: [
@@ -155,7 +155,7 @@ const toolMeta = {
   pdfdelete: { label: 'Delete Pages', desc: 'Remove specific pages from a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfwatermark: { label: 'Watermark PDF', desc: 'Stamp text across every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfsplit: { label: 'Split PDF', desc: 'Break a PDF into separate files by page range.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
-  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by recompressing images and trimming unused data — text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by recompressing images and trimming unused data. Text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdftoword: { label: 'PDF to Word', desc: 'Extract text into an editable Word document.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'word' },
   pdftoexcel: { label: 'PDF to Excel', desc: 'Pull tabular data into a spreadsheet.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'excel' },
   pdftojpg: { label: 'PDF to JPG', desc: 'Export every page as an image.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'image' },
@@ -1477,7 +1477,7 @@ function renderSingleFileConfig() {
       const scale = Math.max(0.4, Math.min(1.5, Math.sqrt((w * h) / (origW * origH))));
       currentImg.style.transform = `scale(${scale})`;
       const stretched = Math.abs((origW / origH) - (w / h)) / (origW / origH) > 0.05;
-      liveHint.innerHTML = `New size: <strong>${w} × ${h}px</strong>${stretched ? ' <span class="tp-live-warn"><span class="icon icon-alert-triangle" aria-hidden="true"></span> different aspect ratio — image will stretch</span>' : ''}`;
+      liveHint.innerHTML = `New size: <strong>${w} × ${h}px</strong>${stretched ? ' <span class="tp-live-warn"><span class="icon icon-alert-triangle" aria-hidden="true"></span> different aspect ratio: image will stretch</span>' : ''}`;
     };
     widthInput.addEventListener('input', updateResizeLivePreview);
     heightInput.addEventListener('input', updateResizeLivePreview);
@@ -2784,7 +2784,7 @@ function renderSingleFileConfig() {
         if (metadataTrimmed) extras.push('metadata cleaned');
         const note = savedSomething
           ? `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller); ${extras.length ? extras.join(', ') + ', ' : ''}text untouched.`
-          : 'This PDF is already about as small as it gets — no embedded JPEGs to recompress and no extra data to trim without changing its content.';
+          : 'This PDF is already about as small as it gets: no embedded JPEGs to recompress and no extra data to trim without changing its content.';
         await minWait(300);
         showResultState(blob, `compressed-${currentFile.name}`, note);
       } catch (err) { showErrorState(err.message); }
@@ -3985,7 +3985,7 @@ function renderMultiFileTool(initialFiles) {
         <p class="multi-file-summary" id="multiFileSummary"></p>
         <button type="button" class="multi-add-btn" id="addMoreBtn">+ Add files</button>
         <input type="file" id="multiAddInput" multiple accept="${meta.accept || ''}" style="display:none" />
-        ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder — files combine in this order.</p>' : ''}
+        ${showReorder ? '<p class="multi-file-hint">Drag cards to reorder. Files combine in this order.</p>' : ''}
         <div id="multiWarning" class="batch-warning" style="display:none;"></div>
         <button class="multi-cta-btn" id="multiApply" disabled>${actionLabel}</button>
       </aside>
@@ -4250,6 +4250,21 @@ function wireSearch(inputId, resultsId) {
       resultsEl.classList.remove('visible');
     }
   });
+
+  // Blue search button next to the input: focus the field, and if a
+  // result set is already showing, open the highlighted (or first) match
+  // just like pressing Enter would.
+  const searchBtn = document.querySelector(`[data-search-btn="${inputId}"]`);
+  if (searchBtn) {
+    searchBtn.addEventListener('click', () => {
+      const items = resultsEl.querySelectorAll('.search-result-item');
+      if (items.length && resultsEl.classList.contains('visible')) {
+        const target = items[activeIndex >= 0 ? activeIndex : 0];
+        if (target) { activateItem(target.dataset.key, target.dataset.cat); return; }
+      }
+      input.focus();
+    });
+  }
 }
 
 // Ctrl/Cmd+K focuses the prominent homepage search box; on any other
@@ -4673,7 +4688,7 @@ function wireSmartNav() {
 // prefers-reduced-motion, so there's no "disabled" state to maintain
 // elsewhere — it simply never wires up.
 const CARD_TILT_MAX_DEG = 1.4;
-const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon)';
+const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon), .popular-item-visual';
 
 function wirePointerEffects() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -4779,7 +4794,7 @@ function wireHoverSound() {
 // into/out of view (no unobserve) rather than firing once per page
 // load, and is a no-op under prefers-reduced-motion, where every target
 // is marked visible immediately instead of observed.
-const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-card';
+const SCROLL_REVEAL_SELECTOR = '.editorial-section, .editorial-media, .editorial-copy, .tp-section, .tp-usecases, .tool-card, .popular-item';
 
 function wireScrollReveal() {
   const targets = document.querySelectorAll(SCROLL_REVEAL_SELECTOR);
@@ -4821,6 +4836,203 @@ function wireSoundToggle() {
   });
 }
 
+// ================= FLOATING SAND-PARTICLE BACKGROUND =================
+// Home + category pages only (see initToolPage() below) — fine grains in
+// the site's own logo gradient (deep navy through mid blue to bright
+// cyan), drifting slowly across three depths of field, that part around
+// the cursor and settle back. Approved as a standalone preview before
+// being wired in here; see /sand-particles preview history for the
+// design rationale. No-ops entirely under prefers-reduced-motion (the
+// canvas is already display:none via CSS in that case, so this skips
+// the animation loop rather than fighting it).
+function initParticleField() {
+  const canvas = document.querySelector('.particle-field');
+  if (!canvas) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) return;
+
+  const ctx = canvas.getContext('2d');
+  const root = document.documentElement;
+
+  const PALETTES = {
+    light: { grains: ['#0A3FBF', '#0B68F3', '#12CDF6'], glint: '#EAF6FF' },
+    dark: { grains: ['#3E6FFF', '#4FA0FF', '#57E4FF'], glint: '#F3FBFF' },
+  };
+  function currentTheme() {
+    const explicit = root.getAttribute('data-theme');
+    if (explicit === 'light' || explicit === 'dark') return explicit;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  let vw = window.innerWidth, vh = window.innerHeight;
+  let dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function resize() {
+    vw = window.innerWidth; vh = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = vw * dpr; canvas.height = vh * dpr;
+    canvas.style.width = vw + 'px'; canvas.style.height = vh + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  const LAYERS = [
+    { count: 46, sizeMin: 1.1, sizeMax: 2.2, speed: 0.06, blur: 1.6, alphaMin: 0.11, alphaMax: 0.2, repel: 0.35 },
+    { count: 40, sizeMin: 2.0, sizeMax: 3.6, speed: 0.13, blur: 0.6, alphaMin: 0.16, alphaMax: 0.28, repel: 0.7 },
+    { count: 30, sizeMin: 3.2, sizeMax: 5.4, speed: 0.22, blur: 0, alphaMin: 0.22, alphaMax: 0.38, repel: 1.15 },
+  ];
+  // Reference size baked into every pre-rendered sprite (see the sprite
+  // section further down) — declared up here, ahead of spawn()/
+  // buildParticles(), since buildParticles() runs immediately below and
+  // spawn() needs these to compute each particle's draw size.
+  const SPRITE_R = 32;
+  const SPRITE_PAD = 8;
+  const SPRITE_DIM = (SPRITE_R + SPRITE_PAD) * 2;
+  let particles = [];
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function spawn(p, layerIdx) {
+    const layer = LAYERS[layerIdx];
+    p.layer = layerIdx;
+    p.size = rand(layer.sizeMin, layer.sizeMax);
+    p.alpha = rand(layer.alphaMin, layer.alphaMax);
+    p.driftAngle = rand(0, Math.PI * 2);
+    p.driftSpeed = layer.speed * rand(0.6, 1.3);
+    p.wobbleAmp = rand(8, 22);
+    p.wobbleFreq = rand(0.0004, 0.0011);
+    p.wobblePhase = rand(0, Math.PI * 2);
+    p.baseX = rand(0, vw);
+    p.baseY = rand(0, vh);
+    p.offX = 0; p.offY = 0;
+    p.velX = 0; p.velY = 0;
+    p.glint = Math.random() < 0.08;
+    p.colorIdx = (Math.random() * 3) | 0;
+    // Precompute the sprite slot (0-2 = grain color, 3 = glint) and the
+    // on-screen draw size once — both are fixed for the particle's whole
+    // lifetime, so there's no reason to redo this math every frame.
+    p.colorSlot = p.glint ? 3 : p.colorIdx;
+    p.destSize = (p.size / SPRITE_R) * SPRITE_DIM;
+  }
+  function buildParticles() {
+    particles = [];
+    LAYERS.forEach((layer, li) => {
+      for (let i = 0; i < layer.count; i++) { const p = {}; spawn(p, li); particles.push(p); }
+    });
+  }
+  buildParticles();
+
+  let pointerX = -9999, pointerY = -9999, hasPointer = false;
+  const REPEL_RADIUS = 150, REPEL_STRENGTH = 2.4;
+  window.addEventListener('pointermove', (e) => { pointerX = e.clientX; pointerY = e.clientY; hasPointer = true; }, { passive: true });
+  window.addEventListener('pointerleave', () => { hasPointer = false; }, { passive: true });
+  window.addEventListener('resize', () => { resize(); buildParticles(); });
+
+  function step(p) {
+    const layer = LAYERS[p.layer];
+    p.baseX += Math.cos(p.driftAngle) * p.driftSpeed;
+    p.baseY += Math.sin(p.driftAngle) * p.driftSpeed * 0.6 - p.driftSpeed * 0.18;
+    const m = 40;
+    if (p.baseX < -m) p.baseX = vw + m;
+    if (p.baseX > vw + m) p.baseX = -m;
+    if (p.baseY < -m) p.baseY = vh + m;
+    if (p.baseY > vh + m) p.baseY = -m;
+    const wx = p.baseX, wy = p.baseY;
+    if (hasPointer) {
+      const dx = wx + p.offX - pointerX, dy = wy + p.offY - pointerY;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
+      if (dist < REPEL_RADIUS) {
+        const force = (1 - dist / REPEL_RADIUS) * REPEL_STRENGTH * layer.repel;
+        p.velX += (dx / dist) * force; p.velY += (dy / dist) * force;
+      }
+    }
+    p.velX *= 0.9; p.velY *= 0.9;
+    p.offX += p.velX; p.offY += p.velY;
+    p.offX *= 0.96; p.offY *= 0.96;
+    p.x = wx + p.offX; p.y = wy + p.offY;
+  }
+
+  function hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${Math.max(0, Math.min(1, alpha))})`;
+  }
+  function lighten(hex) {
+    let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+    r = Math.min(255, r + 70); g = Math.min(255, g + 70); b = Math.min(255, b + 70);
+    return '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+
+  // --- Pre-rendered sprites -------------------------------------------
+  // The previous version created a fresh radial gradient (3 color stops,
+  // parsed from hex every time) AND ran a canvas blur filter for every
+  // one of the ~116 particles on every single animation frame — that's
+  // what was making the whole page feel sluggish, since the browser had
+  // to redo that expensive gradient + blur work ~7,000+ times a second
+  // and it was competing with scrolling/clicks for the main thread.
+  //
+  // Instead, each (layer, color) combination is drawn ONCE onto a small
+  // offscreen canvas — blur included — and every frame just stamps that
+  // ready-made sprite down with ctx.drawImage(), which is dramatically
+  // cheaper. Per-particle alpha still varies via ctx.globalAlpha.
+  // (SPRITE_R / SPRITE_PAD / SPRITE_DIM are declared up near LAYERS,
+  // since spawn() needs them too.)
+  function buildSpriteSet(theme) {
+    const palette = PALETTES[theme];
+    const colors = [...palette.grains, palette.glint];
+    const cx = SPRITE_DIM / 2, cy = SPRITE_DIM / 2;
+    return LAYERS.map((layer) => colors.map((hex, ci) => {
+      const isGlint = ci === 3;
+      const off = document.createElement('canvas');
+      off.width = SPRITE_DIM; off.height = SPRITE_DIM;
+      const octx = off.getContext('2d');
+      if (layer.blur) octx.filter = `blur(${layer.blur}px)`;
+      const core = isGlint ? hex : lighten(hex);
+      const grad = octx.createRadialGradient(cx - SPRITE_R * 0.3, cy - SPRITE_R * 0.3, 0, cx, cy, SPRITE_R);
+      grad.addColorStop(0, hexToRgba(core, isGlint ? 1 : 0.85));
+      grad.addColorStop(0.55, hexToRgba(hex, 0.6));
+      grad.addColorStop(1, hexToRgba(hex, 0));
+      octx.fillStyle = grad;
+      octx.beginPath();
+      octx.arc(cx, cy, SPRITE_R, 0, Math.PI * 2);
+      octx.fill();
+      return off;
+    }));
+  }
+
+  let sprites = buildSpriteSet(currentTheme());
+  let themeDirty = false;
+  // Rebuild sprites only when the theme actually changes, not on every
+  // frame — a media-query listener + attribute observer instead of
+  // polling currentTheme() 60 times a second.
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { themeDirty = true; });
+  new MutationObserver(() => { themeDirty = true; }).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+
+  let rafId = null;
+  function draw() {
+    if (themeDirty) { themeDirty = false; sprites = buildSpriteSet(currentTheme()); }
+    ctx.clearRect(0, 0, vw, vh);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      step(p);
+      const sprite = sprites[p.layer][p.colorSlot];
+      const d = p.destSize;
+      ctx.globalAlpha = p.alpha;
+      ctx.drawImage(sprite, p.x - d / 2, p.y - d / 2, d, d);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    rafId = requestAnimationFrame(draw);
+  }
+
+  resize();
+  rafId = requestAnimationFrame(draw);
+
+  // Pause the loop entirely while the tab is hidden — a background tab
+  // has no visible cursor interaction to react to anyway.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { if (rafId) cancelAnimationFrame(rafId); rafId = null; }
+    else if (!rafId) { rafId = requestAnimationFrame(draw); }
+  });
+}
+
 // ================= PAGE INIT =================
 export function initToolPage(pageCategory) {
   wireThemeToggle();
@@ -4830,6 +5042,7 @@ export function initToolPage(pageCategory) {
   wireSoundToggle();
   wirePointerEffects();
   wireHoverSound();
+  initParticleField();
   renderMainNav();
   wireNavDropdowns();
   wireSearch('mobileSearchInput', 'mobileSearchResults');

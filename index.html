@@ -21,6 +21,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is my file uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Every tool runs locally in your browser, your files never leave your device."}},{"@type":"Question","name":"Do I need to create an account?","acceptedAnswer":{"@type":"Answer","text":"No. There's no sign-up, no login, and nothing to remember."}},{"@type":"Question","name":"Is there a file size or usage limit?","acceptedAnswer":{"@type":"Answer","text":"No. Use any tool as many times as you like, on files of any size your browser can handle."}},{"@type":"Question","name":"What file types are supported?","acceptedAnswer":{"@type":"Answer","text":"PDF, images (JPG/PNG/WebP/HEIC), Word, Excel, PowerPoint, plus everyday text and utility tools."}},{"@type":"Question","name":"Is my data private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Since nothing is uploaded, no one else, including us, ever sees your files."}},{"@type":"Question","name":"Can I use this on my phone?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every tool works on any modern mobile or desktop browser."}},{"@type":"Question","name":"Do I need to install anything?","acceptedAnswer":{"@type":"Answer","text":"No. Just open the site and start using a tool."}},{"@type":"Question","name":"Are the tools really free?","acceptedAnswer":{"@type":"Answer","text":"Core OnlineToolsWeb tools are free to use. Optional premium features may be introduced for advanced workflows such as batch processing, larger limits, saved presets, or history."}}]}</script>
   </head>
   <body data-tool-category="all">
+    <canvas class="particle-field" aria-hidden="true"></canvas>
     <!--HEADER-->
 
     <section class="hero">
@@ -29,6 +30,7 @@
 
       <div class="home-search-wrap site-search-wrap">
         <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search 63+ tools..." aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <button type="button" class="site-search-btn" data-search-btn="homeSearchInput" aria-label="Search"><span class="icon icon-search" aria-hidden="true"></span></button>
         <div id="homeSearchResults" class="search-results-list" role="listbox"></div>
       </div>
     </section>
@@ -76,7 +78,7 @@
       <div class="editorial-copy">
         <span class="editorial-eyebrow">Local-first</span>
         <h2>Everything happens on your device</h2>
-        <p>Every tool runs as JavaScript directly in your browser. Your files are read, processed, and written back out without ever touching a server — so nothing is uploaded, and nothing is stored anywhere but your own machine.</p>
+        <p>Every tool runs as JavaScript directly in your browser. Your files are read, processed, and written back out without ever touching a server. Nothing is uploaded, and nothing is stored anywhere but your own machine.</p>
         <ul class="editorial-points">
           <li><span class="icon icon-check" aria-hidden="true"></span> No upload step, ever</li>
           <li><span class="icon icon-check" aria-hidden="true"></span> Works offline once the page has loaded</li>
@@ -101,7 +103,7 @@
       <div class="editorial-copy">
         <span class="editorial-eyebrow">No installs, no waiting</span>
         <h2>Open a link and it's already working</h2>
-        <p>There's nothing to download and nothing to configure. Every tool loads in a second and starts processing the moment you drop a file — no account, no plugin, no queue to wait behind.</p>
+        <p>There's nothing to download and nothing to configure. Every tool loads in a second and starts processing the moment you drop a file: no account, no plugin, no queue to wait behind.</p>
         <ul class="editorial-points">
           <li><span class="icon icon-check" aria-hidden="true"></span> Instant results, no server round-trip</li>
           <li><span class="icon icon-check" aria-hidden="true"></span> Runs the same on desktop and mobile</li>
@@ -132,7 +134,7 @@
       <div class="editorial-copy">
         <span class="editorial-eyebrow">One platform, every format</span>
         <h2>PDF, image, Excel, Word and PowerPoint tools in one place</h2>
-        <p>63+ tools cover the everyday file work people actually do — converting, compressing, merging, and editing — so you stop hunting for a different site for every format.</p>
+        <p>63+ tools cover the everyday file work people actually do: converting, compressing, merging, and editing, so you stop hunting for a different site for every format.</p>
         <ul class="editorial-points">
           <li><span class="icon icon-check" aria-hidden="true"></span> One consistent tool for every task</li>
           <li><span class="icon icon-check" aria-hidden="true"></span> Free to use, with no per-tool signup</li>

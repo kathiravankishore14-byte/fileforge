@@ -18,6 +18,7 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { extractMainData } from './extract-main-data.mjs';
 import { TOOL_SLUGS } from '../src/toolSlugs.js';
+import { popularIllustrationSvg, STEP_ICONS } from './illustrations.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
@@ -72,38 +73,42 @@ function deriveSeo(key, meta) {
   const slug = TOOL_SLUGS[key];
   const title = `${meta.label} Online Free | OnlineToolsWeb`;
   const privacyClause = meta.usesServer
-    ? 'Free, fast AI processing — no signup, nothing stored.'
-    : 'Free, private, and runs right in your browser — no upload, no signup.';
+    ? 'Free, fast AI processing, no signup, nothing stored.'
+    : 'Free, private, and runs right in your browser: no upload, no signup.';
   let description = `${meta.desc} ${privacyClause}`;
-  if (description.length > 158) description = meta.usesServer ? `${meta.desc} No signup — nothing stored.` : `${meta.desc} No upload, no signup — runs in your browser.`;
+  if (description.length > 158) description = meta.usesServer ? `${meta.desc} No signup, nothing stored.` : `${meta.desc} No upload, no signup, runs in your browser.`;
   // A tool can supply its own hand-written hero copy (see toolMeta in
   // main.js) when the generic auto-derived phrasing undersells it —
   // used for Remove Background, which leads with real use cases rather
   // than the generic "drop or select your file" pattern.
   const h1 = meta.heroCopy?.h1 || `${meta.label} Online`;
+  // Trimmed to a two-line hero: the tool's own value line, then one short
+  // action line. The trust badges just below the hero already carry the
+  // "runs in your browser, nothing uploaded" promise, so the intro no
+  // longer has to restate it.
   const actionHint = meta.noFile
-    ? 'fill in the details below'
-    : (meta.multiFile ? 'drop or select your files' : 'drop or select your file');
-  const intro = meta.heroCopy?.intro || `${meta.desc} Everything happens locally in your browser, so your files are never uploaded to a server — ${actionHint}, and get your result in seconds.`;
+    ? 'Fill in the details'
+    : (meta.multiFile ? 'Drop your files' : 'Drop your file');
+  const intro = meta.heroCopy?.intro || `${meta.desc} ${actionHint} and get your result in seconds.`;
 
   const faq = [];
   faq.push({
     q: `Is ${meta.label} free to use?`,
-    a: `Yes — core OnlineToolsWeb tools are free to use, including ${meta.label}. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free.`,
+    a: `Yes, core OnlineToolsWeb tools are free to use, including ${meta.label}. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free.`,
   });
   faq.push({
     q: `Do I need to install anything to use ${meta.label}?`,
-    a: `No installation needed. ${meta.label} runs directly in your browser on any modern desktop or mobile browser — just open this page and use it.`,
+    a: `No installation needed. ${meta.label} runs directly in your browser on any modern desktop or mobile browser, just open this page and use it.`,
   });
   if (meta.noFile) {
     faq.push({
       q: `Does ${meta.label} store or send what I enter?`,
-      a: `No. ${meta.label} runs entirely in your browser — nothing you type or generate here is uploaded or saved on a server.`,
+      a: `No. ${meta.label} runs entirely in your browser: nothing you type or generate here is uploaded or saved on a server.`,
     });
   } else if (meta.usesServer) {
     faq.push({
       q: `Is my file safe when I use ${meta.label}?`,
-      a: `Your photo is sent securely to our server, which uses remove.bg to process the cutout — the photo is auto-deleted from their servers afterward. See our Privacy Policy for the full details. If our server is ever unavailable, ${meta.label} automatically falls back to an AI model that runs right in your browser instead, so nothing leaves your device at all.`,
+      a: `Your photo is sent securely to our server, which uses remove.bg to process the cutout. The photo is auto-deleted from their servers afterward. See our Privacy Policy for the full details. If our server is ever unavailable, ${meta.label} automatically falls back to an AI model that runs right in your browser instead, so nothing leaves your device at all.`,
     });
   } else {
     faq.push({
@@ -123,15 +128,15 @@ function deriveSeo(key, meta) {
     ? [
         `Open ${meta.label} on this page.`,
         'Enter the details or paste your content.',
-        'Click the action button — processing happens instantly in your browser.',
+        'Click the action button: processing happens instantly in your browser.',
         'Copy or download your result.',
       ]
     : [
         `Open ${meta.label} and drop your ${meta.multiFile ? 'files' : 'file'}, or click to browse.`,
         'Adjust the available settings if needed.',
         meta.usesServer
-          ? 'Run the tool — your photo is sent to our server for AI processing, with an automatic in-browser fallback if it’s unavailable.'
-          : 'Run the tool — everything processes right in your browser, nothing is uploaded.',
+          ? 'Run the tool: your photo is sent to our server for AI processing, with an automatic in-browser fallback if it’s unavailable.'
+          : 'Run the tool: everything processes right in your browser, nothing is uploaded.',
         'Download your result, or process another file.',
       ];
 
@@ -221,12 +226,61 @@ function faqHtml(faq) {
     </section>`;
 }
 
-function stepsHtml(steps) {
-  const items = steps.map((s) => `<li>${esc(s)}</li>`).join('');
+// Four colorful, gently-animated character icons in a fixed 1-2-3-4 row —
+// same everywhere, cycling the site's own category colors so the row
+// itself is colorful without needing per-tool tuning.
+const STEP_COLORS = ['image', 'excel', 'word', 'pdf'];
+function stepsCartoonHtml() {
+  const items = STEP_ICONS.map((step, i) => {
+    const arrow = i < STEP_ICONS.length - 1 ? `<span class="tp-step-arrow" aria-hidden="true">→</span>` : '';
+    return `
+        <div class="tp-step" style="--step-color: var(--category-${STEP_COLORS[i]});">
+          <div class="tp-step-icon-wrap">
+            <span class="tp-step-icon" style="--step-delay: ${(i * 0.15).toFixed(2)}s;">${step.svg}</span>
+            <span class="tp-step-num">${i + 1}</span>
+          </div>
+          <span class="tp-step-label">${esc(step.label)}</span>
+        </div>
+        ${arrow}`;
+  }).join('');
   return `
-    <section class="tp-section tp-how" data-reveal>
-      <h2>How It Works</h2>
-      <ol class="tp-how-list">${items}</ol>
+    <section class="tp-section tp-steps" data-reveal>
+      <h2>How it works</h2>
+      <div class="tp-steps-row">${items}</div>
+    </section>`;
+}
+
+// "Popular in {category}" — three other tools from the same category,
+// image-left/text-right alternating with the homepage's editorial
+// sections, each paired with a cartoon illustration (see
+// scripts/illustrations.mjs) instead of a plain icon glyph.
+function popularToolsHtml(key, meta) {
+  const related = relatedKeysFor(key, meta).slice(0, 3);
+  if (!related.length) return '';
+  const catLabel = categoryLabels[meta.category] || meta.category;
+  const items = related.map((rk, i) => {
+    const rMeta = toolMeta[rk];
+    const rSlug = TOOL_SLUGS[rk];
+    if (!rSlug) return '';
+    const reverse = i % 2 === 1 ? ' popular-item-reverse' : '';
+    return `
+        <a class="popular-item${reverse}" href="/${rSlug}">
+          <div class="popular-item-visual cat-${rMeta.category}">
+            <div class="popular-item-glow" aria-hidden="true"></div>
+            <div class="popular-item-icon">${popularIllustrationSvg(rk, rMeta)}</div>
+          </div>
+          <div class="popular-item-copy">
+            <span class="tool-card-cat">${esc(categoryLabels[rMeta.category] || rMeta.category)}</span>
+            <h3>${esc(rMeta.label)}</h3>
+            ${rMeta.desc ? `<p>${esc(rMeta.desc)}</p>` : ''}
+            <span class="popular-item-cta">Open tool <span class="icon icon-arrow-right" aria-hidden="true"></span></span>
+          </div>
+        </a>`;
+  }).join('');
+  return `
+    <section class="tp-section tp-popular" data-reveal>
+      <h2>Popular in ${esc(catLabel)}</h2>
+      <div class="popular-showcase">${items}</div>
     </section>`;
 }
 
@@ -243,7 +297,7 @@ function jsonLd(key, meta, seo, categoryUrl) {
   const app = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: `${meta.label} — OnlineToolsWeb`,
+    name: `${meta.label} | OnlineToolsWeb`,
     url: `${SITE_ORIGIN}/${seo.slug}`,
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Any (runs in browser)',
@@ -312,7 +366,7 @@ function buildPage(key) {
   <body class="tool-landing-page" data-tool-landing="${key}">
     <!--HEADER-->
 
-    <!-- Visible breadcrumb nav intentionally removed per request — the
+    <!-- Visible breadcrumb nav intentionally removed per request: the
          BreadcrumbList JSON-LD above (jsonLd()) still carries this same
          hierarchy for search engines, so nothing is lost for SEO. -->
 
@@ -340,8 +394,9 @@ function buildPage(key) {
       </div>
     </div>
 
+    ${popularToolsHtml(key, meta)}
+    ${stepsCartoonHtml()}
     ${relatedToolsHtml(key, meta)}
-    ${stepsHtml(seo.steps)}
     ${faqHtml(seo.faq)}
 
     <!--FOOTER-->
