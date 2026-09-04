@@ -405,10 +405,16 @@ function closeToolModal(skipHistory) {
   if (lastFocusedElement) lastFocusedElement.focus();
 }
 
-modalClose.addEventListener('click', () => closeToolModal());
-backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeToolModal(); });
+// Informational pages (About, Contact, Privacy Policy, Terms of
+// Service) carry the shared header/footer but no tool modal markup —
+// guard this module-level wiring so importing main.js there doesn't
+// throw before any of the page-specific init functions even run.
+if (backdrop && modalClose) {
+  modalClose.addEventListener('click', () => closeToolModal());
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeToolModal(); });
+}
 document.addEventListener('keydown', (e) => {
-  if (!backdrop.classList.contains('hidden')) {
+  if (backdrop && !backdrop.classList.contains('hidden')) {
     if (e.key === 'Escape') { closeToolModal(); return; }
     if (e.key === 'Tab') {
       const focusables = modalBox.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -4396,30 +4402,34 @@ const CATEGORY_NAV_CONFIG = {
 
 const CATEGORY_LABELS = { pdf: 'PDF', image: 'Image', excel: 'Excel', word: 'Word', ppt: 'PowerPoint', utilities: 'Utilities' };
 
-// Flat, header-less dropdown grid: every tool in the list as one evenly
-// spaced row×column grid (no "Popular"/group sub-headers), with the
-// column count picked so rows and columns come out as close to equal
-// as the item count allows (ceil(sqrt(n))), then left filled in reading
-// order. Every label stays on a single line — see .mega-menu in
-// style.css, which sizes each column to its own content instead of a
-// fixed width so nothing wraps. Each entry gets the exact same icon
-// badge as its tool-grid card (renderIconBadge), just shrunk down to
-// sit inline at roughly the same size as the label text next to it.
-// Capped at 5 columns: for a ~20-tool category dropdown ceil(sqrt(n))
-// never hits the cap (stays at 4-5, same as before), but the ~65-tool
-// "All Tools" list would otherwise land on 8 columns — wider than any
-// dropdown should be. Capping it re-balances that toward more rows
-// instead, which the panel's own vertical scroll already handles.
-function flatMegaMenuHtml(keys) {
-  const cols = Math.max(1, Math.min(3, Math.ceil(Math.sqrt(keys.length))));
-  const linksHtml = keys
-    .map((k) => `<a href="${toolUrl(k) || `?tool=${k}`}" data-nav-tool="${k}"><span class="mega-menu-icons">${renderIconBadge(toolMeta[k].category, toolMeta[k].iconTo, k)}</span>${toolMeta[k].label}</a>`)
-    .join('');
-  return `<div class="dropdown mega-menu mega-menu-flat" style="--mega-cols:${cols}">${linksHtml}</div>`;
+// Full-viewport-width, categorized dropdown: every tool grouped into
+// labeled sub-columns (a "Popular" column plus each of that category's
+// groups — Convert/Organize/Security/etc. — for a single-category
+// dropdown, or one column per top-level category for "All Tools").
+// Columns wrap responsively (CSS grid auto-fill in .mega-menu-groups),
+// since the panel itself is always the full viewport width rather than
+// anchored/sized to its trigger (see .mega-menu-full in style.css).
+// Each entry gets the exact same overlap icon badge as its tool-grid
+// card (.tool-icon-badge, via renderIconBadge) — no arrow — just
+// scaled down (.mega-menu-badge) to sit inline at the label's size.
+function toolLinkHtml(key) {
+  const meta = toolMeta[key];
+  if (!meta) return '';
+  const badge = renderIconBadge(meta.category, meta.iconTo, key);
+  return `<a href="${toolUrl(key) || `?tool=${key}`}" data-nav-tool="${key}"><span class="tool-icon-badge mega-menu-badge">${badge}</span>${meta.label}</a>`;
 }
 
-function categoryToolKeys(config) {
-  return [...config.top3, ...config.groups.flatMap((g) => g.tools)];
+function groupedMegaMenuHtml(groups) {
+  const colsHtml = groups
+    .filter((g) => g.tools && g.tools.length)
+    .map((g) => `
+      <div class="mega-menu-col">
+        <p class="mega-menu-col-label">${g.label}</p>
+        <div class="mega-menu-col-links">${g.tools.map(toolLinkHtml).join('')}</div>
+      </div>
+    `)
+    .join('');
+  return `<div class="dropdown mega-menu-full"><div class="mega-menu-groups">${colsHtml}</div></div>`;
 }
 
 // One identical nav bar everywhere — home page and every tool/category
@@ -4433,18 +4443,27 @@ function renderMainNav() {
   const navEl = document.querySelector('.main-nav');
   if (!navEl) return;
 
-  const categoryItem = (label, category) => `
+  const categoryItem = (label, category) => {
+    const config = CATEGORY_NAV_CONFIG[category];
+    const groups = [{ label: 'Popular', tools: config.top3 }, ...config.groups];
+    return `
     <div class="nav-item">
       <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link nav-trigger-link">${label}</a>
-      ${flatMegaMenuHtml(categoryToolKeys(CATEGORY_NAV_CONFIG[category]))}
+      ${groupedMegaMenuHtml(groups)}
     </div>
   `;
+  };
 
-  const allToolsKeys = Object.keys(toolMeta).filter((k) => !toolMeta[k].comingSoon);
+  // Grouped by top-level category (PDF/Image/Excel/Word/PowerPoint/
+  // Utilities) rather than one flat list of ~65 tools.
+  const allToolsGroups = Object.keys(categoryTools).map((cat) => ({
+    label: CATEGORY_LABELS[cat] || cat,
+    tools: categoryTools[cat].filter((k) => toolMeta[k] && !toolMeta[k].comingSoon),
+  }));
   const allToolsItem = `
     <div class="nav-item">
       <a href="/" class="nav-link nav-trigger-link">All Tools</a>
-      ${flatMegaMenuHtml(allToolsKeys)}
+      ${groupedMegaMenuHtml(allToolsGroups)}
     </div>
   `;
 
@@ -4459,10 +4478,10 @@ function renderMainNav() {
   `;
 
   navEl.innerHTML = `
+    ${allToolsItem}
     ${categoryItem('PDF', 'pdf')}
     ${categoryItem('Image', 'image')}
     ${categoryItem('Utilities', 'utilities')}
-    ${allToolsItem}
     ${categoriesItem}
   `;
   // Nav/mega-menu links point straight at each tool's dedicated,
@@ -4493,7 +4512,11 @@ function wireNavDropdowns() {
       // its trigger's right edge can just push it off the LEFT edge
       // instead, especially for a trigger near the start of the nav.
       // Clamping the actual edges keeps it fully on-screen either way.
-      if (panel) {
+      // Full-viewport panels (.mega-menu-full) are position:fixed and
+      // already span edge-to-edge regardless of their trigger's
+      // position, so this per-trigger horizontal nudge doesn't apply —
+      // only the small anchored panels (Categories) need it.
+      if (panel && !panel.classList.contains('mega-menu-full')) {
         panel.style.left = '';
         const margin = 12;
         const overflowRight = panel.getBoundingClientRect().right - (window.innerWidth - margin);
@@ -4525,6 +4548,23 @@ function wireNavDropdowns() {
     // keyboard-opened panel doesn't hang off the screen either.
     item.addEventListener('focusin', openNow);
   });
+}
+
+// ================= HEADER HEIGHT VAR =================
+// The full-viewport-width mega-menu (.mega-menu-full) is position:fixed
+// so it can span edge-to-edge regardless of which trigger opened it —
+// that takes it out of .site-header's own box, so it needs the header's
+// real, measured height (logo + tagline stack, actions row, padding —
+// all of which can shift with font-loading or a future edit) to know
+// where to sit, rather than a guessed CSS constant.
+function wireHeaderHeightVar() {
+  const header = document.querySelector('.site-header');
+  if (!header) return;
+  const setVar = () => {
+    document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+  };
+  setVar();
+  window.addEventListener('resize', setVar);
 }
 
 // ================= SMART NAV HIDE/SHOW =================
@@ -4751,6 +4791,7 @@ export function initToolPage(pageCategory) {
   wireThemeToggle();
   wireHamburger();
   wireSmartNav();
+  wireHeaderHeightVar();
   wireSoundToggle();
   wirePointerEffects();
   wireHoverSound();
@@ -4875,6 +4916,7 @@ export function initToolLandingPage(toolKey) {
   wireThemeToggle();
   wireHamburger();
   wireSmartNav();
+  wireHeaderHeightVar();
   wireSoundToggle();
   wirePointerEffects();
   wireHoverSound();

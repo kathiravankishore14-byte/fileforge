@@ -23,17 +23,21 @@
 <header class="site-header">
   <div class="header-inner">
     <a href="/" class="logo">
-      <img src="/icons/logo-mark.png" class="logo-mark-img" width="46" height="34" alt="" /> OnlineToolsWeb
+      <img src="/icons/logo-mark.png" class="logo-mark-img" width="46" height="34" alt="" />
+      <span class="logo-text-wrap">
+        <img src="/icons/logo-wordmark.png" class="logo-wordmark-img" width="177" height="23" alt="OnlineToolsWeb" />
+        <span class="logo-tagline">Fast <span aria-hidden="true">&bull;</span> Secure <span aria-hidden="true">&bull;</span> Everyday Tools</span>
+      </span>
     </a>
     <!-- Static fallback shown before renderMainNav() (src/main.js) replaces
          this on load with the real hover dropdowns — kept as plain,
          icon-free links here since building the mega-menu content needs
          the JS-only tool data. -->
     <nav class="main-nav">
+      <a href="/" class="nav-link">All Tools</a>
       <a href="/pdf" class="nav-link">PDF</a>
       <a href="/image" class="nav-link">Image</a>
       <a href="/other-tools" class="nav-link">Utilities</a>
-      <a href="/" class="nav-link">All Tools</a>
     </nav>
     <div class="header-actions">
       <!-- Hover sounds are a desktop-only, hover-only affordance (see
@@ -58,7 +62,13 @@
 <div class="mobile-menu-backdrop hidden" id="mobileMenuBackdrop">
   <div class="mobile-menu-panel" id="mobileMenuPanel" role="dialog" aria-modal="true" aria-label="Site menu">
     <div class="mobile-menu-header">
-      <span class="logo"><img src="/icons/logo-mark.png" class="logo-mark-img" width="40" height="29" alt="" /> OnlineToolsWeb</span>
+      <span class="logo">
+        <img src="/icons/logo-mark.png" class="logo-mark-img" width="40" height="29" alt="" />
+        <span class="logo-text-wrap">
+          <img src="/icons/logo-wordmark.png" class="logo-wordmark-img" width="154" height="20" alt="OnlineToolsWeb" />
+          <span class="logo-tagline">Fast <span aria-hidden="true">&bull;</span> Secure <span aria-hidden="true">&bull;</span> Everyday Tools</span>
+        </span>
+      </span>
       <div class="mobile-menu-header-actions">
         <button type="button" class="theme-toggle-btn" id="themeToggleBtnMobile" aria-label="Switch to dark theme" aria-pressed="false">
           <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
@@ -73,10 +83,10 @@
     </div>
     <p class="mobile-nav-label">Tools</p>
     <nav class="mobile-nav-links">
+      <a href="/">All Tools</a>
       <a href="/pdf">PDF</a>
       <a href="/image">Image</a>
       <a href="/other-tools">Utilities</a>
-      <a href="/">All Tools</a>
     </nav>
     <p class="mobile-nav-label">Company</p>
     <nav class="mobile-nav-links mobile-nav-links-secondary">

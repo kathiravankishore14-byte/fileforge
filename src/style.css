@@ -14,6 +14,7 @@
   --header-bg: rgba(255, 255, 255, 0.72);
   --text: #111827;
   --text-secondary: #6B7280;
+  --text-tertiary: #98A2B3;
   --border: #E7EBF0;
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 1px rgba(17, 24, 39, 0.03);
   --shadow-md: 0 10px 28px rgba(17, 24, 39, 0.08), 0 2px 8px rgba(17, 24, 39, 0.04);
@@ -70,10 +71,47 @@
   --purple-light: #EEEDFE;
   --orange: var(--category-ppt);
   --orange-light: #FBEEE1;
-  --gray: #888780;
-  --gray-light: #F1EFE8;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* Premium cool grey — replaces an earlier warm beige/cream pair
+     (#888780 / #F1EFE8) that clashed with the site's cool blue-grey
+     surfaces (--bg, --border, --text-secondary). Same slate family as
+     those, just a step darker/lighter, so hover tints and neutral
+     fills now read as part of one considered palette instead of a
+     warm patch dropped onto a cool site. */
+  --gray: #8A8F99;
+  --gray-light: #EDEFF3;
+
+  /* ---------- Typography system ----------
+     One family sitewide (a modern geometric/neo-grotesk sans) instead
+     of the old two-family display/body split — headings, controls and
+     paragraphs all draw from these same tokens, so the whole site
+     reads as one considered type system rather than a page-by-page
+     patchwork. Self-hosted-quality fallback stack: if the webfont is
+     still loading or blocked, Inter (near-identical metrics) or the
+     platform's own default system sans steps in with minimal reflow. */
+  --font-sans: 'Manrope', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --font-size-xs: 0.75rem;    /* 12px — captions, helper/small text */
+  --font-size-sm: 0.875rem;   /* 14px — nav, buttons, UI labels */
+  --font-size-base: 1rem;     /* 16px — body copy, search input */
+  --font-size-lg: 1.125rem;   /* 18px — card titles, lead paragraphs */
+  --font-size-xl: 1.5rem;     /* 24px — section headings (mobile) */
+  --font-size-2xl: 2.25rem;   /* 36px — section headings (desktop) */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --tracking-tight: -0.02em;
+  --tracking-tighter: -0.035em;
+  --line-height-body: 1.65;
+  --line-height-heading: 1.1;
+
+  /* Legacy names — identical values, kept for every existing
+     var(--font-display)/var(--font-body) usage already in this file
+     (one family now, so both simply alias --font-sans). */
+  --font-display: var(--font-sans);
+  --font-body: var(--font-sans);
 }
 
 /* ============================================================
@@ -93,8 +131,9 @@
     --surface: #111722;
     --surface-elevated: #161D2C;
     --header-bg: rgba(11, 15, 23, 0.72);
-    --text: #F3F5F8;
-    --text-secondary: #9099AC;
+    --text: #F4F7FB;
+    --text-secondary: #A8B0C0;
+    --text-tertiary: #778195;
     --border: #232B3D;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
     --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.35);
@@ -363,15 +402,27 @@
 
 body {
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-regular);
   background: var(--bg);
   color: var(--text);
+  /* Base UI line-height stays compact (1.5) — --line-height-body
+     (1.65) is reserved for long-form reading copy specifically, applied
+     per paragraph below, so nav/buttons/cards don't inherit a looser
+     rhythm meant for SEO content. */
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body.modal-open { overflow: hidden; }
 
 a { color: inherit; }
+
+/* Muted but readable — every text input's placeholder draws from the
+   same tertiary tone rather than each browser's own default gray. */
+::placeholder { color: var(--text-tertiary); opacity: 1; }
 
 /* ---------- Header ---------- */
 .site-header {
@@ -406,9 +457,10 @@ a { color: inherit; }
 
 .logo {
   margin-right: auto;
-  font-family: var(--font-display);
-  font-weight: 700;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold);
   font-size: 1.95rem;
+  letter-spacing: var(--tracking-tight);
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -419,11 +471,35 @@ a { color: inherit; }
 .logo-mark { color: var(--red); }
 
 /* The provided OTW artwork, cropped to just its icon mark and keyed to
-   transparent — sits inline to the left of the live "OnlineToolsWeb"
-   text (kept as real text rather than baked into the image, so it
-   stays crisp and independently sizeable/themeable). */
+   transparent — sits inline to the left of the wordmark (see below). */
 .logo-mark-img { display: block; height: 34px; width: auto; }
 .mobile-menu-header .logo-mark-img { height: 29px; }
+
+/* Wordmark + tagline stack to the right of the icon mark. The
+   "OnlineToolsWeb" text is now the supplied artwork (gradient-blue,
+   cropped from the source logo) rather than live text, so its styling
+   always matches the brand mark pixel-for-pixel; the tagline underneath
+   stays live text so it's crisp and independently themeable. */
+.logo-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logo-wordmark-img { display: block; height: 23px; width: auto; }
+.mobile-menu-header .logo-wordmark-img { height: 20px; }
+
+.logo-tagline {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, var(--text-muted));
+  white-space: nowrap;
+}
+
+.logo-tagline span { color: var(--accent); margin: 0 1px; }
 
 .main-nav {
   display: flex;
@@ -440,8 +516,10 @@ a { color: inherit; }
   border-radius: 8px;
   text-decoration: none;
   color: var(--ink);
-  font-size: 0.796rem; /* was 0.637rem (half of the original 1.274rem); bumped back up 25% per request — logo is untouched */
-  font-weight: 600;
+  font-family: var(--font-sans);
+  /* 14px — the typography system's navigation size. */
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -461,9 +539,10 @@ a { color: inherit; }
   padding: 10px 14px;
   border-radius: 8px;
   color: var(--ink);
-  font-size: 0.796rem; /* was 0.637rem (half of the original 1.274rem); bumped back up 25% per request — logo is untouched */
-  font-weight: 600;
-  font-family: var(--font-body);
+  /* 14px — the typography system's navigation size. */
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  font-family: var(--font-sans);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -540,55 +619,95 @@ a { color: inherit; }
 
 .dropdown a:hover { background: var(--gray-light); color: var(--accent); }
 
-/* A contained, rounded panel anchored under its own trigger — not a
-   full-viewport-width bar. Flat, header-less: every tool as a direct
-   grid item, no group sub-headers, each with the same icon badge as
-   its tool-grid card (renderIconBadge), shrunk to sit inline at about
-   the same size as the label text. Column count is set per-dropdown
-   via --mega-cols (main.js computes it as ceil(sqrt(itemCount)) capped
-   at 5, so rows and columns land as close to equal as the item count
-   allows without ever going wider than 5 columns). Each column sizes
-   to its own longest label (max-content) rather than a fixed width, so
-   every label — including the "All Tools" dropdown's ~65 — stays on
-   one line without wrapping; columns still end up close to matching
-   width since tool names run a fairly similar length. max-width is
-   generous — up to 60% of the viewport, since the nav bar this lives
-   in only ever renders at >=1180px viewports (see the media query
-   below), so there's always room — and overflow-y handles the rare
-   case (the big "All Tools" grid, capped at 5 columns so it runs to
-   ~13 rows) where content is taller than max-height. */
-.mega-menu {
-  display: grid;
-  grid-template-columns: repeat(var(--mega-cols, 4), max-content);
-  grid-auto-rows: 1fr;
-  width: max-content;
-  max-width: min(60vw, 1400px);
-  max-height: min(560px, calc(100vh - 120px));
-  overflow: auto;
-  padding: 16px 18px;
-  gap: 2px 10px;
+/* Full-viewport-width, categorized mega-menu — used by the "All Tools"
+   dropdown and each category's own dropdown (PDF/Image/Utilities).
+   Unlike the small anchored .dropdown panel above (still used as-is by
+   "Categories", unaffected by anything below), this one is pinned to
+   the viewport itself rather than positioned relative to its trigger,
+   so every dropdown opens as one consistent edge-to-edge bar sitting
+   flush under the sticky header — see wireHeaderHeightVar() in main.js,
+   which measures the header's real height into --header-height so this
+   always lines up under it regardless of what changes the header's
+   height (font loading, a breakpoint, a future edit). Tools are grouped
+   into labeled sub-columns (main.js: groupedMegaMenuHtml) instead of
+   one flat grid, and those columns wrap responsively since the panel's
+   width is fixed to the viewport rather than sized to its content. */
+.mega-menu-full {
+  position: fixed;
+  top: var(--header-height, 84px);
+  left: 0;
+  right: 0;
+  width: 100vw;
+  max-width: none;
+  min-width: 0;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  max-height: calc(100vh - var(--header-height, 84px) - 24px);
+  overflow-y: auto;
+  padding: 0;
+  transform: translateY(-8px);
 }
 
-.mega-menu a {
+.mega-menu-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 28px 24px;
+  padding: 32px;
+}
+
+.mega-menu-col-label {
+  margin: 0 0 10px;
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.mega-menu-col-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mega-menu-full a {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  padding: 7px 8px;
   color: var(--text);
   text-decoration: none;
-  font-size: 1.144rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   line-height: 1.3;
-  border-radius: 10px;
-  white-space: nowrap;
+  border-radius: 8px;
+  /* Columns flex with the grid rather than sizing to their longest
+     label, so a long tool name wraps instead of forcing its column
+     wider than its neighbors. */
+  white-space: normal;
 }
 
-.mega-menu a:hover { background: var(--gray-light); color: var(--accent); }
+.mega-menu-full a:hover { background: var(--gray-light); color: var(--accent); }
 
-/* Icon badge — identical artwork to the tool-grid cards, sized down to
-   sit inline at roughly the same size as the label text beside it. */
-.mega-menu-icons { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.mega-menu-icons img { width: 19px; height: 19px; flex-shrink: 0; display: block; }
-.mega-menu-icons .arrow { font-size: 0.85rem; color: var(--text-secondary); }
+/* Icon badge — the exact same overlap artwork as the tool-grid cards
+   (.tool-icon-badge: base icon behind, "from" icon overlapping its
+   bottom-left corner), just scaled down to sit inline at roughly the
+   label's own size. No arrow — a cross-category convert tool's two
+   icons overlap into one stamp here too, never side-by-side. The
+   combined-class selectors below (rather than plain descendant
+   selectors) beat .tool-icon-badge's own sizing rules on specificity
+   regardless of source order. */
+.mega-menu-badge.tool-icon-badge { width: 24px; height: 24px; }
+.mega-menu-badge.tool-icon-badge img { width: 16px; height: 16px; }
+.mega-menu-badge.tool-icon-badge img:not(:only-child) { width: 13px; height: 13px; }
+.mega-menu-badge.tool-icon-badge img:first-child:not(:only-child) {
+  bottom: -3px;
+  left: -3px;
+  border-width: 1.5px;
+  border-radius: 4px;
+}
 
 @media (max-width: 1180px) {
   .main-nav { display: none; }
@@ -609,24 +728,25 @@ a { color: inherit; }
      background, tool grid) does go full width. */
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 32px 16px;
+  padding: 40px 32px 28px;
   text-align: center;
 }
 
 .hero h1 {
-  font-family: var(--font-display);
-  /* Fluid instead of a fixed 3.9rem: the homepage's short "Work with
+  font-family: var(--font-sans);
+  /* Fluid instead of a fixed size: the homepage's short "Work with
      files." never revealed it, but a longer tool-page headline (e.g.
      Remove Background's custom heroCopy) can overflow a narrow phone
-     width at a fixed size — this scales down smoothly instead. Max
-     trimmed to 3.625rem (58px) — inside the 52-60px desktop target —
-     from the previous 3.9rem/62.4px, a deliberate size rather than
-     whatever the old one-line headline happened to reach. */
-  /* 15% smaller than the original clamp(2rem, 7.5vw, 3.625rem), per request. */
-  font-size: clamp(1.7rem, 6.375vw, 3.081rem);
+     width at a fixed size — this scales down smoothly instead.
+     Premium-SaaS hero scale: 48-64px desktop, tight leading and
+     tracking so it reads as one confident block rather than a
+     stretched-out display headline. */
+  font-size: clamp(3rem, 4vw, 4rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tighter);
   margin: 0 0 16px;
   color: var(--text);
-  line-height: 1.1;
+  line-height: 1.05;
   overflow-wrap: break-word;
   /* Balances the last line instead of leaving a single stray word on
      its own — no-op in browsers that don't support it yet. */
@@ -634,9 +754,12 @@ a { color: inherit; }
 }
 
 .hero p {
-  color: var(--text-muted);
-  /* 15% smaller than the original 1.625rem, per request. */
-  font-size: 1.381rem;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-regular);
+  /* Supporting copy stays modest next to the now-larger headline —
+     16-19px, never competing with the H1 for attention. */
+  font-size: 1.125rem;
   margin: 0;
   /* Controlled reading width on wide desktop screens instead of
      stretching to the .hero container's full 900px. */
@@ -645,43 +768,19 @@ a { color: inherit; }
   line-height: 1.5;
 }
 
-/* Compact eyebrow badge above the H1 — "63+ PRIVATE BROWSER TOOLS".
-   Same pill language as .hero-trust-item (existing palette, no new
-   visual identity) but in the accent red so it reads as a single, quiet
-   lead-in line rather than another trust badge competing with the row
-   below the fold. */
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 14px;
-  padding: 6px 14px;
-  background: var(--red-light);
-  color: var(--red-dark);
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.hero-eyebrow .icon { width: 14px; height: 14px; }
-
 /* ---------- Mobile hero (375-430px phones) ---------- */
 @media (max-width: 480px) {
-  .hero { padding: 28px 20px 12px; }
-  .hero-eyebrow { font-size: 0.72rem; padding: 5px 12px; margin: 0 0 10px; }
+  .hero { padding: 28px 20px 22px; }
   .hero h1 {
-    /* 36-42px, tightened line-height so the headline reads as one
-       compact block instead of a desktop headline just shrunk down.
-       15% smaller than the original clamp(2.25rem, 8.5vw, 2.625rem), per request. */
-    font-size: clamp(1.913rem, 7.225vw, 2.231rem);
+    /* 34-42px per the type scale, tightened line-height so the
+       headline reads as one compact block instead of a desktop
+       headline just shrunk down. */
+    font-size: clamp(2.125rem, 9vw, 2.625rem);
     line-height: 1.08;
     margin: 0 0 12px;
   }
   .hero p {
-    /* 15% smaller than the original 1.0625rem, per request. */
-    font-size: 0.903rem;
+    font-size: 0.9375rem;
     line-height: 1.5;
     max-width: 36ch;
     margin: 0 auto;
@@ -690,9 +789,9 @@ a { color: inherit; }
 
 /* ---------- Tablet hero (~601-860px) ---------- */
 @media (min-width: 481px) and (max-width: 860px) {
-  .hero { padding: 32px 24px 14px; }
-  /* 15% smaller than the original clamp(2.75rem, 5.5vw, 3rem), per request. */
-  .hero h1 { font-size: clamp(2.338rem, 4.675vw, 2.55rem); line-height: 1.1; }
+  .hero { padding: 32px 24px 24px; }
+  /* Bridges the mobile (34-42px) and desktop (48-64px) tiers. */
+  .hero h1 { font-size: clamp(2.5rem, 6vw, 3.25rem); line-height: 1.1; }
 }
 
 .home-search-wrap {
@@ -701,54 +800,12 @@ a { color: inherit; }
 }
 
 .home-search-input {
-  /* border-radius/padding are set on the shared .site-search-input rule
-     (further down the cascade, so it wins on those properties) — this
-     block only adds what's specific to the larger homepage search bar. */
-  font-size: 1.17rem;
+  /* border-radius/padding/font-size are set on the shared
+     .site-search-input rule (further down the cascade, so it wins on
+     those properties, per the typography system's 16px search-input
+     size) — this block only adds what's specific to the larger
+     homepage search bar's visual weight. */
   box-shadow: 0 6px 20px rgba(27, 36, 48, 0.08);
-}
-
-.hero-trust-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.hero-trust-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.98rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  background: var(--gray-light);
-  border: 1px solid var(--border);
-  padding: 6px 13px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-
-.hero-trust-item .icon { width: 16px; height: 16px; }
-
-/* Four items squeezed into one wrapping row read as clutter on a
-   phone — a fixed 2x2 grid keeps them tidy and predictable instead of
-   wrapping unevenly (e.g. 3-then-1) depending on label length. */
-@media (max-width: 480px) {
-  .home-search-wrap { margin-top: 18px; }
-  .hero-trust-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 14px;
-  }
-  .hero-trust-item {
-    white-space: normal;
-    justify-content: center;
-    text-align: center;
-    padding: 8px 10px;
-  }
 }
 
 /* ---------- Homepage editorial sections ----------
@@ -808,17 +865,19 @@ a { color: inherit; }
 
 .editorial-eyebrow {
   display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--red);
   margin-bottom: 10px;
 }
 
 .editorial-copy h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 1.85rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   line-height: 1.2;
   color: var(--text);
   margin: 0 0 14px;
@@ -826,9 +885,10 @@ a { color: inherit; }
 }
 
 .editorial-copy p {
-  font-size: 1.05rem;
-  line-height: 1.6;
-  color: var(--text-muted);
+  font-size: 1.0625rem;
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-body);
+  color: var(--text-secondary);
   margin: 0 0 18px;
   max-width: 46ch;
 }
@@ -1019,18 +1079,20 @@ a { color: inherit; }
 
 .tool-card-cat {
   display: block;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--card-accent, var(--text-muted));
   margin-bottom: 6px;
 }
 
 .tool-card h3 {
-  font-size: 1.3rem;
+  font-size: 1.1875rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   margin: 0 0 8px;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   color: var(--text);
   line-height: 1.25;
 }
@@ -1044,7 +1106,8 @@ a { color: inherit; }
    description length. */
 .tool-card p {
   margin: 0;
-  font-size: 0.98rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-regular);
   color: var(--text-muted);
   line-height: 1.55;
   min-height: calc(1.55em * 2);
@@ -1385,9 +1448,11 @@ a { color: inherit; }
 .mobile-nav-label {
   margin: 18px 0 4px;
   padding: 0 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  /* Micro-label treatment: small uppercase, wide tracking, heavy
+     weight — same recipe as any section-label chip sitewide. */
+  font-size: 0.6875rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -1409,8 +1474,9 @@ a { color: inherit; }
   padding: 14px 20px 14px 44px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  font-size: 1.404rem;
-  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-regular);
   background-color: var(--surface);
   color: var(--text);
   transform-origin: center;
@@ -1472,7 +1538,8 @@ a { color: inherit; }
   gap: 10px;
   padding: 10px 14px;
   cursor: pointer;
-  font-size: 1.17rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .search-result-item:hover,
@@ -1487,7 +1554,7 @@ a { color: inherit; }
   padding: 16px;
   text-align: center;
   color: var(--text-muted);
-  font-size: 1.144rem;
+  font-size: var(--font-size-sm);
 }
 
 /* ---------- Tool card extras ---------- */
@@ -1550,8 +1617,10 @@ a { color: inherit; }
 }
 
 .modal-header h2 {
-  font-family: var(--font-display);
-  font-size: 1.82rem;
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   margin: 0;
 }
 
@@ -1906,7 +1975,9 @@ body.tool-result-active #tpDropZone {
 
 .tp-result-heading {
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   font-size: clamp(1.8rem, 5vw, 2.8rem);
   line-height: 1.15;
   color: var(--text);
@@ -1981,8 +2052,10 @@ body.tool-result-active #tpDropZone {
 
 .tp-result-continue h2 {
   margin: 0 0 20px;
-  font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
 }
 
 .tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(2, 1fr); }
@@ -2263,8 +2336,9 @@ body.tool-result-active #tpDropZone {
   color: #fff;
   text-decoration: none;
   border-radius: 10px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.9375rem;
   margin-bottom: 16px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
   transition: background 0.15s ease, transform 0.1s ease;
@@ -2306,8 +2380,8 @@ body.tool-result-active #tpDropZone {
   padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-family: var(--font-body);
-  font-size: 1.3rem;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -2687,8 +2761,9 @@ body.tool-result-active #tpDropZone {
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.9375rem;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0,0,0,0.12);
   transition: background 0.15s ease, transform 0.1s ease;
@@ -2780,9 +2855,9 @@ body.tool-result-active #tpDropZone {
 }
 
 .legal-eyebrow {
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--blue);
@@ -2790,8 +2865,12 @@ body.tool-result-active #tpDropZone {
 }
 
 .legal-page h1 {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-family: var(--font-sans);
+  /* Page H1 tier: 40-52px. */
+  font-size: clamp(2.5rem, 3vw, 3.25rem);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1.1;
   margin: 0 0 8px;
   color: var(--text);
 }
@@ -2813,14 +2892,17 @@ body.tool-result-active #tpDropZone {
 }
 
 .legal-page h2 {
-  font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-family: var(--font-sans);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   margin: 32px 0 12px;
   color: var(--text);
 }
 
 .legal-page p {
-  line-height: 1.65;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
   color: var(--text);
   margin: 0 0 14px;
 }
@@ -2841,8 +2923,10 @@ body.tool-result-active #tpDropZone {
 }
 
 .privacy-diagram-inner h2 {
-  font-family: var(--font-display);
-  font-size: 1.95rem;
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   color: var(--text);
   margin: 0 0 10px;
   text-wrap: balance;
@@ -2948,8 +3032,10 @@ body.tool-result-active #tpDropZone {
 }
 
 .faq-section h2 {
-  font-family: var(--font-display);
-  font-size: 1.9rem;
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   margin: 0 0 20px;
   color: var(--text);
 }
@@ -3015,9 +3101,9 @@ body.tool-result-active #tpDropZone {
 .faq-answer {
   margin: 0;
   padding: 0 20px 18px;
-  color: var(--text-muted);
-  font-size: 1.09rem;
-  line-height: 1.6;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
   animation: faqAnswerIn 0.18s ease;
 }
 
@@ -3053,9 +3139,10 @@ body.tool-result-active #tpDropZone {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   color: var(--footer-heading);
   text-decoration: none;
   margin-bottom: 12px;
@@ -3089,8 +3176,9 @@ body.tool-result-active #tpDropZone {
 
 .footer-col h4 {
   color: var(--footer-heading);
-  font-family: var(--font-display);
-  font-size: 1.365rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-semibold);
   margin: 0 0 12px;
 }
 
@@ -3258,9 +3346,9 @@ body.tool-result-active #tpDropZone {
   color: #fff;
   border: none;
   border-radius: 10px;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  font-size: 0.9375rem;
   min-height: 46px;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -3275,9 +3363,22 @@ body.tool-result-active #tpDropZone {
   padding: 0 32px;
 }
 
+/* Long-form explanatory copy (how-it-works, privacy, limitations,
+   common uses) — comfortable reading measure and generous leading
+   rather than the tighter UI line-height used elsewhere. */
+.tp-content p {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
+  color: var(--text-secondary);
+  max-width: 72ch;
+  margin: 0 0 20px;
+}
+
 .tp-section h2 {
-  font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-family: var(--font-sans);
+  font-size: 1.875rem;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
   margin: 0 0 18px;
   color: var(--text);
 }
@@ -3291,9 +3392,9 @@ body.tool-result-active #tpDropZone {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: var(--text-muted);
-  font-size: 1.144rem;
-  line-height: 1.55;
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-body);
 }
 
 .tp-how-list li::marker { color: var(--red); font-weight: 700; }
