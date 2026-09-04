@@ -669,7 +669,7 @@ a { color: inherit; }
    main.js), each still gets its own smaller label and a clear gap
    above the next one, so sharing a column doesn't read as one
    undifferentiated list. */
-.mega-menu-subgroup + .mega-menu-subgroup { margin-top: 16px; }
+.mega-menu-subgroup + .mega-menu-subgroup { margin-top: 28px; }
 
 .mega-menu-subgroup-label {
   margin: 0 0 6px;
