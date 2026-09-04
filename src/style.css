@@ -482,8 +482,6 @@ a { color: inherit; }
   color: var(--text);
 }
 
-.logo-mark { color: var(--red); }
-
 /* The provided OTW artwork, cropped to just its icon mark and keyed to
    transparent — sits inline to the left of the wordmark (see below). */
 .logo-mark-img { display: block; height: 34px; width: auto; }
@@ -1507,7 +1505,7 @@ a { color: inherit; }
      edge is the only search affordance left, so nothing needs to make
      room for an icon on the left. */
   padding: 14px 60px;
-  border: 1px solid var(--border);
+  border: 1.5px solid rgba(55, 138, 221, 0.55);
   border-radius: 999px;
   font-size: var(--font-size-base);
   font-family: var(--font-sans);
@@ -1515,23 +1513,27 @@ a { color: inherit; }
   background-color: var(--surface);
   color: var(--text);
   transform-origin: center;
+  /* A strong blue radiance around the bar at rest, in both themes (not
+     a dark-mode-only effect) — a tight ring plus a wide soft glow, so
+     the search bar reads as the page's clear focal point rather than
+     blending into the surrounding cards. */
+  box-shadow: 0 0 0 1px rgba(55, 138, 221, 0.16), 0 0 34px rgba(55, 138, 221, 0.32);
   transition: transform var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
 }
 
-/* Dark mode: gives the whole bar a soft blue radiance and a blue-tinted
-   border — on the near-black surface the previous plain --border
-   outline all but disappeared, which was the actual "not visible in
-   dark mode" complaint. */
+/* Dark mode: the same treatment re-drawn with the dark-mode blue and
+   pushed even brighter — a near-black surface needs a punchier glow
+   than a white one for the two to read as equally "strong". */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .site-search-input {
-    border-color: rgba(95, 168, 240, 0.45);
-    box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.12), 0 0 28px rgba(95, 168, 240, 0.16);
+    border-color: rgba(95, 168, 240, 0.65);
+    box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.22), 0 0 42px rgba(95, 168, 240, 0.4);
   }
 }
 
 :root[data-theme="dark"] .site-search-input {
-  border-color: rgba(95, 168, 240, 0.45);
-  box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.12), 0 0 28px rgba(95, 168, 240, 0.16);
+  border-color: rgba(95, 168, 240, 0.65);
+  box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.22), 0 0 42px rgba(95, 168, 240, 0.4);
 }
 
 /* Search button — a filled blue circle at the trailing edge of the
@@ -3208,18 +3210,22 @@ body.tool-result-active #tpDropZone {
 
 .footer-brand-col { flex: 1 1 260px; max-width: 300px; }
 
+/* Real brand mark + wordmark artwork (same source images as the
+   header), replacing the old "⌁" text-symbol placeholder — the footer
+   background is always the dark --footer-bg regardless of site theme,
+   which is exactly the condition the header already renders this same
+   artwork against in dark mode, so no separate light/dark asset is
+   needed here. */
 .footer-logo {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 1.5rem;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--tracking-tight);
-  color: var(--footer-heading);
+  gap: 10px;
   text-decoration: none;
   margin-bottom: 12px;
 }
+
+.footer-logo-mark-img { display: block; height: 34px; width: auto; }
+.footer-logo-wordmark-img { display: block; height: 22px; width: auto; }
 
 .footer-tagline {
   font-size: 1.05rem;
