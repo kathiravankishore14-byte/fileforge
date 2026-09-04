@@ -1505,7 +1505,11 @@ a { color: inherit; }
      edge is the only search affordance left, so nothing needs to make
      room for an icon on the left. */
   padding: 14px 60px;
-  border: 1.5px solid rgba(55, 138, 221, 0.55);
+  /* Light mode sits quiet at rest — a plain neutral border, no glow —
+     and only lights up on hover/focus (see below). Dark mode is the
+     exception: its always-on glow is set unconditionally further down
+     so it doesn't depend on interaction state. */
+  border: 1.5px solid var(--border);
   border-radius: 999px;
   font-size: var(--font-size-base);
   font-family: var(--font-sans);
@@ -1513,17 +1517,13 @@ a { color: inherit; }
   background-color: var(--surface);
   color: var(--text);
   transform-origin: center;
-  /* A strong blue radiance around the bar at rest, in both themes (not
-     a dark-mode-only effect) — a tight ring plus a wide soft glow, so
-     the search bar reads as the page's clear focal point rather than
-     blending into the surrounding cards. */
-  box-shadow: 0 0 0 1px rgba(55, 138, 221, 0.16), 0 0 34px rgba(55, 138, 221, 0.32);
+  box-shadow: none;
   transition: transform var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
 }
 
-/* Dark mode: the same treatment re-drawn with the dark-mode blue and
-   pushed even brighter — a near-black surface needs a punchier glow
-   than a white one for the two to read as equally "strong". */
+/* Dark mode: the strong blue radiance stays on at rest regardless of
+   hover/focus — a near-black surface needs the field to keep reading
+   as the page's focal point even when the visitor isn't touching it. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .site-search-input {
     border-color: rgba(95, 168, 240, 0.65);
@@ -1569,21 +1569,42 @@ a { color: inherit; }
    field. Uses --bg (the real page background) rather than the warmer
    --gray-light hover tint used elsewhere, so the field visually
    "sinks into" the page instead of taking on an unrelated color. */
+/* Hover/focus in light mode: this is where the blue radiance now
+   lives, instead of being on at rest — the field lights up only when
+   the visitor is actually pointing at or typing in it. Dark mode
+   already has the same glow on permanently (see above), so these
+   values just keep it consistent there too rather than turning it
+   off between interactions. */
 .site-search-input:hover {
   transform: scale(1.015);
   background-color: var(--bg);
-  border-color: var(--accent);
+  border-color: rgba(55, 138, 221, 0.55);
+  box-shadow: 0 0 0 1px rgba(55, 138, 221, 0.16), 0 0 34px rgba(55, 138, 221, 0.32);
 }
 
 .site-search-input:focus {
   outline: none;
   transform: scale(1.03);
   background-color: var(--bg);
-  border-color: var(--red);
-  /* Outline removed above, but a visible ring still needs to replace
-     it — a border-color change alone is too subtle to count as a
-     focus indicator on its own. */
-  box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.18);
+  border-color: rgba(55, 138, 221, 0.7);
+  /* Outline removed above, so the glow itself is the focus indicator —
+     a tight ring plus the wider soft glow, matching the hover state
+     but a touch stronger. */
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.22), 0 0 34px rgba(55, 138, 221, 0.32);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .site-search-input:hover,
+  :root:not([data-theme="light"]) .site-search-input:focus {
+    border-color: rgba(95, 168, 240, 0.65);
+    box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.22), 0 0 42px rgba(95, 168, 240, 0.4);
+  }
+}
+
+:root[data-theme="dark"] .site-search-input:hover,
+:root[data-theme="dark"] .site-search-input:focus {
+  border-color: rgba(95, 168, 240, 0.65);
+  box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.22), 0 0 42px rgba(95, 168, 240, 0.4);
 }
 
 /* Ctrl+K hint — a visible kbd badge instead of baked into the
