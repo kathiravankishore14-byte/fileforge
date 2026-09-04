@@ -4419,15 +4419,51 @@ function toolLinkHtml(key) {
   return `<a href="${toolUrl(key) || `?tool=${key}`}" data-nav-tool="${key}"><span class="tool-icon-badge mega-menu-badge">${badge}</span>${meta.label}</a>`;
 }
 
+// The "Convert" group each category's CATEGORY_NAV_CONFIG already
+// curates (pdftoword, pdftojpg, etc.) only ever covers tools going
+// OUT of that category — nothing in the static config captures the
+// reverse direction (img/excel/word → pdf, say), since those tools
+// live under their OWN category (image/excel/word) in categoryTools.
+// This computes that reverse column on the fly: any real file-to-file
+// converter (excludes noFile generators like Invoice/Resume/HTML-to-
+// PDF, which don't "convert from" anything) whose iconTo is this
+// category but whose own category isn't.
+function convertFromGroup(category) {
+  const tools = Object.keys(toolMeta).filter((k) => {
+    const m = toolMeta[k];
+    return m && !m.comingSoon && !m.noFile && m.accept && m.category !== category && m.iconTo === category;
+  });
+  return { label: 'Convert From', tools };
+}
+
+// A group either lists its tools directly ({label, tools}) or, when
+// several small categories share one column (Excel/Word/PowerPoint —
+// see allToolsGroups below), carries {label, subGroups: [{label,
+// tools}, ...]} instead: each sub-group keeps its own smaller label
+// and its own vertical block, so Excel/Word/PowerPoint still read as
+// three distinct categories even while sharing a column.
 function groupedMegaMenuHtml(groups) {
   const colsHtml = groups
-    .filter((g) => g.tools && g.tools.length)
-    .map((g) => `
-      <div class="mega-menu-col">
-        <p class="mega-menu-col-label">${g.label}</p>
-        <div class="mega-menu-col-links">${g.tools.map(toolLinkHtml).join('')}</div>
-      </div>
-    `)
+    .filter((g) => (g.tools && g.tools.length) || (g.subGroups && g.subGroups.some((sg) => sg.tools.length)))
+    .map((g) => {
+      const body = g.subGroups
+        ? g.subGroups
+            .filter((sg) => sg.tools.length)
+            .map((sg) => `
+              <div class="mega-menu-subgroup">
+                <p class="mega-menu-subgroup-label">${sg.label}</p>
+                <div class="mega-menu-col-links">${sg.tools.map(toolLinkHtml).join('')}</div>
+              </div>
+            `)
+            .join('')
+        : `<div class="mega-menu-col-links">${g.tools.map(toolLinkHtml).join('')}</div>`;
+      return `
+        <div class="mega-menu-col">
+          <p class="mega-menu-col-label">${g.label}</p>
+          ${body}
+        </div>
+      `;
+    })
     .join('');
   return `<div class="dropdown mega-menu-full"><div class="mega-menu-groups">${colsHtml}</div></div>`;
 }
@@ -4445,7 +4481,17 @@ function renderMainNav() {
 
   const categoryItem = (label, category) => {
     const config = CATEGORY_NAV_CONFIG[category];
-    const groups = [{ label: 'Popular', tools: config.top3 }, ...config.groups];
+    let groups = [{ label: 'Popular', tools: config.top3 }, ...config.groups];
+    // PDF and Image both have a real two-way conversion story (things
+    // convert INTO them from other formats, and OUT of them to other
+    // formats) worth splitting into two columns instead of one; the
+    // other categories' "Convert" group stays as a single column.
+    if (category === 'pdf' || category === 'image') {
+      groups = groups.map((g) => (g.label === 'Convert' ? { ...g, label: 'Convert To' } : g));
+      const convertToIdx = groups.findIndex((g) => g.label === 'Convert To');
+      const fromGroup = convertFromGroup(category);
+      if (convertToIdx !== -1 && fromGroup.tools.length) groups.splice(convertToIdx, 0, fromGroup);
+    }
     return `
     <div class="nav-item">
       <a href="${pageUrlMap[category] || `/${category}`}" class="nav-link nav-trigger-link">${label}</a>
@@ -4454,12 +4500,26 @@ function renderMainNav() {
   `;
   };
 
-  // Grouped by top-level category (PDF/Image/Excel/Word/PowerPoint/
-  // Utilities) rather than one flat list of ~65 tools.
-  const allToolsGroups = Object.keys(categoryTools).map((cat) => ({
-    label: CATEGORY_LABELS[cat] || cat,
-    tools: categoryTools[cat].filter((k) => toolMeta[k] && !toolMeta[k].comingSoon),
-  }));
+  // Grouped by top-level category, PDF/Image/Utilities each on their
+  // own — but Excel, Word and PowerPoint each have only a couple of
+  // tools, so they share a single combined column instead of three
+  // near-empty ones. They still each get their own labeled sub-block
+  // with space between them (see .mega-menu-subgroup in style.css),
+  // so sharing a column doesn't blur them into one undifferentiated list.
+  const activeTools = (list) => list.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon);
+  const allToolsGroups = [
+    { label: CATEGORY_LABELS.pdf, tools: activeTools(categoryTools.pdf) },
+    { label: CATEGORY_LABELS.image, tools: activeTools(categoryTools.image) },
+    {
+      label: 'Excel · Word · PPT',
+      subGroups: [
+        { label: 'Excel', tools: activeTools(categoryTools.excel) },
+        { label: 'Word', tools: activeTools(categoryTools.word) },
+        { label: 'PowerPoint', tools: activeTools(categoryTools.ppt) },
+      ],
+    },
+    { label: CATEGORY_LABELS.utilities, tools: activeTools(categoryTools.utilities) },
+  ];
   const allToolsItem = `
     <div class="nav-item">
       <a href="/" class="nav-link nav-trigger-link">All Tools</a>
@@ -4483,6 +4543,7 @@ function renderMainNav() {
     ${categoryItem('Image', 'image')}
     ${categoryItem('Utilities', 'utilities')}
     ${categoriesItem}
+    <a href="/about" class="nav-link">About Us</a>
   `;
   // Nav/mega-menu links point straight at each tool's dedicated,
   // indexable URL (toolUrl(k)) and navigate normally — no click
@@ -4607,13 +4668,10 @@ function wireSmartNav() {
   }, { passive: true });
 }
 
-// ================= CURSOR GLOW + CARD TILT (Parts 3 & 11) =================
-// Both are continuous, cursor-position-driven effects, so they share
-// ONE pointermove/mouseout listener pair instead of registering their
-// own — a real cost difference when it fires on every pixel of mouse
-// movement across the whole site. Desktop mouse only: skipped entirely
-// on touch and for prefers-reduced-motion, so neither has a
-// "disabled" state to maintain elsewhere, they simply never wire up.
+// ================= CARD TILT (Part 11) =================
+// Desktop mouse only: skipped entirely on touch and for
+// prefers-reduced-motion, so there's no "disabled" state to maintain
+// elsewhere — it simply never wires up.
 const CARD_TILT_MAX_DEG = 1.4;
 const CARD_TILT_SELECTOR = '.tool-card:not(.tool-grid-more-tile):not(.coming-soon)';
 
@@ -4621,24 +4679,11 @@ function wirePointerEffects() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
-  let glow = document.querySelector('.cursor-glow');
-  if (!glow) {
-    glow = document.createElement('div');
-    glow.className = 'cursor-glow';
-    glow.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(glow);
-  }
-
   let activeCard = null;
   const resetCard = (card) => { card.style.transform = ''; };
-  let raf = null;
-  let x = 0;
-  let y = 0;
 
   document.addEventListener('pointermove', (e) => {
     if (e.pointerType && e.pointerType !== 'mouse') return;
-    x = e.clientX;
-    y = e.clientY;
 
     const card = e.target.closest ? e.target.closest(CARD_TILT_SELECTOR) : null;
     if (card !== activeCard) {
@@ -4654,22 +4699,12 @@ function wirePointerEffects() {
       card.style.transform =
         `perspective(900px) translateY(-3px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
     }
-
-    // Always a plain neutral grey — no per-category tinting — per the
-    // Phase 7 spec, so no color is set here; the CSS default handles it.
-    glow.classList.add('active');
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      glow.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-      raf = null;
-    });
   }, { passive: true });
 
   // No relatedTarget means the pointer left the window entirely (not
   // just moved between two elements inside it).
   window.addEventListener('mouseout', (e) => {
     if (e.relatedTarget) return;
-    glow.classList.remove('active');
     if (activeCard) { resetCard(activeCard); activeCard = null; }
   });
 }
