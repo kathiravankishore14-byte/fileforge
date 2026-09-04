@@ -211,6 +211,15 @@ const categoryTools = {
 };
 
 // ================= ICON BADGE RENDERING =================
+// Small curved-arrow stamp added to every two-icon overlap badge (see
+// .icon-overlap-arrow in style.css for positioning) — positioned lower
+// and further right than a first pass, directly over the seam where
+// the front ("from") icon and back ("to") icon actually overlap, so
+// the curve visibly runs from one icon into the other rather than
+// sitting in the corner gap above them. The arrowhead is a solid
+// filled triangle, not a stroked chevron.
+const ICON_OVERLAP_ARROW_SVG = `<svg class="icon-overlap-arrow" viewBox="0 0 20 24" aria-hidden="true"><path d="M4 22C2 14 6 6 13 5" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" /><polygon points="17,3 11.5,4.5 14,9" fill="var(--blue)" /></svg>`;
+
 function renderIconBadge(fromCategory, toCategory, toolKey) {
   // A tool-specific icon (Other Tools) already fully identifies that one
   // tool on its own — pairing it with a destination-format overlay would
@@ -225,7 +234,7 @@ function renderIconBadge(fromCategory, toCategory, toolKey) {
   if (!toCategory || fromCategory === toCategory) {
     return `<img src="${fromIcon}" alt="" />`;
   }
-  return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />`;
+  return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />${ICON_OVERLAP_ARROW_SVG}`;
 }
 
 // ================= TOOL GRID RENDERING =================
@@ -4854,9 +4863,15 @@ function initParticleField() {
   const ctx = canvas.getContext('2d');
   const root = document.documentElement;
 
+  // Two extra "radiant" accent colors (indices 3 and 4, after the three
+  // base blues) ride along on every particle roll, but on the light
+  // palette they simply alias back to ordinary blues — so they stay
+  // invisible until dark mode supplies the real white/red hues. That
+  // keeps the "only in dark mode" requirement true by construction
+  // instead of needing separate light/dark spawn logic.
   const PALETTES = {
-    light: { grains: ['#0A3FBF', '#0B68F3', '#12CDF6'], glint: '#EAF6FF' },
-    dark: { grains: ['#3E6FFF', '#4FA0FF', '#57E4FF'], glint: '#F3FBFF' },
+    light: { grains: ['#0A3FBF', '#0B68F3', '#12CDF6', '#0B68F3', '#0A3FBF'], glint: '#EAF6FF' },
+    dark: { grains: ['#3E6FFF', '#4FA0FF', '#57E4FF', '#FFFFFF', '#FF5C5C'], glint: '#F3FBFF' },
   };
   function currentTheme() {
     const explicit = root.getAttribute('data-theme');
@@ -4878,7 +4893,13 @@ function initParticleField() {
     { count: 46, sizeMin: 1.1, sizeMax: 2.2, speed: 0.06, blur: 1.6, alphaMin: 0.11, alphaMax: 0.2, repel: 0.35 },
     { count: 40, sizeMin: 2.0, sizeMax: 3.6, speed: 0.13, blur: 0.6, alphaMin: 0.16, alphaMax: 0.28, repel: 0.7 },
     { count: 30, sizeMin: 3.2, sizeMax: 5.4, speed: 0.22, blur: 0, alphaMin: 0.22, alphaMax: 0.38, repel: 1.15 },
+    // A 4th, livelier layer reserved for the two corner clusters below
+    // (never spawned across the full viewport like the ambient three) —
+    // a bit bigger and brighter so the corners read as a deliberate
+    // decorative accent rather than more of the same ambient drift.
+    { count: 17, sizeMin: 2.6, sizeMax: 4.8, speed: 0.15, blur: 0.4, alphaMin: 0.26, alphaMax: 0.44, repel: 0.95 },
   ];
+  const CORNER_LAYER_IDX = 3;
   // Reference size baked into every pre-rendered sprite (see the sprite
   // section further down) — declared up here, ahead of spawn()/
   // buildParticles(), since buildParticles() runs immediately below and
@@ -4889,9 +4910,23 @@ function initParticleField() {
   let particles = [];
   const rand = (a, b) => a + Math.random() * (b - a);
 
-  function spawn(p, layerIdx) {
+  // Two roaming "pockets" tucked into the top-left/top-right corners,
+  // just clear of the sticky nav — recomputed on every resize since
+  // they're sized off the current viewport.
+  function cornerZones() {
+    const navClearance = 96;
+    const cw = Math.min(340, vw * 0.26);
+    const ch = Math.min(460, vh * 0.55);
+    return {
+      left: { x0: 0, y0: navClearance, x1: cw, y1: navClearance + ch },
+      right: { x0: vw - cw, y0: navClearance, x1: vw, y1: navClearance + ch },
+    };
+  }
+
+  function spawn(p, layerIdx, zone) {
     const layer = LAYERS[layerIdx];
     p.layer = layerIdx;
+    p.zone = zone || null;
     p.size = rand(layer.sizeMin, layer.sizeMax);
     p.alpha = rand(layer.alphaMin, layer.alphaMax);
     p.driftAngle = rand(0, Math.PI * 2);
@@ -4899,22 +4934,33 @@ function initParticleField() {
     p.wobbleAmp = rand(8, 22);
     p.wobbleFreq = rand(0.0004, 0.0011);
     p.wobblePhase = rand(0, Math.PI * 2);
-    p.baseX = rand(0, vw);
-    p.baseY = rand(0, vh);
+    const zx0 = zone ? zone.x0 : 0, zx1 = zone ? zone.x1 : vw;
+    const zy0 = zone ? zone.y0 : 0, zy1 = zone ? zone.y1 : vh;
+    p.baseX = rand(zx0, zx1);
+    p.baseY = rand(zy0, zy1);
     p.offX = 0; p.offY = 0;
     p.velX = 0; p.velY = 0;
     p.glint = Math.random() < 0.08;
-    p.colorIdx = (Math.random() * 3) | 0;
-    // Precompute the sprite slot (0-2 = grain color, 3 = glint) and the
+    // Most rolls land on one of the three base blues; a small slice
+    // instead spawns as the white/red "radiant" accent (see PALETTES).
+    const roll = Math.random();
+    p.colorIdx = roll < 0.05 ? 4 : roll < 0.11 ? 3 : (Math.random() * 3) | 0;
+    // Precompute the sprite slot (0-4 = grain color, 5 = glint) and the
     // on-screen draw size once — both are fixed for the particle's whole
     // lifetime, so there's no reason to redo this math every frame.
-    p.colorSlot = p.glint ? 3 : p.colorIdx;
+    p.colorSlot = p.glint ? 5 : p.colorIdx;
     p.destSize = (p.size / SPRITE_R) * SPRITE_DIM;
   }
   function buildParticles() {
     particles = [];
+    const zones = cornerZones();
     LAYERS.forEach((layer, li) => {
-      for (let i = 0; i < layer.count; i++) { const p = {}; spawn(p, li); particles.push(p); }
+      if (li === CORNER_LAYER_IDX) {
+        for (let i = 0; i < layer.count; i++) { const p = {}; spawn(p, li, zones.left); particles.push(p); }
+        for (let i = 0; i < layer.count; i++) { const p = {}; spawn(p, li, zones.right); particles.push(p); }
+      } else {
+        for (let i = 0; i < layer.count; i++) { const p = {}; spawn(p, li, null); particles.push(p); }
+      }
     });
   }
   buildParticles();
@@ -4930,10 +4976,17 @@ function initParticleField() {
     p.baseX += Math.cos(p.driftAngle) * p.driftSpeed;
     p.baseY += Math.sin(p.driftAngle) * p.driftSpeed * 0.6 - p.driftSpeed * 0.18;
     const m = 40;
-    if (p.baseX < -m) p.baseX = vw + m;
-    if (p.baseX > vw + m) p.baseX = -m;
-    if (p.baseY < -m) p.baseY = vh + m;
-    if (p.baseY > vh + m) p.baseY = -m;
+    // Ambient (unzoned) particles wrap across the whole viewport, same
+    // as before; the two corner clusters wrap within their own pocket
+    // instead, so they stay put as a corner accent rather than drifting
+    // out across the page.
+    const zone = p.zone;
+    const zx0 = zone ? zone.x0 : 0, zx1 = zone ? zone.x1 : vw;
+    const zy0 = zone ? zone.y0 : 0, zy1 = zone ? zone.y1 : vh;
+    if (p.baseX < zx0 - m) p.baseX = zx1 + m;
+    if (p.baseX > zx1 + m) p.baseX = zx0 - m;
+    if (p.baseY < zy0 - m) p.baseY = zy1 + m;
+    if (p.baseY > zy1 + m) p.baseY = zy0 - m;
     const wx = p.baseX, wy = p.baseY;
     if (hasPointer) {
       const dx = wx + p.offX - pointerX, dy = wy + p.offY - pointerY;
@@ -4976,9 +5029,10 @@ function initParticleField() {
   function buildSpriteSet(theme) {
     const palette = PALETTES[theme];
     const colors = [...palette.grains, palette.glint];
+    const glintIdx = colors.length - 1;
     const cx = SPRITE_DIM / 2, cy = SPRITE_DIM / 2;
     return LAYERS.map((layer) => colors.map((hex, ci) => {
-      const isGlint = ci === 3;
+      const isGlint = ci === glintIdx;
       const off = document.createElement('canvas');
       off.width = SPRITE_DIM; off.height = SPRITE_DIM;
       const octx = off.getContext('2d');
@@ -4996,7 +5050,12 @@ function initParticleField() {
     }));
   }
 
-  let sprites = buildSpriteSet(currentTheme());
+  let sprites, activeTheme;
+  function rebuildTheme() {
+    activeTheme = currentTheme();
+    sprites = buildSpriteSet(activeTheme);
+  }
+  rebuildTheme();
   let themeDirty = false;
   // Rebuild sprites only when the theme actually changes, not on every
   // frame — a media-query listener + attribute observer instead of
@@ -5006,15 +5065,22 @@ function initParticleField() {
 
   let rafId = null;
   function draw() {
-    if (themeDirty) { themeDirty = false; sprites = buildSpriteSet(currentTheme()); }
+    if (themeDirty) { themeDirty = false; rebuildTheme(); }
+    // Dark backgrounds swallow the same alpha/size a lot faster than a
+    // light one, and the brief was explicit that the effect should read
+    // as more prominent in dark mode — so both get a boost there,
+    // rather than only relying on the new white/red accent colors.
+    const isDark = activeTheme === 'dark';
+    const boostAlpha = isDark ? 1.35 : 1;
+    const boostSize = isDark ? 1.15 : 1;
     ctx.clearRect(0, 0, vw, vh);
     ctx.globalCompositeOperation = 'lighter';
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
       step(p);
       const sprite = sprites[p.layer][p.colorSlot];
-      const d = p.destSize;
-      ctx.globalAlpha = p.alpha;
+      const d = p.destSize * boostSize;
+      ctx.globalAlpha = Math.min(1, p.alpha * boostAlpha);
       ctx.drawImage(sprite, p.x - d / 2, p.y - d / 2, d, d);
     }
     ctx.globalAlpha = 1;

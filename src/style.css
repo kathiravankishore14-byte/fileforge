@@ -394,11 +394,18 @@
 
 /* Floating sand-particle background (home + category pages only, see
    initParticleField() in main.js) — fixed behind everything, never
-   intercepts clicks, and never adds scroll of its own. */
+   intercepts clicks, and never adds scroll of its own.
+   z-index: -1 (not 0) is the part that actually delivers "behind
+   everything": a positive/zero z-index here paints AFTER ordinary
+   in-flow content in the CSS stacking order, which let particles show
+   up on top of headings and tool cards. A negative z-index moves this
+   canvas into the layer painted before normal page content, so every
+   heading, paragraph and card reliably covers it — particles only show
+   through where the page background is otherwise empty. */
 .particle-field {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   pointer-events: none;
   display: block;
 }
@@ -718,11 +725,12 @@ a { color: inherit; }
 /* Icon badge — the exact same overlap artwork as the tool-grid cards
    (.tool-icon-badge: base icon behind, "from" icon overlapping its
    bottom-left corner), just scaled down to sit inline at roughly the
-   label's own size. No arrow — a cross-category convert tool's two
-   icons overlap into one stamp here too, never side-by-side. The
-   combined-class selectors below (rather than plain descendant
-   selectors) beat .tool-icon-badge's own sizing rules on specificity
-   regardless of source order. */
+   label's own size. No horizontal text arrow — a cross-category
+   convert tool's two icons overlap into one stamp here too, never
+   side-by-side — but the same small curved corner arrow as the tool
+   cards still appears, scaled to match. The combined-class selectors
+   below (rather than plain descendant selectors) beat .tool-icon-badge's
+   own sizing rules on specificity regardless of source order. */
 .mega-menu-badge.tool-icon-badge { width: 24px; height: 24px; }
 .mega-menu-badge.tool-icon-badge img { width: 16px; height: 16px; }
 .mega-menu-badge.tool-icon-badge img:not(:only-child) { width: 13px; height: 13px; }
@@ -731,6 +739,12 @@ a { color: inherit; }
   left: -3px;
   border-width: 1.5px;
   border-radius: 4px;
+}
+.mega-menu-badge.tool-icon-badge .icon-overlap-arrow {
+  top: 8px;
+  left: 1px;
+  width: 7px;
+  height: 8px;
 }
 
 @media (max-width: 1180px) {
@@ -1187,6 +1201,23 @@ a { color: inherit; }
   z-index: 2;
 }
 
+/* Small curved arrow marking a conversion pair — added by
+   renderIconBadge() (ICON_OVERLAP_ARROW_SVG) alongside the two
+   overlapping icons above, so it only ever appears where there's
+   actually a "from → to" pair to point out. Deliberately dragged down
+   and right off the badge's bare top-left corner so it sits right over
+   the seam where the two icons actually overlap, running from inside
+   the "from" icon into the "to" icon rather than floating above both. */
+.icon-overlap-arrow {
+  position: absolute;
+  top: 20px;
+  left: 2px;
+  width: 18px;
+  height: 21px;
+  z-index: 3;
+  filter: drop-shadow(0 1px 2px rgba(27, 36, 48, 0.2));
+}
+
 /* "⋯ Tools" tile — sits in the grid itself as the 18th cell (not a
    separate button below it) revealing the rest of the tools on click.
    Neutral gray, deliberately not category-tinted, so it reads as a
@@ -1233,6 +1264,7 @@ a { color: inherit; }
   .tool-icon-badge { width: 56px; height: 56px; }
   .tool-icon-badge img { width: 34px; height: 34px; }
   .tool-icon-badge img:not(:only-child) { width: 28px; height: 28px; }
+  .tool-icon-badge .icon-overlap-arrow { width: 16px; height: 18px; top: 18px; left: 2px; }
 }
 
 .coming-soon-badge {
@@ -1470,7 +1502,11 @@ a { color: inherit; }
 
 .site-search-input {
   width: 100%;
-  padding: 14px 60px 14px 44px;
+  /* Left padding matches the right side now that the leading magnifier
+     icon is gone — the field's own blue search button at the trailing
+     edge is the only search affordance left, so nothing needs to make
+     room for an icon on the left. */
+  padding: 14px 60px;
   border: 1px solid var(--border);
   border-radius: 999px;
   font-size: var(--font-size-base);
@@ -1480,34 +1516,22 @@ a { color: inherit; }
   color: var(--text);
   transform-origin: center;
   transition: transform var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), box-shadow var(--motion-fast);
-  /* Inline SVG icon — no extra request, no icon-font dependency. Blue
-     (#378ADD) to match the site's own --blue token; can't reference the
-     CSS variable inside a data-URI, so the dark-mode override below
-     re-declares the same image with the dark-mode blue baked in. */
-  background-repeat: no-repeat;
-  background-position: 16px center;
-  background-size: 18px 18px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23378ADD' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
 }
 
-/* Dark mode: the same icon re-drawn in the dark-mode blue (#5FA8F0) so
-   it stays legible against a dark field instead of reusing the light
-   theme's darker blue. Also gives the whole bar a soft blue radiance
-   and a blue-tinted border — on the near-black surface the previous
-   plain --border outline all but disappeared, which was the actual
-   "not visible in dark mode" complaint. */
+/* Dark mode: gives the whole bar a soft blue radiance and a blue-tinted
+   border — on the near-black surface the previous plain --border
+   outline all but disappeared, which was the actual "not visible in
+   dark mode" complaint. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .site-search-input {
     border-color: rgba(95, 168, 240, 0.45);
     box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.12), 0 0 28px rgba(95, 168, 240, 0.16);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235FA8F0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
   }
 }
 
 :root[data-theme="dark"] .site-search-input {
   border-color: rgba(95, 168, 240, 0.45);
   box-shadow: 0 0 0 1px rgba(95, 168, 240, 0.12), 0 0 28px rgba(95, 168, 240, 0.16);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235FA8F0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
 }
 
 /* Search button — a filled blue circle at the trailing edge of the
