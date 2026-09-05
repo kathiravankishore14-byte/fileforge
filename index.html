@@ -12,9 +12,14 @@
     <meta property="og:description" content="Resize images, merge PDFs, generate QR codes, and more. Every tool runs entirely in your browser. No account, no file limit, no server upload." />
     <meta property="og:url" content="https://onlinetoolsweb.com/" />
     <meta property="og:site_name" content="OnlineToolsWeb" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="https://onlinetoolsweb.com/images/social-preview.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="OnlineToolsWeb — fast, secure, everyday file tools that run entirely in your browser" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="OnlineToolsWeb: Free Online File Tools, No Upload Required" />
     <meta name="twitter:description" content="Resize images, merge PDFs, generate QR codes, and more. Every tool runs entirely in your browser. No account, no file limit, no server upload." />
+    <meta name="twitter:image" content="https://onlinetoolsweb.com/images/social-preview.jpg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -63,6 +68,13 @@
         <div class="tool-grid popular-tools-grid" id="popularToolsGrid"></div>
       </div>
     </section>
+
+    <!-- Phase 3: reusable ad slot, filled in by src/adSlots.js. Stays
+         hidden and reserves no space unless ADS_ENABLED is turned on in
+         src/config.js (it isn't — no provider is approved yet). Placed
+         after the first major tool group (Popular Tools), never inside
+         a dropzone/workspace, and never adjacent to a button. -->
+    <div id="homeAdSlotContainer"></div>
 
     <div class="category-bar-wrap">
       <nav class="category-bar" aria-label="Tool categories">

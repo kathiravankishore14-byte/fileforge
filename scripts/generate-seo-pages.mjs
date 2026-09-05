@@ -23,6 +23,11 @@ import { popularIllustrationSvg, STEP_ICONS } from './illustrations.mjs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const SITE_ORIGIN = 'https://onlinetoolsweb.com';
+// One shared branded social-preview image (1200x630, the standard og:image
+// size) for every page — a per-tool image isn't worth the maintenance
+// burden this phase, and a single accurate, on-brand image beats a
+// missing or generic one everywhere it's shared.
+const OG_IMAGE_URL = `${SITE_ORIGIN}/images/social-preview.jpg`;
 
 const { toolMeta, categoryNavConfig, pageUrlMap, categoryLabels, categoryIcons, toolIconOverrides } =
   extractMainData(resolve(ROOT, 'src/main.js'));
@@ -154,13 +159,16 @@ function esc(str) {
 // category) renders the two-icon "from → to" badge instead of a single
 // generic category icon.
 function toolIconBadgeHtml(key, meta) {
+  // width/height="40" — a Phase 3 CLS hint mirroring renderIconBadge() in
+  // src/main.js. CSS still decides the real rendered size; every icon is
+  // square, so a fixed 1:1 hint holds true in every context it's used.
   const override = toolIconOverrides[key];
-  if (override) return `<img src="${override}" alt="" />`;
+  if (override) return `<img src="${override}" alt="" width="40" height="40" />`;
   const fromIcon = categoryIcons[meta.category] || '/icons/icon-utilities.svg';
   const toCategory = meta.iconTo;
-  if (!toCategory || toCategory === meta.category) return `<img src="${fromIcon}" alt="" />`;
+  if (!toCategory || toCategory === meta.category) return `<img src="${fromIcon}" alt="" width="40" height="40" />`;
   const toIcon = categoryIcons[toCategory] || '/icons/icon-utilities.svg';
-  return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />`;
+  return `<img src="${fromIcon}" alt="" width="40" height="40" /><span class="arrow">→</span><img src="${toIcon}" alt="" width="40" height="40" />`;
 }
 
 // Optional row of use-case icons under the hero (e.g. Headshots,
@@ -356,9 +364,14 @@ function buildPage(key) {
     <meta property="og:description" content="${esc(seo.description)}" />
     <meta property="og:url" content="${canonical}" />
     <meta property="og:site_name" content="OnlineToolsWeb" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:image" content="${OG_IMAGE_URL}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="OnlineToolsWeb — fast, secure, everyday file tools that run entirely in your browser" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${esc(seo.title)}" />
     <meta name="twitter:description" content="${esc(seo.description)}" />
+    <meta name="twitter:image" content="${OG_IMAGE_URL}" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     ${jsonLd(key, meta, seo, categoryUrl)}

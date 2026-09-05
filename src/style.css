@@ -33,7 +33,10 @@
   --radius-lg: 24px;
 
   --motion-fast: 150ms ease;
-  --motion-normal: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  /* Phase 3: 280ms -> 240ms to land inside the 150-250ms guidance (this
+     is the site's only --motion-normal use — a card hover lift — so the
+     change is effectively scoped to that one transition, not sitewide). */
+  --motion-normal: 240ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Footer is a deliberately inverse (dark) surface in both themes —
      these stay separate from --bg/--surface/--text rather than
@@ -1220,6 +1223,138 @@ summary:focus-visible,
   .all-tools-heading {
     padding: 0 20px;
   }
+}
+
+/* ---------- Phase 3: advertising slots (disabled by default) ----------
+   Every .ad-slot starts `hidden` in markup (see src/adSlots.js) and stays
+   that way while no provider is configured — these rules only matter once
+   ADS_ENABLED is flipped on. Fixed aspect-ratio + min-height reserve the
+   slot's footprint immediately, before any provider script would load, so
+   turning ads on can never shift layout. Deliberately NOT styled like a
+   .tool-card or button: dashed border, muted surface, uppercase label —
+   unmistakably sponsored content, never mistaken for a tool control, and
+   always separated from neighboring controls by real margin so it can't
+   catch an accidental click meant for something else. */
+/* Specificity between an attribute selector and a class selector is
+   equal, so without this explicit rule the plain `.ad-slot { display:
+   flex }` below — an AUTHOR rule — would beat the browser's own built-in
+   `[hidden] { display: none }` default (a lower-priority UA-stylesheet
+   rule), leaving a "hidden" slot rendered anyway. This must stay ahead of
+   (or at least as specific as) every other .ad-slot rule. */
+.ad-slot[hidden] { display: none; }
+
+.ad-slot {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 32px;
+  box-sizing: content-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--text) 3%, var(--surface));
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+.ad-slot-label {
+  font-size: var(--font-size-sm, 0.8rem);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.ad-slot--leaderboard { aspect-ratio: 728 / 90; min-height: 90px; }
+.ad-slot--rectangle { max-width: 300px; aspect-ratio: 300 / 250; min-height: 250px; }
+/* Below 640px a 728:90 leaderboard would be squeezed illegibly thin — the
+   same homepage slot becomes the "mobile" placement the brief calls for
+   by switching to rectangle proportions here, rather than shipping a
+   second component. */
+@media (max-width: 640px) {
+  .ad-slot--leaderboard { max-width: 300px; aspect-ratio: 300 / 250; min-height: 250px; }
+  .ad-slot { padding: 0 20px; }
+}
+
+/* ---------- Phase 3: result-page premium explainer + feedback ----------
+   Sits below "Continue to…", never between the download action and the
+   result — see showResultState() in src/main.js. Quiet by design: no
+   button, no price, no urgency, matching PREMIUM_CTA_ENABLED being false
+   in src/config.js today. */
+.tp-result-extras {
+  max-width: 1400px;
+  margin: 0 auto 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.tp-premium-note {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.tp-premium-note-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 12%, var(--white));
+  color: var(--accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+.tp-premium-note h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+}
+.tp-premium-note p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.tp-premium-note-cta {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: var(--font-weight-medium);
+  color: var(--accent-dark);
+  text-decoration: none;
+  min-height: 44px;
+}
+.tp-premium-note-cta:hover { text-decoration: underline; }
+
+.tp-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+}
+.tp-feedback-buttons { display: flex; gap: 8px; }
+.tp-feedback-btn {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+}
+.tp-feedback-btn:hover { border-color: var(--accent); }
+.tp-feedback-btn.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--white)); }
+
+@media (max-width: 720px) {
+  .tp-premium-note { padding: 18px 20px; }
 }
 
 /* ---------- Tool grid ---------- */

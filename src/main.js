@@ -1,12 +1,19 @@
-import imageCompression from 'browser-image-compression';
-import Cropper from 'cropperjs';
-import 'cropperjs/dist/cropper.css';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import Tesseract from 'tesseract.js';
-import { PDFDocument, degrees, rgb, StandardFonts, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } from 'pdf-lib';
 import { TOOL_SLUGS, toolUrl } from './toolSlugs.js';
 import './style.css';
+import { PREMIUM_CTA_ENABLED, PREMIUM_BENEFITS, PREMIUM_CTA_HREF } from './config.js';
+import { adSlotHtml, mountAdSlots } from './adSlots.js';
+import {
+  trackSearchStarted, trackSearchResultsShown, trackSearchNoResults,
+  trackToolOpened, trackProcessingStarted, trackProcessingCompleted, trackProcessingFailed,
+  trackResultDownloaded, trackRelatedToolOpened, trackPremiumCtaViewed, trackPremiumCtaClicked,
+} from './analytics.js';
+
+// Reverse of TOOL_SLUGS (key -> slug), used to resolve which tool a
+// statically-generated "Related Tools" link (href="/some-slug") points to
+// for the related_tool_opened analytics event — those links are plain
+// <a href> tags baked in by scripts/generate-seo-pages.mjs and carry no
+// data-tool attribute the way runtime-rendered tool cards do.
+const SLUG_TO_KEY = Object.fromEntries(Object.entries(TOOL_SLUGS).map(([key, slug]) => [slug, key]));
 
 // ================= STALE DEPLOY RECOVERY =================
 // Every build gets new content-hashed chunk filenames (e.g. the AI model
@@ -326,16 +333,21 @@ function renderIconBadge(fromCategory, toCategory, toolKey) {
   // tool on its own — pairing it with a destination-format overlay would
   // just bury the custom glyph behind the (now much larger) overlap
   // badge, so it always renders alone, ignoring toCategory.
+  // width/height="40" is a Phase 3 CLS hint, not the rendered size — CSS
+  // always wins the actual box (40px in a plain tool card, 16px/13px when
+  // this same markup renders inside .mega-menu-badge — see style.css).
+  // Every one of these icons is square, so a fixed 1:1 hint is correct in
+  // every context it's reused in; only the true render size ever changes.
   const overrideIcon = toolKey && TOOL_ICON_OVERRIDES[toolKey];
   if (overrideIcon) {
-    return `<img src="${overrideIcon}" alt="" />`;
+    return `<img src="${overrideIcon}" alt="" width="40" height="40" />`;
   }
   const fromIcon = CATEGORY_ICONS[fromCategory];
   const toIcon = CATEGORY_ICONS[toCategory];
   if (!toCategory || fromCategory === toCategory) {
-    return `<img src="${fromIcon}" alt="" />`;
+    return `<img src="${fromIcon}" alt="" width="40" height="40" />`;
   }
-  return `<img src="${fromIcon}" alt="" /><span class="arrow">→</span><img src="${toIcon}" alt="" />${ICON_OVERLAP_ARROW_SVG}`;
+  return `<img src="${fromIcon}" alt="" width="40" height="40" /><span class="arrow">→</span><img src="${toIcon}" alt="" width="40" height="40" />${ICON_OVERLAP_ARROW_SVG}`;
 }
 
 // ================= TOOL GRID RENDERING =================
@@ -433,6 +445,7 @@ function renderToolGrid(containerEl, toolKeys) {
 function handleToolCardClick(toolKey, card) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
+  trackToolOpened(toolKey, 'card');
   clearResultPage(); // starting a new tool from anywhere restores a clean grid if a result page was showing
   // openToolModal is the single source of truth for what happens next:
   // opens in place if the tool needs no file (or one is already ready),
@@ -648,7 +661,14 @@ function showPreviewImage(file) {
 }
 
 // ---------- Processing state (with loading bird) ----------
+// Set by showProcessingState(), read by showResultState()/showErrorState()
+// to compute file_processing_completed's durationMs — never anything more
+// than a timestamp, so it carries no file information itself.
+let processingStartedAt = null;
+
 function showProcessingState(captionText) {
+  processingStartedAt = performance.now();
+  trackProcessingStarted(currentToolKey);
   modalBody.innerHTML = `
     <div class="processing-row">
       <video class="bird-video" src="/bird/bird-loading.mp4" autoplay loop muted playsinline></video>
@@ -726,6 +746,9 @@ function clearResultPage() {
 
 function showResultState(blob, filename, extraNote) {
   closeToolModal(false);
+  const durationMs = processingStartedAt !== null ? performance.now() - processingStartedAt : undefined;
+  processingStartedAt = null;
+  trackProcessingCompleted(currentToolKey, durationMs);
   const url = URL.createObjectURL(blob);
   const meta = toolMeta[currentToolKey];
 
@@ -762,6 +785,20 @@ function showResultState(blob, filename, extraNote) {
     </div>
   ` : '';
 
+  // Restrained continuation area — deliberately BELOW "Continue to…", so
+  // it never competes with the result/download or with finding another
+  // tool. Feedback first (closest to the task just finished), then the
+  // honest "planned" premium note (see src/config.js — no product exists
+  // yet, so no button/price/trial appears), then the ad slot last and
+  // furthest from every primary action (inert today — see src/adSlots.js).
+  const extrasHtml = `
+    <div class="tp-result-extras">
+      ${renderFeedbackControlHtml()}
+      ${renderPremiumNoteHtml()}
+      ${adSlotHtml('adSlotToolResult', 'rectangle')}
+    </div>
+  `;
+
   const page = document.createElement('section');
   page.className = 'tp-result-page';
   page.id = 'toolResultPage';
@@ -784,6 +821,7 @@ function showResultState(blob, filename, extraNote) {
         </aside>
       </div>
       ${continueHtml}
+      ${extrasHtml}
     </div>
   `;
 
@@ -795,12 +833,89 @@ function showResultState(blob, filename, extraNote) {
   page.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   renderResultPreview(blob, url);
-  page.querySelector('.download-btn').addEventListener('click', () => showToast(`Downloading ${filename}`, '<span class="icon icon-download" aria-hidden="true"></span>'));
+  page.querySelector('.download-btn').addEventListener('click', () => {
+    trackResultDownloaded(currentToolKey);
+    showToast(`Downloading ${filename}`, '<span class="icon icon-download" aria-hidden="true"></span>');
+  });
   page.querySelector('#resetToolBtn').addEventListener('click', () => {
     currentFile = null;
     clearResultPage();
     handleToolCardClick(currentToolKey, lastFocusedElement);
   });
+  wireResultExtras(page);
+  mountAdSlots();
+}
+
+// ---------- Result-page continuation extras (feedback / premium / ads) ----------
+// Non-deceptive by construction: PREMIUM_CTA_ENABLED is false (see
+// src/config.js), so this renders plain description text with no button,
+// price, or "Start trial" action — exactly the brief's fallback
+// requirement for when the underlying product doesn't exist yet.
+function renderPremiumNoteHtml() {
+  const benefits = PREMIUM_BENEFITS.slice(0, 5);
+  const benefitsText = benefits.length > 1
+    ? `${benefits.slice(0, -1).join(', ')}, and ${benefits[benefits.length - 1]}`
+    : (benefits[0] || '');
+  const ctaHtml = (PREMIUM_CTA_ENABLED && PREMIUM_CTA_HREF)
+    ? `<a class="tp-premium-note-cta" href="${PREMIUM_CTA_HREF}" id="premiumCtaLink">Learn about advanced workflows <span class="icon icon-arrow-right" aria-hidden="true"></span></a>`
+    : '';
+  return `
+    <div class="tp-premium-note" id="premiumNote">
+      <span class="tp-premium-note-icon" aria-hidden="true">&#10022;</span>
+      <div>
+        <h3>Advanced workflows are planned</h3>
+        <p>Everything you just used is free, with no account and no upload. We're exploring optional features for heavier workflows &mdash; ${benefitsText} &mdash; for people who need more than one file at a time. Nothing to buy today, and nothing about the free tools changes.</p>
+        ${ctaHtml}
+      </div>
+    </div>
+  `;
+}
+
+function renderFeedbackControlHtml() {
+  return `
+    <div class="tp-feedback" id="resultFeedback">
+      <span id="resultFeedbackLabel">Was this result what you expected?</span>
+      <div class="tp-feedback-buttons">
+        <button type="button" class="tp-feedback-btn" id="resultFeedbackYes" aria-label="Yes, this was helpful">&#128578;</button>
+        <button type="button" class="tp-feedback-btn" id="resultFeedbackNo" aria-label="No, this wasn't what I expected">&#128577;</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireResultExtras(page) {
+  // Feedback is UI-only — there is no backend to send it to, so it never
+  // claims to be stored or reviewed. It just confirms the tap and moves
+  // on, which is the honest version of this control until a real
+  // destination for the feedback exists.
+  const feedbackEl = page.querySelector('#resultFeedback');
+  if (feedbackEl) {
+    const yesBtn = feedbackEl.querySelector('#resultFeedbackYes');
+    const noBtn = feedbackEl.querySelector('#resultFeedbackNo');
+    const respond = (btn) => {
+      [yesBtn, noBtn].forEach((b) => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      showToast('Thanks for letting us know');
+    };
+    yesBtn?.addEventListener('click', () => respond(yesBtn));
+    noBtn?.addEventListener('click', () => respond(noBtn));
+  }
+
+  // premium_cta_viewed fires once the note actually scrolls into view,
+  // not merely once it exists in the DOM — this section sits below the
+  // fold on most result pages, so a render-time "viewed" event would
+  // overcount visitors who never scrolled that far.
+  const premiumEl = page.querySelector('#premiumNote');
+  if (premiumEl && 'IntersectionObserver' in window) {
+    const toolKeyAtRender = currentToolKey;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { trackPremiumCtaViewed(toolKeyAtRender); io.disconnect(); }
+      });
+    }, { threshold: 0.5 });
+    io.observe(premiumEl);
+  }
+  page.querySelector('#premiumCtaLink')?.addEventListener('click', () => trackPremiumCtaClicked(currentToolKey));
 }
 
 // Shows what the output actually looks like before the user downloads it.
@@ -1064,7 +1179,15 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
   });
 }
 
-function showErrorState(message) {
+// errorType is a coarse, hand-picked bucket (e.g. 'unsupported_format',
+// 'incorrect_password') — NEVER the raw `message` shown to the visitor,
+// since a handful of dependencies occasionally interpolate a detected
+// value into their thrown Error#message and this file has no way to
+// audit every library's every error path. Defaults to a single generic
+// bucket for the many call sites that haven't been given a specific one.
+function showErrorState(message, errorType) {
+  processingStartedAt = null;
+  trackProcessingFailed(currentToolKey, errorType || 'processing_error');
   modalBody.innerHTML = `
     <div class="result-box" role="alert">
       <video class="bird-video" src="/bird/bird-idle.mp4" autoplay loop muted playsinline style="margin: 0 auto 12px;"></video>
@@ -1128,7 +1251,8 @@ function minWait(ms) {
 // Converting to points (jsPDF's real native unit) avoids that unit-handling bug entirely.
 const PX_TO_PT = 0.75; // standard 96dpi-css-px to pt conversion
 
-function newImagePdf(pxWidth, pxHeight) {
+async function newImagePdf(pxWidth, pxHeight) {
+  const { jsPDF } = await import('jspdf');
   const ptW = pxWidth * PX_TO_PT;
   const ptH = pxHeight * PX_TO_PT;
   const isLandscape = pxWidth > pxHeight;
@@ -1227,6 +1351,7 @@ function looksNumeric(text) {
 }
 
 async function ocrCell(canvas, x, y, w, h) {
+  const Tesseract = (await import('tesseract.js')).default;
   const makeBlob = async (scale, smooth, extraPad) => {
     const pad = extraPad || 0;
     const px = Math.max(0, x - pad);
@@ -1293,6 +1418,7 @@ async function ocrCell(canvas, x, y, w, h) {
 
 async function imageToExcelBlob(file) {
   const XLSX = await import('xlsx');
+  const Tesseract = (await import('tesseract.js')).default;
   const img = await loadImageForGrid(file);
   const canvas = document.createElement('canvas');
   canvas.width = img.naturalWidth;
@@ -1379,6 +1505,7 @@ async function wordToExcelBlob(file) {
 
 async function wordToPdfBlob(file) {
   const mammoth = (await import('mammoth')).default;
+  const { jsPDF } = await import('jspdf');
   const arrayBuffer = await file.arrayBuffer();
   const { value: text } = await mammoth.extractRawText({ arrayBuffer });
   const pdf = new jsPDF();
@@ -1397,6 +1524,8 @@ async function wordToTextBlob(file) {
 
 async function excelToPdfBlob(file) {
   const XLSX = await import('xlsx');
+  const { jsPDF } = await import('jspdf');
+  const autoTable = (await import('jspdf-autotable')).default;
   const arrayBuffer = await file.arrayBuffer();
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
   const sheetName = workbook.SheetNames[0];
@@ -1615,9 +1744,12 @@ function renderSingleFileConfig() {
     area.insertAdjacentHTML('beforeend', `
       <div class="config-panel"><button class="config-action-btn" id="cfgApply">Apply Crop</button></div>
     `);
-    setTimeout(() => {
+    setTimeout(async () => {
       if (myGeneration !== renderGeneration) return; // a newer render has since started — skip this stale init
       if (cropperInstance) cropperInstance.destroy();
+      const { default: Cropper } = await import('cropperjs');
+      await import('cropperjs/dist/cropper.css');
+      if (myGeneration !== renderGeneration) return; // re-check: the render could have moved on while the import was in flight
       cropperInstance = new Cropper(currentImg, { viewMode: 1, autoCropArea: 0.8 });
     }, 50);
     document.querySelector('#cfgApply').addEventListener('click', () => {
@@ -1896,9 +2028,9 @@ function renderSingleFileConfig() {
   else if (currentToolKey === 'pdf') {
     // single-image path when only one file was dropped on this multiFile-capable tool
     area.insertAdjacentHTML('beforeend', `<div class="config-panel"><button class="config-action-btn" id="cfgApply">Convert to PDF</button></div>`);
-    document.querySelector('#cfgApply').addEventListener('click', () => {
+    document.querySelector('#cfgApply').addEventListener('click', async () => {
       const w = currentImg.naturalWidth, h = currentImg.naturalHeight;
-      const pdf = newImagePdf(w, h);
+      const pdf = await newImagePdf(w, h);
       drawImageOnPdfPage(pdf, currentImg, w, h);
       processAndShow(pdf.output('blob'), `${currentFile.name.split('.')[0]}.pdf`);
     });
@@ -1952,6 +2084,7 @@ function renderSingleFileConfig() {
       if (angleToApply === 0) { showErrorState('Rotate the preview left or right first, then apply.'); return; }
       showProcessingState('Rotating your PDF...');
       try {
+        const { PDFDocument, degrees } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const doc = await PDFDocument.load(bytes);
         doc.getPages().forEach((p) => p.setRotation(degrees((p.getRotation().angle + angleToApply) % 360)));
@@ -1975,6 +2108,7 @@ function renderSingleFileConfig() {
       const pos = document.querySelector('#cfgPos').value; // captured BEFORE showProcessingState wipes the DOM
       showProcessingState('Adding page numbers...');
       try {
+        const { PDFDocument } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const doc = await PDFDocument.load(bytes);
         const pages = doc.getPages();
@@ -2004,6 +2138,7 @@ function renderSingleFileConfig() {
       if (!rangeStr) return;
       showProcessingState(isExtract ? 'Extracting pages...' : 'Removing pages...');
       try {
+        const { PDFDocument } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const src = await PDFDocument.load(bytes);
         const total = src.getPageCount();
@@ -2032,6 +2167,7 @@ function renderSingleFileConfig() {
       const text = document.querySelector('#cfgWmText').value.trim() || 'OnlineToolsWeb';
       showProcessingState('Applying watermark...');
       try {
+        const { PDFDocument, degrees } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const doc = await PDFDocument.load(bytes);
         doc.getPages().forEach((p) => {
@@ -2083,6 +2219,7 @@ function renderSingleFileConfig() {
       const right = parseFloat(document.querySelector('#cfgRight').value) || 0;
       showProcessingState('Cropping your PDF...');
       try {
+        const { PDFDocument } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const doc = await PDFDocument.load(bytes);
         doc.getPages().forEach((p) => {
@@ -2153,6 +2290,7 @@ function renderSingleFileConfig() {
     document.querySelector('#cfgApply').addEventListener('click', async () => {
       showProcessingState('Placing your signature...');
       try {
+        const { PDFDocument } = await import('pdf-lib');
         const sigDataUrl = canvas.toDataURL('image/png');
         const sigBytes = await (await fetch(sigDataUrl)).arrayBuffer();
         const bytes = await currentFile.arrayBuffer();
@@ -2181,6 +2319,10 @@ function renderSingleFileConfig() {
   // element lives in PDF point coordinates (not screen pixels), so it
   // survives page navigation and re-renders at any zoom/scale.
   else if (currentToolKey === 'pdfedit') {
+    // pdf-lib symbols are loaded lazily (only this tool needs them) and shared
+    // via these closure-scoped bindings between drawWrappedText() below and
+    // the #cfgApply handler further down, which is what actually populates them.
+    let PDFDocument, rgb, StandardFonts;
     area.insertAdjacentHTML('beforeend', `
       <p class="tp-live-hint" id="pdfeditHint">Add text, an image, or a white "cover" box, then drag it into place. Click an element to edit, move, or resize it.</p>
       <div class="config-panel pdfedit-toolbar">
@@ -2551,6 +2693,7 @@ function renderSingleFileConfig() {
       if (!hasAny) { showErrorState('Add at least one text box, image, or cover box before saving.'); return; }
       showProcessingState('Applying your edits...');
       try {
+        ({ PDFDocument, rgb, StandardFonts } = await import('pdf-lib'));
         const bytes = await currentFile.arrayBuffer();
         const doc = await PDFDocument.load(bytes);
         const font = await doc.embedFont(StandardFonts.Helvetica);
@@ -2663,6 +2806,7 @@ function renderSingleFileConfig() {
       if (!groupsStr) return;
       showProcessingState('Splitting your PDF...');
       try {
+        const { PDFDocument } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const src = await PDFDocument.load(bytes);
         const total = src.getPageCount();
@@ -2704,6 +2848,7 @@ function renderSingleFileConfig() {
       const originalKB = currentFile.size / 1024;
       showProcessingState('Scanning embedded images...');
       try {
+        const { PDFDocument, PDFName, PDFRawStream, PDFRef, PDFDict, PDFArray, PDFStream } = await import('pdf-lib');
         const bytes = await currentFile.arrayBuffer();
         const originalPageCount = (await PDFDocument.load(bytes)).getPageCount();
 
@@ -3009,6 +3154,7 @@ function renderTextToPdfTool() {
     const text = document.querySelector('#t2pdfText').value.trim();
     if (!text) return;
     showProcessingState('Building your PDF...');
+    const { jsPDF } = await import('jspdf');
     const pdf = new jsPDF();
     const lines = pdf.splitTextToSize(text, 180);
     let y = 15;
@@ -3312,6 +3458,8 @@ Hosting, 12, 10" style="width:100%; padding:10px; border:1px solid var(--border)
       return { desc, qty: parseFloat(qty) || 0, price: parseFloat(price) || 0 };
     });
     const total = items.reduce((sum, it) => sum + it.qty * it.price, 0);
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
     const pdf = new jsPDF();
     pdf.setFontSize(20); pdf.text('INVOICE', 15, 20);
     pdf.setFontSize(11);
@@ -3350,6 +3498,7 @@ function renderResumeBuilderTool() {
     const education = document.querySelector('#resEdu').value.trim();
     const skills = document.querySelector('#resSkills').value.trim();
     showProcessingState('Building your resume...');
+    const { jsPDF } = await import('jspdf');
     const pdf = new jsPDF();
     let y = 20;
     pdf.setFontSize(22); pdf.text(name, 15, y); y += 8;
@@ -3604,7 +3753,7 @@ function renderScanToPdfTool() {
     showProcessingState('Building your PDF...');
     const loadImg = (blob) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(blob); });
     const first = await loadImg(captures[0]);
-    const pdf = newImagePdf(first.width, first.height);
+    const pdf = await newImagePdf(first.width, first.height);
     drawImageOnPdfPage(pdf, first, first.width, first.height);
     for (let i = 1; i < captures.length; i++) {
       const img = await loadImg(captures[i]);
@@ -3693,7 +3842,7 @@ function renderHtmlToPdfTool() {
       document.body.appendChild(container);
       const canvas = await html2canvas(container, { backgroundColor: '#ffffff' });
       document.body.removeChild(container);
-      const pdf = newImagePdf(canvas.width, canvas.height);
+      const pdf = await newImagePdf(canvas.width, canvas.height);
       drawImageOnPdfPage(pdf, canvas.toDataURL('image/jpeg', 0.92), canvas.width, canvas.height);
       await minWait(400);
       showResultState(pdf.output('blob'), 'html-export.pdf');
@@ -4214,7 +4363,7 @@ function renderMultiFileTool(initialFiles) {
       if (currentToolKey === 'pdf') {
         const loadImg = (f) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = URL.createObjectURL(f); });
         const first = await loadImg(files[0]);
-        const pdf = newImagePdf(first.width, first.height);
+        const pdf = await newImagePdf(first.width, first.height);
         drawImageOnPdfPage(pdf, first, first.width, first.height);
         for (let i = 1; i < files.length; i++) {
           updateProcessingCaption(`Processing file ${i + 1} of ${files.length}...`);
@@ -4256,6 +4405,7 @@ function renderMultiFileTool(initialFiles) {
         }
         canvas.toBlob((blob) => showResultState(blob, 'collage.png'));
       } else if (currentToolKey === 'pdfmerge') {
+        const { PDFDocument } = await import('pdf-lib');
         const mergedPdf = await PDFDocument.create();
         for (let i = 0; i < files.length; i++) {
           updateProcessingCaption(`Merging file ${i + 1} of ${files.length}...`);
@@ -4385,6 +4535,10 @@ function wireSearch(inputId, resultsId) {
   let debounceTimer;
   let activeIndex = -1;
   let lastClearMatch = null;
+  // Fires tool_search_started once per "search session" (the first
+  // non-empty keystroke), not once per keystroke — a settled query's
+  // result count is tracked separately below, on every debounced render.
+  let searchSessionActive = false;
 
   const setExpanded = (expanded) => input.setAttribute('aria-expanded', String(expanded));
   const updateClearBtn = () => { if (clearBtn) clearBtn.hidden = input.value.length === 0; };
@@ -4397,6 +4551,7 @@ function wireSearch(inputId, resultsId) {
   };
 
   const activateItem = (key, cat) => {
+    trackToolOpened(key, 'search');
     closeResults();
     input.value = '';
     updateClearBtn();
@@ -4428,19 +4583,27 @@ function wireSearch(inputId, resultsId) {
     if (!rawValue.trim()) {
       closeResults();
       resultsEl.innerHTML = '';
+      searchSessionActive = false;
       return;
     }
 
+    if (!searchSessionActive) {
+      searchSessionActive = true;
+      trackSearchStarted(rawValue, inputId);
+    }
+
     if (!matches.length) {
+      trackSearchNoResults(rawValue, inputId);
       resultsEl.innerHTML = `
         <div class="search-no-results">
           <p class="search-no-results-title">No tools found for "${escapeHtml(rawValue.trim())}"</p>
           <p class="search-no-results-hint">Try a different word, or browse tools by category.</p>
         </div>`;
     } else {
+      trackSearchResultsShown(rawValue, matches.length, inputId);
       resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
         <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" aria-selected="false" data-key="${t.key}" data-cat="${t.category}">
-          <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" />
+          <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" width="20" height="24" />
           <span>${escapeHtml(t.label)}</span>
           <span class="search-result-cat">${escapeHtml(t.categoryLabel)}</span>
         </div>
@@ -4501,6 +4664,7 @@ function wireSearch(inputId, resultsId) {
       updateClearBtn();
       resultsEl.innerHTML = '';
       closeResults();
+      searchSessionActive = false;
       input.focus();
     });
   }
@@ -5392,6 +5556,32 @@ function initParticleField() {
 }
 
 // ================= PAGE INIT =================
+// The "Related Tools" section on every dedicated tool page, and the
+// "Continue to…" grid on the result page, are both plain <a href> links
+// (real navigations, not JS-intercepted) — a single delegated listener
+// covers both without needing per-render wiring. Resolves the
+// destination tool key from data-tool when present (result-page cards,
+// via toolCardHtml) or from the href's slug otherwise (statically
+// generated Related Tools links, via SLUG_TO_KEY).
+function wireRelatedToolTracking() {
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('.tp-related-grid a[href], .tp-result-continue-grid a[href]');
+    if (!a) return;
+    const toKey = a.dataset.tool || SLUG_TO_KEY[a.getAttribute('href').replace(/^\//, '')] || null;
+    if (toKey) trackRelatedToolOpened(currentToolKey, toKey);
+  });
+}
+
+// Homepage/category-page ad slot — a no-op placeholder while ADS_ENABLED
+// is false (see src/config.js). #homeAdSlotContainer only exists on
+// index.html, so this quietly does nothing on every other page.
+function renderHomepageAdSlot() {
+  const container = document.querySelector('#homeAdSlotContainer');
+  if (!container) return;
+  container.innerHTML = adSlotHtml('adSlotHomepage', 'leaderboard');
+  mountAdSlots();
+}
+
 export function initToolPage(pageCategory) {
   wireThemeToggle();
   wireHamburger();
@@ -5406,6 +5596,8 @@ export function initToolPage(pageCategory) {
   renderRecentTools();
   wireRecentToolsClear();
   renderPopularTools();
+  renderHomepageAdSlot();
+  wireRelatedToolTracking();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   // Prominent homepage search (only present on index.html — wireSearch
   // no-ops elsewhere since the elements won't exist).
@@ -5522,6 +5714,16 @@ export function initToolLandingPage(toolKey) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
 
+  // A direct page load (typed URL, bookmark, Related Tools link, nav
+  // menu, search navigating cross-page) — the counterpart to the 'card'
+  // and 'search' sources tracked in handleToolCardClick()/activateItem()
+  // for in-place opens. A card click that redirects here (no shared
+  // upload zone on the page it came from) fires both that source's event
+  // and this one — an acceptable, documented double-count for a typed
+  // interface with no live backend yet, rather than session-scoped dedup
+  // logic that would add real complexity for no present benefit.
+  trackToolOpened(toolKey, 'landing_page');
+
   wireThemeToggle();
   wireHamburger();
   wireSmartNav();
@@ -5534,6 +5736,7 @@ export function initToolLandingPage(toolKey) {
   renderMainNav();
   wireNavDropdowns();
   wireScrollReveal();
+  wireRelatedToolTracking();
 
   const needsFile = !meta.noFile && toolKey !== 'pdfcompare';
   if (needsFile) wireToolPageDropZone(toolKey, meta);

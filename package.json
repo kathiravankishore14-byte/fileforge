@@ -15,7 +15,6 @@
     "@huggingface/transformers": "^4.2.0",
     "@pdfsmaller/pdf-decrypt": "^1.0.1",
     "@pdfsmaller/pdf-encrypt-lite": "^1.2.0",
-    "browser-image-compression": "^2.0.2",
     "cropperjs": "^1.6.2",
     "docx": "^9.7.1",
     "heic2any": "^0.0.4",
