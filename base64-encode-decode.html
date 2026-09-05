@@ -24,10 +24,11 @@
   <body class="tool-landing-page" data-tool-landing="base64">
     <!--HEADER-->
 
-    <!-- Visible breadcrumb nav intentionally removed per request — the
+    <!-- Visible breadcrumb nav intentionally removed per request: the
          BreadcrumbList JSON-LD above (jsonLd()) still carries this same
          hierarchy for search engines, so nothing is lost for SEO. -->
 
+    <main id="main-content" tabindex="-1">
     <section class="hero tp-hero">
       <h1>Base64 Encode/Decode Online</h1>
       <p>Convert text to and from Base64. Fill in the details and get your result in seconds.</p>
@@ -43,7 +44,7 @@
     
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Base64 Encode/Decode</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -299,6 +300,7 @@
         </details></div>
       </div>
     </section>
+    </main>
 
     <!--FOOTER-->
 

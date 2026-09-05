@@ -232,6 +232,85 @@ function allToolKeysInterleaved() {
   return result;
 }
 
+// ================= HOMEPAGE POPULAR TOOLS =================
+// A manually maintained editorial pick, not analytics or click-count
+// driven — kept in sync by hand with the same tools already curated in
+// each category dropdown's "Popular" group (CATEGORY_NAV_CONFIG's
+// top3, below) and the footer's "Popular Tools" column
+// (partials/_footer.html). Six tools, spanning the site's two busiest
+// categories (image, PDF) plus one cross-category utility staple.
+const HOMEPAGE_POPULAR_TOOLS = ['resize', 'compress', 'pdfmerge', 'pdftoword', 'qrcode', 'pdfcompress'];
+
+function renderPopularTools() {
+  const gridEl = document.querySelector('#popularToolsGrid');
+  if (!gridEl) return; // only present on the homepage
+  gridEl.innerHTML = HOMEPAGE_POPULAR_TOOLS.map((key) => toolCardHtml(key, false)).join('');
+  gridEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleToolCardClick(card.dataset.tool, card);
+    });
+  });
+}
+
+// ================= RECENTLY USED TOOLS =================
+// Up to 5 tool routes (just the internal tool key — never a filename,
+// file content, or anything else about what the visitor processed),
+// kept in localStorage on the visitor's own device only. Nothing here
+// is sent anywhere; a "Clear history" control removes it entirely.
+const RECENT_TOOLS_KEY = 'otw-recent-tools';
+const RECENT_TOOLS_MAX = 5;
+
+function getRecentTools() {
+  let keys = [];
+  try {
+    keys = JSON.parse(localStorage.getItem(RECENT_TOOLS_KEY) || '[]');
+  } catch { /* localStorage unavailable or corrupt value — just show nothing */ }
+  if (!Array.isArray(keys)) return [];
+  // Filter out any key that no longer exists (a tool removed since the
+  // visitor's last visit) or that duplicates the featured Popular row,
+  // so the two shelves don't just repeat each other.
+  return keys.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon).slice(0, RECENT_TOOLS_MAX);
+}
+
+function recordRecentTool(key) {
+  if (!toolMeta[key]) return;
+  try {
+    let keys = JSON.parse(localStorage.getItem(RECENT_TOOLS_KEY) || '[]');
+    if (!Array.isArray(keys)) keys = [];
+    keys = [key, ...keys.filter((k) => k !== key)].slice(0, RECENT_TOOLS_MAX);
+    localStorage.setItem(RECENT_TOOLS_KEY, JSON.stringify(keys));
+  } catch { /* privacy mode / storage disabled — recently-used just won't persist */ }
+}
+
+function renderRecentTools() {
+  const section = document.querySelector('#recentToolsSection');
+  const gridEl = document.querySelector('#recentToolsGrid');
+  if (!section || !gridEl) return; // only present on the homepage
+  const keys = getRecentTools();
+  if (!keys.length) {
+    section.hidden = true;
+    return;
+  }
+  section.hidden = false;
+  gridEl.innerHTML = keys.map((key) => toolCardHtml(key, false)).join('');
+  gridEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
+    card.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleToolCardClick(card.dataset.tool, card);
+    });
+  });
+}
+
+function wireRecentToolsClear() {
+  const btn = document.querySelector('#recentToolsClear');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    try { localStorage.removeItem(RECENT_TOOLS_KEY); } catch { /* ignore */ }
+    renderRecentTools();
+  });
+}
+
 // ================= ICON BADGE RENDERING =================
 // Small curved-arrow stamp added to every two-icon overlap badge (see
 // .icon-overlap-arrow in style.css for positioning) — positioned lower
@@ -380,6 +459,7 @@ const modalBox = document.querySelector('.modal-box');
 function openToolModal(toolKey, triggerEl, initialMultiFiles) {
   const meta = toolMeta[toolKey];
   if (!meta) return;
+  recordRecentTool(toolKey); // tool key only — never the file the visitor is about to process
   clearResultPage(); // starting a new tool from anywhere restores the hero/dropzone if a result page was showing
 
   // Decide BEFORE opening anything: if this tool needs a file and none is ready, redirect to the
@@ -610,6 +690,12 @@ function showToast(message, icon) {
   if (!toastHost) {
     toastHost = document.createElement('div');
     toastHost.className = 'tp-toast-host';
+    // role="status" + aria-live="polite": a screen reader announces each
+    // toast (e.g. "Downloading file.pdf") without interrupting whatever
+    // the visitor is doing, the same way the toast is visually a brief,
+    // non-blocking confirmation rather than a modal.
+    toastHost.setAttribute('role', 'status');
+    toastHost.setAttribute('aria-live', 'polite');
     document.body.appendChild(toastHost);
   }
   const toast = document.createElement('div');
@@ -980,7 +1066,7 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
 
 function showErrorState(message) {
   modalBody.innerHTML = `
-    <div class="result-box">
+    <div class="result-box" role="alert">
       <video class="bird-video" src="/bird/bird-idle.mp4" autoplay loop muted playsinline style="margin: 0 auto 12px;"></video>
       <p style="color: var(--red-dark);">${message}</p>
       <button class="reset-btn" id="errorBackBtn">Try again</button>
@@ -4466,28 +4552,61 @@ function wireHamburger() {
   const btn = document.querySelector('#hamburgerBtn');
   const menuBackdrop = document.querySelector('#mobileMenuBackdrop');
   const menuClose = document.querySelector('#mobileMenuClose');
+  const menuPanel = document.querySelector('#mobileMenuPanel');
   if (!btn || !menuBackdrop) return;
 
+  // Same trap/return-focus pattern as the tool modal (see the keydown
+  // handler right after openToolModal/closeToolModal above) — the
+  // mobile drawer is just as much a dialog as the tool modal is, so a
+  // keyboard user tabbing through it should never land on something
+  // behind it, and closing it should hand focus straight back to the
+  // hamburger button that opened it.
+  let menuTriggerEl = null;
+
   const openMenu = () => {
+    menuTriggerEl = document.activeElement;
     menuBackdrop.classList.remove('hidden');
     document.body.classList.add('modal-open');
     btn.setAttribute('aria-expanded', 'true');
     btn.setAttribute('aria-label', 'Close menu');
+    (menuClose || menuPanel)?.focus();
   };
   const closeMenu = () => {
     menuBackdrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-label', 'Open menu');
+    (menuTriggerEl || btn).focus();
   };
 
   btn.addEventListener('click', openMenu);
   menuClose.addEventListener('click', closeMenu);
   menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) closeMenu(); });
+  // Choosing a destination closes the drawer instead of leaving it open
+  // behind the page that just navigated (or, for an in-page anchor like
+  // #faq, behind the section it jumped to).
+  menuPanel?.querySelectorAll('.mobile-nav-links a').forEach((link) => {
+    link.addEventListener('click', () => closeMenu());
+  });
   // Obvious, standard close behavior: Esc closes the drawer from anywhere,
-  // matching every other dismissible panel/modal on the site.
+  // matching every other dismissible panel/modal on the site. Tab/Shift+Tab
+  // are trapped inside the panel while it's open so focus never silently
+  // lands on the (still-present, just visually hidden behind the
+  // backdrop) page content underneath.
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !menuBackdrop.classList.contains('hidden')) closeMenu();
+    if (menuBackdrop.classList.contains('hidden')) return;
+    if (e.key === 'Escape') { closeMenu(); return; }
+    if (e.key === 'Tab' && menuPanel) {
+      const focusables = menuPanel.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
   });
 }
 
@@ -5284,6 +5403,9 @@ export function initToolPage(pageCategory) {
   initParticleField();
   renderMainNav();
   wireNavDropdowns();
+  renderRecentTools();
+  wireRecentToolsClear();
+  renderPopularTools();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
   // Prominent homepage search (only present on index.html — wireSearch
   // no-ops elsewhere since the elements won't exist).

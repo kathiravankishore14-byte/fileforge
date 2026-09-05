@@ -23,6 +23,8 @@
     <canvas class="particle-field" aria-hidden="true"></canvas>
     <!--HEADER-->
 
+    <main id="main-content" tabindex="-1">
+
     <section class="hero">
       <h1>Free Word document tools</h1>
       <p class="category-intro">Convert your DOCX files to Excel, PDF, or plain text. Every tool processes your document locally in your browser, so it never leaves your device.</p>
@@ -50,7 +52,7 @@
     <div class="tool-grid" id="toolGrid"></div>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Tool options</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -58,6 +60,8 @@
         <div class="modal-body" id="modalBody"></div>
       </div>
     </div>
+
+    </main>
 
     <!--FOOTER-->
 

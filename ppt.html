@@ -23,6 +23,8 @@
     <canvas class="particle-field" aria-hidden="true"></canvas>
     <!--HEADER-->
 
+    <main id="main-content" tabindex="-1">
+
     <section class="hero">
       <h1>Free PowerPoint tools</h1>
       <p class="category-intro">Extract all text from your slide deck. Processed entirely in your browser, never uploaded to a server. More PowerPoint tools (PDF and image export) are on the way.</p>
@@ -50,7 +52,7 @@
     <div class="tool-grid" id="toolGrid"></div>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Tool options</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -58,6 +60,8 @@
         <div class="modal-body" id="modalBody"></div>
       </div>
     </div>
+
+    </main>
 
     <!--FOOTER-->
 

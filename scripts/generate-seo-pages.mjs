@@ -324,7 +324,7 @@ function dropZoneHtml(key, meta) {
   const noun = meta.multiFile ? 'files' : 'file';
   return `
     <div class="tp-dropzone" id="tpDropZone">
-      <input type="file" id="tpFileInput"${meta.multiFile ? ' multiple' : ''}${acceptAttr} />
+      <input type="file" id="tpFileInput" aria-label="Choose ${esc(noun)} to ${esc(meta.label.toLowerCase())}"${meta.multiFile ? ' multiple' : ''}${acceptAttr} />
       <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
       <p class="tp-dropzone-text">
         <span class="drop-text-desktop">Drop your ${noun} here</span>
@@ -370,6 +370,7 @@ function buildPage(key) {
          BreadcrumbList JSON-LD above (jsonLd()) still carries this same
          hierarchy for search engines, so nothing is lost for SEO. -->
 
+    <main id="main-content" tabindex="-1">
     <section class="hero tp-hero">
       <h1>${esc(seo.h1)}</h1>
       <p>${esc(seo.intro)}</p>
@@ -385,7 +386,7 @@ function buildPage(key) {
     ${dropZoneHtml(key, meta)}
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">${esc(meta.label)}</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -398,6 +399,7 @@ function buildPage(key) {
     ${stepsCartoonHtml()}
     ${relatedToolsHtml(key, meta)}
     ${faqHtml(seo.faq)}
+    </main>
 
     <!--FOOTER-->
 

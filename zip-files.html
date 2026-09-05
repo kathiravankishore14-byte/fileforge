@@ -24,10 +24,11 @@
   <body class="tool-landing-page" data-tool-landing="zipfiles">
     <!--HEADER-->
 
-    <!-- Visible breadcrumb nav intentionally removed per request — the
+    <!-- Visible breadcrumb nav intentionally removed per request: the
          BreadcrumbList JSON-LD above (jsonLd()) still carries this same
          hierarchy for search engines, so nothing is lost for SEO. -->
 
+    <main id="main-content" tabindex="-1">
     <section class="hero tp-hero">
       <h1>Zip Files Online</h1>
       <p>Bundle multiple files into one archive. Drop your files and get your result in seconds.</p>
@@ -42,7 +43,7 @@
 
     
     <div class="tp-dropzone" id="tpDropZone">
-      <input type="file" id="tpFileInput" multiple />
+      <input type="file" id="tpFileInput" aria-label="Choose files to zip files" multiple />
       <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
       <p class="tp-dropzone-text">
         <span class="drop-text-desktop">Drop your files here</span>
@@ -53,7 +54,7 @@
     </div>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Zip Files</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -313,6 +314,7 @@
         </details></div>
       </div>
     </section>
+    </main>
 
     <!--FOOTER-->
 

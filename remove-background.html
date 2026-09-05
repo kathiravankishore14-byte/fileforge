@@ -24,10 +24,11 @@
   <body class="tool-landing-page" data-tool-landing="bgremove">
     <!--HEADER-->
 
-    <!-- Visible breadcrumb nav intentionally removed per request — the
+    <!-- Visible breadcrumb nav intentionally removed per request: the
          BreadcrumbList JSON-LD above (jsonLd()) still carries this same
          hierarchy for search engines, so nothing is lost for SEO. -->
 
+    <main id="main-content" tabindex="-1">
     <section class="hero tp-hero">
       <h1>Remove Image Background: Free &amp; Automatic</h1>
       <p>One tool for e-commerce photos, headshots, marketing graphics, and logos. Drop a photo and the AI finds the subject in seconds, then compare it against the original with a slider and swap in a new background color or image before you download. Nothing leaves your browser.</p>
@@ -66,7 +67,7 @@
 
     
     <div class="tp-dropzone" id="tpDropZone">
-      <input type="file" id="tpFileInput" accept="image/jpeg,image/png,image/webp" />
+      <input type="file" id="tpFileInput" aria-label="Choose file to remove background" accept="image/jpeg,image/png,image/webp" />
       <span class="icon icon-upload tp-dropzone-icon" aria-hidden="true"></span>
       <p class="tp-dropzone-text">
         <span class="drop-text-desktop">Drop your file here</span>
@@ -77,7 +78,7 @@
     </div>
 
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Remove Background</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -335,6 +336,7 @@
         </details></div>
       </div>
     </section>
+    </main>
 
     <!--FOOTER-->
 

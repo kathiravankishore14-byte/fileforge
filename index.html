@@ -24,6 +24,7 @@
     <canvas class="particle-field" aria-hidden="true"></canvas>
     <!--HEADER-->
 
+    <main id="main-content" tabindex="-1">
     <section class="hero">
       <h1>Fast, Secure, Everyday Tools</h1>
       <p>Your files stay yours.</p>
@@ -36,9 +37,36 @@
       </div>
     </section>
 
+    <!-- Recently used tools — populated client-side from up to 5 tool
+         keys kept in localStorage (see RECENT_TOOLS_KEY in main.js).
+         Hidden until the visitor has actually opened a tool at least
+         once, so a first-time visitor never sees an empty shelf. Only
+         tool routes are stored, never filenames or file content. -->
+    <section class="recent-tools-section" id="recentToolsSection" aria-labelledby="recentToolsHeading" hidden>
+      <div class="recent-tools-inner">
+        <div class="recent-tools-head">
+          <h2 id="recentToolsHeading">Continue where you left off</h2>
+          <button type="button" class="recent-tools-clear" id="recentToolsClear">Clear history</button>
+        </div>
+        <div class="tool-grid recent-tools-grid" id="recentToolsGrid"></div>
+      </div>
+    </section>
+
+    <!-- Six curated popular tools — a manually maintained editorial
+         pick (HOMEPAGE_POPULAR_TOOLS in main.js), matching the same
+         tools already curated in the footer's "Popular Tools" column
+         and each category dropdown's "Popular" group. Not based on
+         usage analytics or click counts. -->
+    <section class="popular-tools-section" aria-labelledby="popularToolsHeading">
+      <div class="popular-tools-inner">
+        <h2 id="popularToolsHeading">Popular Tools</h2>
+        <div class="tool-grid popular-tools-grid" id="popularToolsGrid"></div>
+      </div>
+    </section>
+
     <div class="category-bar-wrap">
       <nav class="category-bar" aria-label="Tool categories">
-        <a href="/" class="category-bar-link active" data-filter="all"><span class="icon icon-grid" aria-hidden="true"></span> All Tools</a>
+        <a href="/" class="category-bar-link active" data-filter="all" aria-current="page"><span class="icon icon-grid" aria-hidden="true"></span> All Tools</a>
         <a href="/pdf" class="category-bar-link" data-filter="pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="20" alt="" /> PDF</a>
         <a href="/image" class="category-bar-link" data-filter="image"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="20" alt="" /> Image</a>
         <a href="/excel" class="category-bar-link" data-filter="excel"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="20" alt="" /> Excel</a>
@@ -48,7 +76,46 @@
       </nav>
     </div>
 
-    <div class="tool-grid" id="toolGrid"></div>
+    <section aria-labelledby="allToolsHeading">
+      <h2 id="allToolsHeading" class="all-tools-heading">All Tools</h2>
+      <div class="tool-grid" id="toolGrid"></div>
+    </section>
+
+    <!-- Privacy / local-processing explanation — moved ahead of "How It
+         Works" per the Phase 2 homepage hierarchy (privacy comes right
+         after the tool catalogue, before the deeper how-it-works
+         explanation and the FAQ). -->
+    <section class="privacy-diagram-section" aria-labelledby="privacyDiagramHeading">
+      <div class="privacy-diagram-inner">
+        <h2 id="privacyDiagramHeading">Your files never leave your device.</h2>
+        <p class="privacy-diagram-sub">Every tool on this site processes files directly in your browser, so your documents don't need to be uploaded to a remote server.</p>
+        <div class="privacy-diagram-flow">
+          <div class="privacy-diagram-step">
+            <span class="icon icon-file privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your File</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-browser privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your Browser</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-cpu privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Local Processing</span>
+          </div>
+          <span class="privacy-diagram-connector" aria-hidden="true"></span>
+          <div class="privacy-diagram-step">
+            <span class="icon icon-download privacy-diagram-icon" aria-hidden="true"></span>
+            <span class="privacy-diagram-label">Your Result</span>
+          </div>
+        </div>
+        <div class="privacy-diagram-no-server">
+          <span class="icon icon-cloud-off" aria-hidden="true"></span>
+          No unnecessary server upload
+        </div>
+      </div>
+    </section>
 
     <!-- The real "How It Works" destination — these three sections are
          the site's actual how-it-works explanation (local-first
@@ -152,40 +219,8 @@
       </section>
     </section>
 
-    <section class="privacy-diagram-section" aria-labelledby="privacyDiagramHeading">
-      <div class="privacy-diagram-inner">
-        <h2 id="privacyDiagramHeading">Your files never leave your device.</h2>
-        <p class="privacy-diagram-sub">Every tool on this site processes files directly in your browser, so your documents don't need to be uploaded to a remote server.</p>
-        <div class="privacy-diagram-flow">
-          <div class="privacy-diagram-step">
-            <span class="icon icon-file privacy-diagram-icon" aria-hidden="true"></span>
-            <span class="privacy-diagram-label">Your File</span>
-          </div>
-          <span class="privacy-diagram-connector" aria-hidden="true"></span>
-          <div class="privacy-diagram-step">
-            <span class="icon icon-browser privacy-diagram-icon" aria-hidden="true"></span>
-            <span class="privacy-diagram-label">Your Browser</span>
-          </div>
-          <span class="privacy-diagram-connector" aria-hidden="true"></span>
-          <div class="privacy-diagram-step">
-            <span class="icon icon-cpu privacy-diagram-icon" aria-hidden="true"></span>
-            <span class="privacy-diagram-label">Local Processing</span>
-          </div>
-          <span class="privacy-diagram-connector" aria-hidden="true"></span>
-          <div class="privacy-diagram-step">
-            <span class="icon icon-download privacy-diagram-icon" aria-hidden="true"></span>
-            <span class="privacy-diagram-label">Your Result</span>
-          </div>
-        </div>
-        <div class="privacy-diagram-no-server">
-          <span class="icon icon-cloud-off" aria-hidden="true"></span>
-          No unnecessary server upload
-        </div>
-      </div>
-    </section>
-
     <div class="modal-backdrop hidden" id="modalBackdrop">
-      <div class="modal-box">
+      <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-header">
           <h2 id="modalTitle">Tool options</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
@@ -233,6 +268,7 @@
         </div>
       </div>
     </section>
+    </main>
 
     <!--FOOTER-->
 
