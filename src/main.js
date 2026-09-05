@@ -248,16 +248,14 @@ function allToolKeysInterleaved() {
 // categories (image, PDF) plus one cross-category utility staple.
 const HOMEPAGE_POPULAR_TOOLS = ['resize', 'compress', 'pdfmerge', 'pdftoword', 'qrcode', 'pdfcompress'];
 
-function renderPopularTools() {
-  const gridEl = document.querySelector('#popularToolsGrid');
-  if (!gridEl) return; // only present on the homepage
-  gridEl.innerHTML = HOMEPAGE_POPULAR_TOOLS.map((key) => toolCardHtml(key, false)).join('');
-  gridEl.querySelectorAll('.tool-card[data-tool]').forEach((card) => {
-    card.addEventListener('click', (e) => {
-      e.preventDefault();
-      handleToolCardClick(card.dataset.tool, card);
-    });
-  });
+// Resolves a .category-bar chip's data-filter value to the tool keys it
+// should show in #toolGrid. "popular" is a special case — it isn't a
+// real category in categoryTools, it's the same curated
+// HOMEPAGE_POPULAR_TOOLS list used to back the chip.
+function getFilterKeys(cat) {
+  if (cat === 'all') return allToolKeysInterleaved();
+  if (cat === 'popular') return HOMEPAGE_POPULAR_TOOLS;
+  return categoryTools[cat] || [];
 }
 
 // ================= RECENTLY USED TOOLS =================
@@ -5595,7 +5593,6 @@ export function initToolPage(pageCategory) {
   wireNavDropdowns();
   renderRecentTools();
   wireRecentToolsClear();
-  renderPopularTools();
   renderHomepageAdSlot();
   wireRelatedToolTracking();
   wireSearch('mobileSearchInput', 'mobileSearchResults');
@@ -5606,14 +5603,20 @@ export function initToolPage(pageCategory) {
   const grid = document.querySelector('#toolGrid');
   // The one category-switcher component (see .category-bar in
   // style.css) — a single horizontal chip row right below the search
-  // bar, above the tool grid, at every viewport width.
+  // bar, above the tool grid, at every viewport width. "Popular Tools"
+  // lives here too now (between "All Tools" and "PDF"), backed by
+  // getFilterKeys()'s "popular" case rather than a real category.
   const sidebarLinks = document.querySelectorAll('.category-bar-link[data-filter]');
 
+  // The Popular Tools chip has no dedicated page/route of its own, so
+  // from any other page it's a real link back to "/?filter=popular".
+  // On the homepage itself, treat that the same as clicking the chip:
+  // apply the filter and mark it active on load.
+  const filterParam = new URLSearchParams(window.location.search).get('filter');
+  const initialFilter = (pageCategory === 'all' && filterParam === 'popular') ? 'popular' : pageCategory;
+
   if (grid) {
-    const keys = pageCategory === 'all'
-      ? allToolKeysInterleaved()
-      : categoryTools[pageCategory] || [];
-    renderToolGrid(grid, keys);
+    renderToolGrid(grid, getFilterKeys(initialFilter));
   }
 
   wireScrollReveal();
@@ -5622,7 +5625,7 @@ export function initToolPage(pageCategory) {
   // got here — a fresh page load on /pdf marks "PDF" active just as
   // much as an in-place filter click on the homepage does.
   sidebarLinks.forEach((link) => {
-    const isCurrent = link.dataset.filter === pageCategory;
+    const isCurrent = link.dataset.filter === initialFilter;
     link.classList.toggle('active', isCurrent);
     if (isCurrent) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -5643,8 +5646,7 @@ export function initToolPage(pageCategory) {
           if (active) t.setAttribute('aria-current', 'page');
           else t.removeAttribute('aria-current');
         });
-        const keys = cat === 'all' ? allToolKeysInterleaved() : categoryTools[cat] || [];
-        renderToolGrid(grid, keys);
+        renderToolGrid(grid, getFilterKeys(cat));
         // A sidebar click can originate well down the page (a tall
         // Utilities-style tool grid) — scroll back to the top of the
         // grid so the just-filtered results are actually in view.

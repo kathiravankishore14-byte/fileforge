@@ -57,28 +57,25 @@
       </div>
     </section>
 
-    <!-- Six curated popular tools — a manually maintained editorial
-         pick (HOMEPAGE_POPULAR_TOOLS in main.js), matching the same
-         tools already curated in the footer's "Popular Tools" column
-         and each category dropdown's "Popular" group. Not based on
-         usage analytics or click counts. -->
-    <section class="popular-tools-section" aria-labelledby="popularToolsHeading">
-      <div class="popular-tools-inner">
-        <h2 id="popularToolsHeading">Popular Tools</h2>
-        <div class="tool-grid popular-tools-grid" id="popularToolsGrid"></div>
-      </div>
-    </section>
-
     <!-- Phase 3: reusable ad slot, filled in by src/adSlots.js. Stays
          hidden and reserves no space unless ADS_ENABLED is turned on in
          src/config.js (it isn't — no provider is approved yet). Placed
-         after the first major tool group (Popular Tools), never inside
-         a dropzone/workspace, and never adjacent to a button. -->
+         right after the top search/recent-tools group and before the
+         category bar, never inside a dropzone/workspace, and never
+         adjacent to a button. -->
     <div id="homeAdSlotContainer"></div>
 
     <div class="category-bar-wrap">
       <nav class="category-bar" aria-label="Tool categories">
         <a href="/" class="category-bar-link active" data-filter="all" aria-current="page"><span class="icon icon-grid" aria-hidden="true"></span> All Tools</a>
+        <!-- Six curated popular tools — a manually maintained editorial
+             pick (HOMEPAGE_POPULAR_TOOLS in main.js), matching the same
+             tools already curated in the footer's "Popular Tools" column
+             and each category dropdown's "Popular" group. Not based on
+             usage analytics or click counts. On the homepage this filters
+             #toolGrid in place; from any other page it links back here
+             with ?filter=popular, which main.js reads on load. -->
+        <a href="/?filter=popular" class="category-bar-link" data-filter="popular"><span class="icon icon-zap" aria-hidden="true"></span> Popular Tools</a>
         <a href="/pdf" class="category-bar-link" data-filter="pdf"><img src="/icons/icon-pdf.svg" class="nav-icon" width="20" height="20" alt="" /> PDF</a>
         <a href="/image" class="category-bar-link" data-filter="image"><img src="/icons/icon-image.svg" class="nav-icon" width="20" height="20" alt="" /> Image</a>
         <a href="/excel" class="category-bar-link" data-filter="excel"><img src="/icons/icon-excel.svg" class="nav-icon" width="20" height="20" alt="" /> Excel</a>

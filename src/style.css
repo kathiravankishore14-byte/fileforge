@@ -500,7 +500,18 @@ a { color: inherit; }
    with only the browser's inconsistent default (or no visible outline
    at all). Components that already define their own strong focus
    treatment (search inputs' blue glow, category chips, the FAQ
-   question rows) simply layer this on top with no visible difference. */
+   question rows) simply layer this on top with no visible difference.
+   NOTE: this rule deliberately does NOT set border-radius. It used to
+   (matched to --radius-sm, to keep the outline's corners visually
+   aligned on already-rounded elements), but `border-radius` reshapes
+   the element itself, not just the outline — and because this selector
+   combines a type/attribute selector with a pseudo-class, it is MORE
+   specific than a plain single-class rule like `.site-search-input`.
+   That meant the pill-shaped search bar (border-radius: 999px) was
+   silently flattened to 8px corners the moment it was focused — a real,
+   user-reported bug. Outline + outline-offset alone is a fully valid,
+   visible WCAG focus indicator on any shape; it doesn't need to reshape
+   the element to do its job. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -513,7 +524,6 @@ summary:focus-visible,
 [role="slider"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: var(--radius-sm);
 }
 
 /* ---------- Header ---------- */
@@ -1167,19 +1177,19 @@ summary:focus-visible,
   .category-bar { padding: 20px 0 18px; }
 }
 
-/* ---------- Popular / Recently used / All Tools section headings ----------
-   Both the homepage's curated "Popular Tools" shelf and its conditional
-   "Continue where you left off" shelf reuse .tool-grid (see below) for
-   their cards — this block only styles the wrapper and the heading row
-   above each grid, not the cards themselves. */
-.popular-tools-section,
+/* ---------- Recently used / All Tools section headings ----------
+   The homepage's conditional "Continue where you left off" shelf reuses
+   .tool-grid (see below) for its cards — this block only styles the
+   wrapper and the heading row above the grid, not the cards themselves.
+   (Popular Tools used to be its own shelf here too; it now lives as a
+   chip in .category-bar instead — see index.html and initToolPage() in
+   main.js — so it no longer needs a section of its own.) */
 .recent-tools-section {
   max-width: 1400px;
   margin: 0 auto 48px;
   padding: 0 32px;
 }
 
-.popular-tools-inner h2,
 .recent-tools-head h2,
 .all-tools-heading {
   font-size: 1.65rem;
@@ -1218,7 +1228,6 @@ summary:focus-visible,
 .recent-tools-clear:hover { color: var(--accent); }
 
 @media (max-width: 640px) {
-  .popular-tools-section,
   .recent-tools-section,
   .all-tools-heading {
     padding: 0 20px;
@@ -2022,6 +2031,16 @@ summary:focus-visible,
   cursor: pointer;
   transition: background var(--motion-fast), color var(--motion-fast);
 }
+
+/* Without this, the button showed at rest and on hover, not just while
+   actually typing: `display: flex` above is an AUTHOR rule, and an
+   author rule beats the browser's own built-in `[hidden] { display:
+   none }` regardless of specificity (author styles always outrank the
+   user-agent stylesheet) — so JS toggling the `hidden` attribute based
+   on whether the field is empty was silently having no visual effect at
+   all. User-reported bug; same underlying pattern as the ad-slot
+   [hidden] fix elsewhere in this file. */
+.site-search-clear[hidden] { display: none; }
 
 .site-search-clear:hover { background: var(--gray-light); color: var(--text); }
 
