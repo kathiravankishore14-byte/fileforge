@@ -387,7 +387,7 @@ function buildPage(key) {
     <div class="modal-backdrop hidden" id="modalBackdrop">
       <div class="modal-box">
         <div class="modal-header">
-          <h2 id="modalTitle"></h2>
+          <h2 id="modalTitle">${esc(meta.label)}</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
         </div>
         <div class="modal-body" id="modalBody"></div>

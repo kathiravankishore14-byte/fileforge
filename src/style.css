@@ -438,6 +438,33 @@ a { color: inherit; }
    same tertiary tone rather than each browser's own default gray. */
 ::placeholder { color: var(--text-tertiary); opacity: 1; }
 
+/* Visually hidden but still announced by screen readers — for headings
+   that exist purely to give a section its accessible name (e.g. the
+   "How It Works" group below), where a visible label isn't needed
+   because the content already reads clearly on its own. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Any section a link jumps to directly (the footer's "How It Works"
+   and "FAQ" links, both `/#id` anchors) needs room reserved above it
+   equal to the sticky header's real height, or the header — always on
+   top, always covering the same slice of the viewport — hides the
+   heading the visitor just jumped to. --header-height is kept live by
+   wireHeaderHeightVar() in main.js. */
+#how-it-works,
+#faq {
+  scroll-margin-top: calc(var(--header-height, 84px) + 16px);
+}
+
 /* ---------- Header ---------- */
 .site-header {
   background: var(--header-bg);
@@ -512,6 +539,21 @@ a { color: inherit; }
 }
 
 .logo-tagline span { color: var(--accent); margin: 0 1px; }
+
+/* white-space: nowrap above means this phrase never shrinks below its
+   full width — on a real phone screen (≤600px) that refusal, combined
+   with the header-actions cluster (sound/theme toggle + hamburger)
+   needing its own fixed ~136px alongside it, added up to wider than
+   the header's flex row could hold. The header itself has no scroll
+   container, so that overflow wasn't contained locally — it propagated
+   all the way up to the document, producing the site-wide horizontal
+   scrollbar at 320-390px widths. The tagline is decorative, so the
+   simplest correct fix is to drop it at the one width band where it
+   didn't fit, rather than letting it force the whole header wider than
+   the viewport. */
+@media (max-width: 600px) {
+  .logo-tagline { display: none; }
+}
 
 .main-nav {
   display: flex;
@@ -649,8 +691,16 @@ a { color: inherit; }
   top: var(--header-height, 84px);
   left: 0;
   right: 0;
-  width: 100vw;
-  max-width: none;
+  /* No explicit width here on purpose: left:0 + right:0 already stretch
+     a fixed-position box edge-to-edge against the real visual viewport.
+     `width: 100vw` measures the OUTER viewport (scrollbar included) —
+     wider than the visual viewport whenever a vertical scrollbar is
+     present — and since this panel stays in the layout at all times
+     (hidden via opacity/visibility, not display:none, so open/close can
+     animate), that extra width was a permanent, always-present cause of
+     the page's horizontal scrollbar, not just one that appeared while a
+     menu was open. */
+  max-width: 100%;
   min-width: 0;
   border-radius: 0;
   border-left: none;
@@ -753,6 +803,24 @@ a { color: inherit; }
   .site-header { padding: 14px 0; }
   .header-inner { padding: 0 20px; }
   .logo { font-size: 1.55rem; }
+  /* The hover-sound toggle is a desktop-only, hover-only affordance
+     (see the comment above #soundToggleBtn in partials/_header.html) —
+     nothing it controls ever plays once hover stops existing, which is
+     also exactly the point the site already treats as "mobile" (the
+     hamburger takes over the nav at this same width). Dropping it here
+     frees the header-actions cluster's fixed-width row for what the
+     visitor can actually use (theme toggle + menu), which is also what
+     narrow phone screens need to avoid overflowing their own header. */
+  #soundToggleBtn { display: none; }
+}
+
+@media (max-width: 600px) {
+  /* The wordmark image is a fixed-aspect-ratio <img> with explicit
+     width/height attributes, so it never shrinks on its own — capping
+     max-width (with height:auto keeping the ratio) is what lets the
+     header's fixed-size icon mark, wordmark, theme toggle, and
+     hamburger all actually fit within a real phone's viewport. */
+  .logo-wordmark-img { max-width: 120px; height: auto; }
 }
 
 /* ---------- Hero ---------- */
@@ -1055,7 +1123,7 @@ a { color: inherit; }
   margin: 0 auto 60px;
   padding: 0 32px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -1247,13 +1315,20 @@ a { color: inherit; }
 }
 
 /* Fewer columns on narrower screens — 3-up down to a wide tablet, then
-   2-up, then a single full-width row card per tool on phones. */
+   2-up, then a single full-width row card per tool on phones.
+   minmax(0, 1fr), not bare 1fr — a bare `1fr` track's minimum size still
+   defaults to its item's content-based auto minimum, so on a page whose
+   related-tools card had a slightly wider title/description, the track
+   (and the grid, and the page) was forced wider than the viewport
+   instead of actually shrinking to it. minmax(0, ...) removes that
+   floor with no visible difference in the normal case where the card
+   already fits. */
 @media (max-width: 1080px) {
-  .tool-grid { grid-template-columns: repeat(2, 1fr); }
+  .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
-  .tool-grid { grid-template-columns: 1fr; gap: 16px; padding: 0 20px; }
+  .tool-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 20px; }
 }
 
 @media (max-width: 600px) {
@@ -1646,12 +1721,66 @@ a { color: inherit; }
    panel around it) wider than the viewport. */
 .search-result-item span { min-width: 0; overflow-wrap: break-word; }
 
+/* The trailing category tag (e.g. "PDF") — compact, muted, never
+   wrapping, and pushed to the row's far edge so it reads as metadata
+   rather than part of the tool's name. */
+.search-result-cat {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .search-no-results {
   padding: 16px;
   text-align: center;
   color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
+
+.search-no-results-title {
+  margin: 0 0 4px;
+  color: var(--text);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: break-word;
+}
+
+.search-no-results-hint {
+  margin: 0;
+  font-size: var(--font-size-xs, 0.75rem);
+}
+
+/* "Clear search" — a small ghost button that only appears once there's
+   something typed to clear (toggled via the `hidden` attribute in JS).
+   Sits inside the same relatively-positioned .site-search-wrap /
+   .mobile-search-wrap as the input, at the right edge on mobile (no
+   .site-search-btn there to share space with) and just to the left of
+   the round blue search button everywhere the input has one. */
+.site-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--motion-fast), color var(--motion-fast);
+}
+
+.site-search-clear:hover { background: var(--gray-light); color: var(--text); }
+
+.site-search-wrap .site-search-clear { right: 52px; }
 
 /* ---------- Tool card extras ---------- */
 .tool-card.coming-soon {
@@ -2154,7 +2283,7 @@ body.tool-result-active #tpDropZone {
   letter-spacing: var(--tracking-tight);
 }
 
-.tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(2, 1fr); }
+.tp-result-continue-grid { margin: 0; padding: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 @media (max-width: 980px) {
   /* Below the two-column breakpoint the workspace stacks to a single
@@ -2179,7 +2308,7 @@ body.tool-result-active #tpDropZone {
    tapering (2x-size cards only fit 1-up below ~900px) rather than
    forcing multiple columns down to phone widths. */
 @media (max-width: 900px) {
-  .tp-result-continue-grid { grid-template-columns: 1fr; gap: 12px; }
+  .tp-result-continue-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
 
 @media (max-width: 480px) {
@@ -2969,6 +3098,13 @@ body.tool-result-active #tpDropZone {
   line-height: 1.1;
   margin: 0 0 8px;
   color: var(--text);
+  /* "About OnlineToolsWeb" — at this size, "OnlineToolsWeb" alone (one
+     unbreakable word) is wider than a real phone's content column, and
+     with no break opportunity it doesn't wrap like normal text: it
+     spills past its container and forces the whole page wider than the
+     viewport instead. overflow-wrap only ever engages for a word that
+     genuinely can't otherwise fit, so this is a no-op everywhere else. */
+  overflow-wrap: break-word;
 }
 
 .legal-updated {
@@ -3274,7 +3410,10 @@ body.tool-result-active #tpDropZone {
 
 .footer-col { flex: 1 1 140px; }
 
-.footer-col h4 {
+/* h3, not h4 — the footer used to skip straight from a page's last h2
+   to h4 (no h3 in between), an illogical jump for any page whose last
+   heading before the footer landmark was an h1 or h2. */
+.footer-col h3 {
   color: var(--footer-heading);
   font-family: var(--font-sans);
   font-size: 0.9375rem;
@@ -3484,7 +3623,7 @@ body.tool-result-active #tpDropZone {
 }
 
 .tp-related { max-width: none; }
-.tp-related-grid { max-width: 980px; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
+.tp-related-grid { max-width: 980px; margin: 0 auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* ---------- Popular-in-category showcase (tool landing pages) ----------
    Three tools from the same category as the current one, each paired
@@ -3812,7 +3951,7 @@ body.tool-result-active #tpDropZone {
 .tp-how-list li::marker { color: var(--red); font-weight: 700; }
 
 @media (max-width: 760px) {
-  .tp-related-grid { grid-template-columns: 1fr; }
+  .tp-related-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 700px) {

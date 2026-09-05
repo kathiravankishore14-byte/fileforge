@@ -30,6 +30,7 @@
 
       <div class="home-search-wrap site-search-wrap">
         <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search 63+ tools..." aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <button type="button" class="site-search-clear" data-search-clear="homeSearchInput" aria-label="Clear search" hidden>&#10005;</button>
         <button type="button" class="site-search-btn" data-search-btn="homeSearchInput" aria-label="Search"><span class="icon icon-search" aria-hidden="true"></span></button>
         <div id="homeSearchResults" class="search-results-list" role="listbox"></div>
       </div>
@@ -49,7 +50,15 @@
 
     <div class="tool-grid" id="toolGrid"></div>
 
-    <section class="editorial-section">
+    <!-- The real "How It Works" destination — these three sections are
+         the site's actual how-it-works explanation (local-first
+         processing, instant/no-install, one platform for every format).
+         A stable id + heading here is what the footer's "How It Works"
+         link now points at directly, instead of the homepage root. -->
+    <section id="how-it-works" aria-labelledby="howItWorksHeading">
+      <h2 id="howItWorksHeading" class="sr-only">How It Works</h2>
+
+      <section class="editorial-section">
       <div class="editorial-media">
         <svg viewBox="0 0 480 360" role="img" aria-labelledby="editorialLocalTitle">
           <title id="editorialLocalTitle">A browser window holding a shield, with file icons kept inside it</title>
@@ -140,6 +149,7 @@
           <li><span class="icon icon-check" aria-hidden="true"></span> Free to use, with no per-tool signup</li>
         </ul>
       </div>
+      </section>
     </section>
 
     <section class="privacy-diagram-section" aria-labelledby="privacyDiagramHeading">
@@ -177,7 +187,7 @@
     <div class="modal-backdrop hidden" id="modalBackdrop">
       <div class="modal-box">
         <div class="modal-header">
-          <h2 id="modalTitle"></h2>
+          <h2 id="modalTitle">Tool options</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
         </div>
         <div class="modal-body" id="modalBody"></div>

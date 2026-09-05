@@ -210,6 +210,28 @@ const categoryTools = {
   utilities: ['qrcode', 'passwordgen', 'jsonformatter', 'base64', 'loremipsum', 'unitconverter', 'gpacalculator', 'citationgen', 'randomgen', 'zipfiles', 'unzipfiles', 'invoicegen', 'resumebuilder', 'htmltopdf', 'htmltoexcel', 'aisummarizer', 'texttoppt', 'textopdf', 'wordcounter', 'caseconverter'],
 };
 
+// "All Tools" needs to actually look like all tools from the very first
+// screen — not just be technically correct once you click "Show all
+// tools". Object.keys(toolMeta) happens to list every "image" tool
+// before the first "word" one, and the grid only shows its first 18
+// cells by default (see TOOL_GRID_VISIBLE_LIMIT) — so a flat key order
+// put 17 image cards on screen and nothing else, even though the "All
+// Tools" tab was correctly marked active. Round-robining one tool per
+// category at a time guarantees that first visible page spans every
+// category, matching what "All Tools" actually promises.
+function allToolKeysInterleaved() {
+  const queues = Object.values(categoryTools).map((keys) => keys.slice());
+  const result = [];
+  let tookAny = true;
+  while (tookAny) {
+    tookAny = false;
+    for (const q of queues) {
+      if (q.length) { result.push(q.shift()); tookAny = true; }
+    }
+  }
+  return result;
+}
+
 // ================= ICON BADGE RENDERING =================
 // Small curved-arrow stamp added to every two-icon overlap badge (see
 // .icon-overlap-arrow in style.css for positioning) — positioned lower
@@ -4175,10 +4197,97 @@ function renderMultiFileTool(initialFiles) {
 // ARE each category's true canonical URL, not just a display nicety.
 const pageUrlMap = { image: '/image', word: '/word', excel: '/excel', pdf: '/pdf', ppt: '/ppt', text: '/other-tools', utilities: '/other-tools' };
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// A tool's own extension list (".pdf", "image/*", ".docx", …) doubles as
+// a searchable "format" — normalized down to bare tokens ("pdf", "image",
+// "docx") so typing a file extension surfaces the tools that handle it.
+function searchableFormats(accept) {
+  if (!accept) return [];
+  return accept.split(',')
+    .map((s) => s.trim().toLowerCase().replace(/^\./, '').replace(/\/\*$/, '').replace(/\*$/, ''))
+    .filter(Boolean);
+}
+
+// A short list of common alternate phrasings for tools whose everyday
+// name doesn't literally appear in their label/description — kept small
+// and focused rather than a full synonym dictionary, so search stays
+// predictable instead of over-matching.
+const SEARCH_ALIASES = {
+  compress: ['shrink', 'reduce size', 'make smaller'],
+  pdfcompress: ['shrink pdf', 'reduce pdf size'],
+  convertformat: ['jpeg', 'png', 'webp'],
+  heictojpg: ['iphone photo'],
+  bgremove: ['remove bg', 'transparent background', 'cut out'],
+  qrcode: ['qr generator'],
+  passwordgen: ['random password'],
+  gpacalculator: ['cgpa', 'grade calculator'],
+  unitconverter: ['metric converter'],
+  caseconverter: ['uppercase', 'lowercase', 'title case'],
+  base64: ['base 64'],
+};
+
 function buildSearchIndex() {
   return Object.entries(toolMeta)
     .filter(([, meta]) => !meta.comingSoon)
-    .map(([key, meta]) => ({ key, ...meta }));
+    .map(([key, meta]) => ({
+      key,
+      ...meta,
+      categoryLabel: CATEGORY_LABELS[meta.category] || meta.category,
+      formats: searchableFormats(meta.accept),
+      aliases: SEARCH_ALIASES[key] || [],
+    }));
+}
+
+// Ranks one tool against a already-lowercased, trimmed query.
+// 0 = exact (the whole title/key/an alias matches the query exactly)
+// 1 = prefix (the title, or an alias, starts with the query)
+// 2 = partial (the query appears anywhere in title, description,
+//     category, format, or an alias)
+// -1 = no match at all
+function rankSearchMatch(t, q) {
+  const label = t.label.toLowerCase();
+  const aliases = t.aliases.map((a) => a.toLowerCase());
+  // Deliberately not matched against t.key here: an internal tool key
+  // is unique to exactly one tool and can coincidentally equal a
+  // generic search term (the image-to-PDF tool's key is literally
+  // "pdf"), which would otherwise register as a false "exact,
+  // unambiguous" match and make a broad query like "pdf" silently jump
+  // to one tool — the very bug this search was rebuilt to avoid.
+  if (label === q || aliases.includes(q)) return 0;
+  if (label.startsWith(q) || aliases.some((a) => a.startsWith(q))) return 1;
+  const haystack = [label, t.desc.toLowerCase(), t.categoryLabel.toLowerCase(), t.category, ...t.formats, ...aliases].join('   ');
+  if (haystack.includes(q)) return 2;
+  return -1;
+}
+
+// Scores + sorts the whole index against a query, and separately reports
+// whether there's a single, unambiguous top-ranked match — the only case
+// in which Enter (without an explicit arrow-key selection) should be
+// allowed to navigate on its own. A broad query like "pdf" matches many
+// tools at the same top tier, so it's deliberately NOT a clear match:
+// the visitor gets a results list to choose from instead of a guess.
+function searchTools(index, qRaw) {
+  const q = qRaw.trim().toLowerCase();
+  if (!q) return { matches: [], clearMatch: null };
+  const scored = [];
+  for (const t of index) {
+    const tier = rankSearchMatch(t, q);
+    if (tier >= 0) scored.push({ t, tier });
+  }
+  scored.sort((a, b) => a.tier - b.tier || a.t.label.localeCompare(b.t.label));
+  const matches = scored.map((s) => s.t);
+  let clearMatch = null;
+  if (scored.length) {
+    const topTier = scored[0].tier;
+    const topMatches = scored.filter((s) => s.tier === topTier);
+    if (topMatches.length === 1) clearMatch = topMatches[0].t;
+  }
+  return { matches, clearMatch };
 }
 
 function wireSearch(inputId, resultsId) {
@@ -4186,12 +4295,25 @@ function wireSearch(inputId, resultsId) {
   const resultsEl = document.querySelector(`#${resultsId}`);
   if (!input || !resultsEl) return;
   const index = buildSearchIndex();
+  const clearBtn = document.querySelector(`[data-search-clear="${inputId}"]`);
   let debounceTimer;
   let activeIndex = -1;
+  let lastClearMatch = null;
+
+  const setExpanded = (expanded) => input.setAttribute('aria-expanded', String(expanded));
+  const updateClearBtn = () => { if (clearBtn) clearBtn.hidden = input.value.length === 0; };
+
+  const closeResults = () => {
+    resultsEl.classList.remove('visible');
+    setExpanded(false);
+    activeIndex = -1;
+    input.removeAttribute('aria-activedescendant');
+  };
 
   const activateItem = (key, cat) => {
-    resultsEl.classList.remove('visible');
+    closeResults();
     input.value = '';
+    updateClearBtn();
     if (window.location.pathname.endsWith(pageUrlMap[cat])) {
       openToolModal(key);
     } else {
@@ -4201,75 +4323,117 @@ function wireSearch(inputId, resultsId) {
 
   const setActive = (i) => {
     const items = resultsEl.querySelectorAll('.search-result-item');
-    items.forEach((el) => el.classList.remove('active'));
+    items.forEach((el) => { el.classList.remove('active'); el.setAttribute('aria-selected', 'false'); });
     if (i < 0 || i >= items.length) { activeIndex = -1; input.removeAttribute('aria-activedescendant'); return; }
     activeIndex = i;
     items[i].classList.add('active');
+    items[i].setAttribute('aria-selected', 'true');
     items[i].scrollIntoView({ block: 'nearest' });
     input.setAttribute('aria-activedescendant', items[i].id);
   };
 
-  input.addEventListener('input', () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      const q = input.value.trim().toLowerCase();
-      activeIndex = -1;
-      if (!q) { resultsEl.classList.remove('visible'); resultsEl.innerHTML = ''; return; }
+  const renderResults = () => {
+    const rawValue = input.value;
+    const { matches, clearMatch } = searchTools(index, rawValue);
+    lastClearMatch = clearMatch;
+    activeIndex = -1;
+    input.removeAttribute('aria-activedescendant');
 
-      const matches = index.filter((t) => {
-        const categoryLabel = (CATEGORY_LABELS[t.category] || t.category).toLowerCase();
-        return t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || categoryLabel.includes(q);
-      });
-      if (!matches.length) {
-        resultsEl.innerHTML = `<div class="search-no-results">No tools match "${input.value}"</div>`;
-      } else {
-        resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
-          <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" data-key="${t.key}" data-cat="${t.category}">
-            <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" />
-            <span>${t.label}</span>
-          </div>
-        `).join('');
-      }
-      resultsEl.classList.add('visible');
+    if (!rawValue.trim()) {
+      closeResults();
+      resultsEl.innerHTML = '';
+      return;
+    }
 
+    if (!matches.length) {
+      resultsEl.innerHTML = `
+        <div class="search-no-results">
+          <p class="search-no-results-title">No tools found for "${escapeHtml(rawValue.trim())}"</p>
+          <p class="search-no-results-hint">Try a different word, or browse tools by category.</p>
+        </div>`;
+    } else {
+      resultsEl.innerHTML = matches.slice(0, 8).map((t, i) => `
+        <div class="search-result-item" id="${resultsId}-opt-${i}" role="option" aria-selected="false" data-key="${t.key}" data-cat="${t.category}">
+          <img src="${TOOL_ICON_OVERRIDES[t.key] || CATEGORY_ICONS[t.category] || ''}" alt="" />
+          <span>${escapeHtml(t.label)}</span>
+          <span class="search-result-cat">${escapeHtml(t.categoryLabel)}</span>
+        </div>
+      `).join('');
       resultsEl.querySelectorAll('.search-result-item').forEach((item) => {
         item.addEventListener('click', () => activateItem(item.dataset.key, item.dataset.cat));
       });
-    }, 180);
+    }
+    resultsEl.classList.add('visible');
+    setExpanded(true);
+  };
+
+  input.addEventListener('input', () => {
+    updateClearBtn();
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(renderResults, 180);
   });
 
-  // Arrow-key navigation through the results, Enter to open the
-  // highlighted (or first) match, Escape to dismiss the panel.
+  // Arrow-key navigation through the results, Enter to open a match,
+  // Escape to dismiss the panel (without clearing what was typed).
   input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (resultsEl.classList.contains('visible')) { e.preventDefault(); closeResults(); }
+      return;
+    }
     const items = resultsEl.querySelectorAll('.search-result-item');
     if (!items.length || !resultsEl.classList.contains('visible')) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIndex + 1 >= items.length ? 0 : activeIndex + 1); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIndex <= 0 ? items.length - 1 : activeIndex - 1); }
     else if (e.key === 'Enter') {
-      const target = items[activeIndex >= 0 ? activeIndex : 0];
-      if (target) { e.preventDefault(); activateItem(target.dataset.key, target.dataset.cat); }
-    } else if (e.key === 'Escape') {
-      resultsEl.classList.remove('visible');
-      setActive(-1);
+      e.preventDefault();
+      if (activeIndex >= 0) {
+        // An explicit arrow-key selection always wins, however many
+        // results are showing.
+        const target = items[activeIndex];
+        if (target) activateItem(target.dataset.key, target.dataset.cat);
+      } else if (lastClearMatch) {
+        // No explicit selection, but exactly one tool clearly matches
+        // best (e.g. "merge pdf") — safe to open it directly.
+        activateItem(lastClearMatch.key, lastClearMatch.category);
+      }
+      // Otherwise the query is ambiguous (e.g. "pdf" matches dozens of
+      // tools): do nothing rather than guess. The results list stays
+      // open and the query stays put, so the visitor can arrow down or
+      // click the tool they actually meant.
     }
   });
 
   document.addEventListener('click', (e) => {
-    if (!input.contains(e.target) && !resultsEl.contains(e.target)) {
-      resultsEl.classList.remove('visible');
+    if (!input.contains(e.target) && !resultsEl.contains(e.target) && !(clearBtn && clearBtn.contains(e.target))) {
+      closeResults();
     }
   });
 
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      updateClearBtn();
+      resultsEl.innerHTML = '';
+      closeResults();
+      input.focus();
+    });
+  }
+
   // Blue search button next to the input: focus the field, and if a
-  // result set is already showing, open the highlighted (or first) match
-  // just like pressing Enter would.
+  // result set is already showing, open an explicit arrow-key selection
+  // or an unambiguous top match — same rule Enter follows above.
   const searchBtn = document.querySelector(`[data-search-btn="${inputId}"]`);
   if (searchBtn) {
     searchBtn.addEventListener('click', () => {
       const items = resultsEl.querySelectorAll('.search-result-item');
       if (items.length && resultsEl.classList.contains('visible')) {
-        const target = items[activeIndex >= 0 ? activeIndex : 0];
-        if (target) { activateItem(target.dataset.key, target.dataset.cat); return; }
+        if (activeIndex >= 0) {
+          const target = items[activeIndex];
+          if (target) { activateItem(target.dataset.key, target.dataset.cat); return; }
+        } else if (lastClearMatch) {
+          activateItem(lastClearMatch.key, lastClearMatch.category);
+          return;
+        }
       }
       input.focus();
     });
@@ -4879,13 +5043,22 @@ function initParticleField() {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 
-  let vw = window.innerWidth, vh = window.innerHeight;
+  // clientWidth/clientHeight (the visual viewport, scrollbar excluded)
+  // rather than window.innerWidth/innerHeight (the outer viewport,
+  // scrollbar INCLUDED) — the canvas is position:fixed with inset:0, so
+  // a size measured from the scrollbar-inclusive metric was up to a
+  // scrollbar's width (~15-17px) wider than the visual viewport,
+  // pushing this always-present, full-page canvas past the right edge
+  // and forcing a horizontal scrollbar on every load.
+  let vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
   let dpr = Math.min(window.devicePixelRatio || 1, 2);
   function resize() {
-    vw = window.innerWidth; vh = window.innerHeight;
+    vw = document.documentElement.clientWidth; vh = document.documentElement.clientHeight;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = vw * dpr; canvas.height = vh * dpr;
-    canvas.style.width = vw + 'px'; canvas.style.height = vh + 'px';
+    // CSS (inset: 0 on .particle-field) drives the display size — an
+    // explicit pixel width here is exactly what caused the overflow.
+    canvas.style.width = '100%'; canvas.style.height = '100%';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
@@ -5124,7 +5297,7 @@ export function initToolPage(pageCategory) {
 
   if (grid) {
     const keys = pageCategory === 'all'
-      ? Object.keys(toolMeta)
+      ? allToolKeysInterleaved()
       : categoryTools[pageCategory] || [];
     renderToolGrid(grid, keys);
   }
@@ -5156,7 +5329,7 @@ export function initToolPage(pageCategory) {
           if (active) t.setAttribute('aria-current', 'page');
           else t.removeAttribute('aria-current');
         });
-        const keys = cat === 'all' ? Object.keys(toolMeta) : categoryTools[cat] || [];
+        const keys = cat === 'all' ? allToolKeysInterleaved() : categoryTools[cat] || [];
         renderToolGrid(grid, keys);
         // A sidebar click can originate well down the page (a tall
         // Utilities-style tool grid) — scroll back to the top of the

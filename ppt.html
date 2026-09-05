@@ -29,6 +29,7 @@
 
       <div class="home-search-wrap site-search-wrap category-search-wrap">
         <input type="text" id="homeSearchInput" class="site-search-input home-search-input" placeholder="Search PowerPoint tools..." aria-label="Search tools" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="homeSearchResults" />
+        <button type="button" class="site-search-clear" data-search-clear="homeSearchInput" aria-label="Clear search" hidden>&#10005;</button>
         <button type="button" class="site-search-btn" data-search-btn="homeSearchInput" aria-label="Search"><span class="icon icon-search" aria-hidden="true"></span></button>
         <div id="homeSearchResults" class="search-results-list" role="listbox"></div>
       </div>
@@ -51,7 +52,7 @@
     <div class="modal-backdrop hidden" id="modalBackdrop">
       <div class="modal-box">
         <div class="modal-header">
-          <h2 id="modalTitle"></h2>
+          <h2 id="modalTitle">Tool options</h2>
           <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
         </div>
         <div class="modal-body" id="modalBody"></div>
