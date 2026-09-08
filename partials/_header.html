@@ -24,6 +24,16 @@
 
 <header class="site-header">
   <div class="header-inner">
+    <!-- Mobile/tablet only (≤1180px, same breakpoint .main-nav already
+         hides at — see style.css). display:none on desktop, so it takes
+         no part in the desktop flex layout at all; .logo's own
+         margin-right:auto (below) is what then pulls it flush to the
+         header's left edge next to the logo, with .header-actions
+         pinned to the right, matching the approved mobile header
+         layout: [Hamburger] Logo ......... [theme/sound icons]. -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="mobileMenuPanel">
+      <span></span><span></span><span></span>
+    </button>
     <a href="/" class="logo">
       <img src="/icons/logo-mark.png" class="logo-mark-img" width="46" height="34" alt="" />
       <span class="logo-text-wrap">
@@ -34,7 +44,8 @@
     <!-- Static fallback shown before renderMainNav() (src/main.js) replaces
          this on load with the real hover dropdowns — kept as plain,
          icon-free links here since building the mega-menu content needs
-         the JS-only tool data. -->
+         the JS-only tool data. Desktop only (≤1180px hides this in favor
+         of the hamburger drawer). -->
     <nav class="main-nav">
       <a href="/" class="nav-link">All Tools</a>
       <a href="/pdf" class="nav-link">PDF</a>
@@ -55,9 +66,6 @@
         <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
         <span class="icon icon-moon theme-icon-dark" aria-hidden="true"></span>
       </button>
-      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenuPanel">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </div>
 </header>
@@ -77,7 +85,7 @@
           <span class="icon icon-sun theme-icon-light" aria-hidden="true"></span>
           <span class="icon icon-moon theme-icon-dark" aria-hidden="true"></span>
         </button>
-        <button class="modal-close" id="mobileMenuClose" aria-label="Close menu">✕</button>
+        <button class="modal-close" id="mobileMenuClose" aria-label="Close navigation">✕</button>
       </div>
     </div>
     <div class="mobile-search-wrap">
@@ -85,17 +93,32 @@
       <button type="button" class="site-search-clear" data-search-clear="mobileSearchInput" aria-label="Clear search" hidden>&#10005;</button>
       <div id="mobileSearchResults" class="search-results-list" role="listbox"></div>
     </div>
-    <p class="mobile-nav-label">Tools</p>
-    <nav class="mobile-nav-links">
-      <a href="/">All Tools</a>
-      <a href="/pdf">PDF</a>
-      <a href="/image">Image</a>
-      <a href="/other-tools">Utilities</a>
+
+    <!-- Nested "All Tools -> category -> tool" disclosure tree. Only
+         the "All Tools" toggle and its (initially empty) body are
+         static markup — everything inside mobileAccBody-all (the 6
+         category rows and every tool link under them) is filled in by
+         renderMobileNavAccordion() in main.js straight from
+         categoryTools/toolMeta, the exact same data every other nav on
+         the site (desktop mega-menu, homepage grid) already reads from,
+         so nothing here can ever point at a route that doesn't exist. -->
+    <nav class="mobile-accordion" id="mobileAccordion" aria-label="Tool categories">
+      <div class="mobile-acc-item mobile-acc-item-top">
+        <button type="button" class="mobile-acc-toggle mobile-acc-toggle-top" id="mobileAccAllToolsToggle" aria-expanded="true" aria-controls="mobileAccBody-all" data-acc-toggle="all">
+          <span class="icon icon-grid" aria-hidden="true"></span>
+          <span class="mobile-acc-label">All Tools</span>
+          <span class="mobile-acc-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="mobile-acc-body" id="mobileAccBody-all"></div>
+      </div>
     </nav>
-    <p class="mobile-nav-label">Company</p>
-    <nav class="mobile-nav-links mobile-nav-links-secondary">
-      <a href="/about">About</a>
-      <a href="/contact">Contact</a>
+
+    <nav class="mobile-nav-links mobile-nav-links-secondary" aria-label="Company">
+      <a href="/about"><span class="icon icon-info" aria-hidden="true"></span> About Us</a>
+      <a href="/?filter=popular"><span class="icon icon-zap" aria-hidden="true"></span> Popular Tools</a>
+      <a href="/contact"><span class="icon icon-mail" aria-hidden="true"></span> Contact Us</a>
+    </nav>
+    <nav class="mobile-nav-links mobile-nav-links-secondary mobile-nav-links-legal" aria-label="Legal">
       <a href="/privacy-policy">Privacy Policy</a>
       <a href="/terms-of-service">Terms of Service</a>
     </nav>

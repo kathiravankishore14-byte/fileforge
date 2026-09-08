@@ -4730,14 +4730,14 @@ function wireHamburger() {
     menuBackdrop.classList.remove('hidden');
     document.body.classList.add('modal-open');
     btn.setAttribute('aria-expanded', 'true');
-    btn.setAttribute('aria-label', 'Close menu');
+    btn.setAttribute('aria-label', 'Close navigation');
     (menuClose || menuPanel)?.focus();
   };
   const closeMenu = () => {
     menuBackdrop.classList.add('hidden');
     document.body.classList.remove('modal-open');
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-label', 'Open menu');
+    btn.setAttribute('aria-label', 'Open navigation');
     (menuTriggerEl || btn).focus();
   };
 
@@ -4746,9 +4746,16 @@ function wireHamburger() {
   menuBackdrop.addEventListener('click', (e) => { if (e.target === menuBackdrop) closeMenu(); });
   // Choosing a destination closes the drawer instead of leaving it open
   // behind the page that just navigated (or, for an in-page anchor like
-  // #faq, behind the section it jumped to).
-  menuPanel?.querySelectorAll('.mobile-nav-links a').forEach((link) => {
-    link.addEventListener('click', () => closeMenu());
+  // #faq, behind the section it jumped to). Delegated on the panel
+  // (rather than a one-time querySelectorAll over .mobile-nav-links a)
+  // so it also covers every link renderMobileNavAccordion() injects
+  // into the "All Tools" accordion body after this function has already
+  // run — a plain per-element listener bound here would miss links that
+  // don't exist in the DOM yet. Accordion disclosure buttons are real
+  // <button> elements, not <a href>, so they never match this selector
+  // and never accidentally close the drawer on expand/collapse.
+  menuPanel?.addEventListener('click', (e) => {
+    if (e.target.closest('a[href]')) closeMenu();
   });
   // Obvious, standard close behavior: Esc closes the drawer from anywhere,
   // matching every other dismissible panel/modal on the site. Tab/Shift+Tab
@@ -4769,6 +4776,108 @@ function wireHamburger() {
         e.preventDefault(); first.focus();
       }
     }
+  });
+}
+
+// ================= MOBILE NAV ACCORDION (hamburger drawer) =================
+// Builds the "All Tools -> category -> tool" disclosure tree inside the
+// mobile drawer straight from categoryTools/toolMeta — the exact same
+// data every other nav on the site (desktop mega-menu, homepage grid,
+// the .category-bar chips) already reads from. Nothing here is a
+// hand-typed link list, so nothing here can point at a route that
+// doesn't exist. Category order matches the desktop .category-bar
+// exactly (see index.html): PDF, Image, Excel, Word, PowerPoint,
+// Utilities.
+const MOBILE_NAV_CATEGORY_ORDER = ['pdf', 'image', 'excel', 'word', 'ppt', 'utilities'];
+const MOBILE_NAV_CATEGORY_META = {
+  pdf: { label: 'PDF Tools', icon: '/icons/icon-pdf.svg', link: '/pdf', accent: 'pdf' },
+  image: { label: 'Image Tools', icon: '/icons/icon-image.svg', link: '/image', accent: 'image' },
+  excel: { label: 'Excel Tools', icon: '/icons/icon-excel.svg', link: '/excel', accent: 'excel' },
+  word: { label: 'Word Tools', icon: '/icons/icon-word.svg', link: '/word', accent: 'word' },
+  ppt: { label: 'PowerPoint Tools', icon: '/icons/icon-ppt.svg', link: '/ppt', accent: 'ppt' },
+  utilities: { label: 'Utilities', icon: '/icons/icon-utilities.svg', link: '/other-tools', accent: 'utility' },
+};
+
+function mobileToolLinkHtml(key, activeToolKey) {
+  const meta = toolMeta[key];
+  const url = meta && toolUrl(key);
+  if (!meta || !url) return ''; // comingSoon tools (no dedicated page yet) are skipped — never a dead link
+  const isActive = key === activeToolKey;
+  return `<a class="mobile-acc-tool-link${isActive ? ' active' : ''}" href="${url}" data-tool="${key}"${isActive ? ' aria-current="page"' : ''}>${meta.label}</a>`;
+}
+
+function mobileCategoryAccordionHtml(cat, activeCategory, activeToolKey) {
+  const info = MOBILE_NAV_CATEGORY_META[cat];
+  const keys = categoryTools[cat] || [];
+  if (!info || !keys.length) return '';
+  const isActiveCategory = cat === activeCategory;
+  const toolsHtml = keys.map((k) => mobileToolLinkHtml(k, activeToolKey)).join('');
+  return `
+    <div class="mobile-acc-item mobile-acc-category" data-accent="${info.accent}">
+      <button type="button" class="mobile-acc-toggle${isActiveCategory ? ' active' : ''}" aria-expanded="${isActiveCategory ? 'true' : 'false'}" aria-controls="mobileAccBody-${cat}" data-acc-toggle="${cat}"${isActiveCategory ? ' aria-current="page"' : ''}>
+        <img src="${info.icon}" class="nav-icon" width="18" height="18" alt="" />
+        <span class="mobile-acc-label">${info.label}</span>
+        <span class="mobile-acc-chevron" aria-hidden="true"></span>
+      </button>
+      <div class="mobile-acc-body" id="mobileAccBody-${cat}"${isActiveCategory ? '' : ' hidden'}>
+        <a class="mobile-acc-viewall" href="${info.link}">View all ${info.label}</a>
+        ${toolsHtml}
+      </div>
+    </div>
+  `;
+}
+
+// activeCategory: 'all' on the homepage/All-Tools view, one of
+// MOBILE_NAV_CATEGORY_ORDER's keys on a category hub page or a tool's
+// own landing page. activeToolKey: set only on a tool landing page —
+// highlights that one tool row and (via activeCategory) auto-expands
+// its parent category, per "if the user is on Merge PDF, PDF Tools
+// should be recognizably active and Merge PDF should have a subtle
+// active row state" (mobile-nav spec §14).
+function renderMobileNavAccordion(activeCategory, activeToolKey) {
+  const topToggle = document.querySelector('#mobileAccAllToolsToggle');
+  const topBody = document.querySelector('#mobileAccBody-all');
+  if (!topToggle || !topBody) return; // header partial not present on this page
+
+  const isHomeView = activeCategory === 'all';
+  topToggle.classList.toggle('active', isHomeView);
+  if (isHomeView) topToggle.setAttribute('aria-current', 'page');
+  else topToggle.removeAttribute('aria-current');
+
+  const categoriesHtml = MOBILE_NAV_CATEGORY_ORDER
+    .map((cat) => mobileCategoryAccordionHtml(cat, activeCategory, activeToolKey))
+    .join('');
+  topBody.innerHTML = `<a class="mobile-acc-viewall mobile-acc-viewall-top" href="/">Browse all tools</a>${categoriesHtml}`;
+}
+
+// Accordion behavior: "All Tools" (the one .mobile-acc-toggle-top) opens
+// and closes independently and defaults to open — expanding/collapsing
+// it never touches any category's own state. Each category toggle is
+// mutually exclusive with every other category (opening one collapses
+// whichever other one was open) so the fully-expanded tree never grows
+// past "All Tools -> one open category -> its tools" at once.
+function wireMobileNavAccordion() {
+  const panel = document.querySelector('#mobileMenuPanel');
+  if (!panel) return;
+  panel.querySelectorAll('[data-acc-toggle]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.accToggle;
+      const body = document.querySelector(`#mobileAccBody-${key}`);
+      if (!body) return;
+      const nowExpanding = btn.getAttribute('aria-expanded') !== 'true';
+
+      if (key !== 'all') {
+        panel.querySelectorAll('.mobile-acc-category [data-acc-toggle]').forEach((other) => {
+          if (other === btn) return;
+          other.setAttribute('aria-expanded', 'false');
+          const otherBody = document.querySelector(`#mobileAccBody-${other.dataset.accToggle}`);
+          if (otherBody) otherBody.hidden = true;
+        });
+      }
+
+      btn.setAttribute('aria-expanded', String(nowExpanding));
+      body.hidden = !nowExpanding;
+    });
   });
 }
 
@@ -5591,6 +5700,13 @@ export function initToolPage(pageCategory) {
   initParticleField();
   renderMainNav();
   wireNavDropdowns();
+  // Mobile/tablet hamburger drawer's nested tool nav — pageCategory is
+  // 'all' on the homepage (highlights "All Tools") or a real category
+  // key on a hub page (highlights + auto-expands that one category).
+  // Render before wiring so the click handlers below attach to the
+  // category toggle buttons this just injected.
+  renderMobileNavAccordion(pageCategory, null);
+  wireMobileNavAccordion();
   renderRecentTools();
   wireRecentToolsClear();
   renderHomepageAdSlot();
@@ -5737,6 +5853,10 @@ export function initToolLandingPage(toolKey) {
   wireSearchShortcut();
   renderMainNav();
   wireNavDropdowns();
+  // Mobile drawer: highlight + auto-expand this tool's own category and
+  // mark the tool's own row active — see mobile-nav spec §14.
+  renderMobileNavAccordion(meta.category, toolKey);
+  wireMobileNavAccordion();
   wireScrollReveal();
   wireRelatedToolTracking();
 

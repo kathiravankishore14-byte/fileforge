@@ -257,6 +257,20 @@
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.78 4 4 0 0 1 0-6.75Z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E");
 }
 
+/* Added for the mobile nav drawer's About Us / Contact Us rows
+   (section 13/4 of the mobile-nav spec) — same feather-icon-style
+   mask-image pattern as every icon above, just two glyphs this file
+   didn't have yet. */
+.icon-info {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='16' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12.01' y2='8'/%3E%3C/svg%3E");
+}
+
+.icon-mail {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Z'/%3E%3Cpolyline points='22,6 12,13 2,6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Z'/%3E%3Cpolyline points='22,6 12,13 2,6'/%3E%3C/svg%3E");
+}
+
 .icon-arrow-right {
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14'/%3E%3Cpath d='m12 5 7 7-7 7'/%3E%3C/svg%3E");
@@ -1107,14 +1121,25 @@ summary:focus-visible,
    the 6 category pages (replaces the old standalone .filter-tabs pill
    row — same [data-filter] values, same click handler in main.js).
    Sits right below the search bar, above the tool grid, as a single
-   horizontal row of pill chips at every viewport width — the same
-   momentum-scrolled chip-row treatment the old sidebar used to
-   collapse into below 1080px, now applied universally instead of a
-   left-hand sticky rail. */
+   horizontal row of pill chips — the same momentum-scrolled chip-row
+   treatment the old sidebar used to collapse into below 1080px, now
+   applied on desktop instead of a left-hand sticky rail.
+   Mobile/tablet (≤1180px — same breakpoint .main-nav hides at, see
+   .hamburger-btn below) hides this entirely: those categories move
+   into the hamburger drawer's "All Tools" accordion instead (see
+   .mobile-accordion further down and renderMobileNavAccordion() in
+   main.js), so a phone visitor isn't asked to horizontally scroll a
+   chip row AND use a drawer for the same navigation. display:none
+   (not visibility/opacity) so the wrapper collapses to zero height —
+   no blank gap left behind above the tool grid. */
 .category-bar-wrap {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 32px;
+}
+
+@media (max-width: 1180px) {
+  .category-bar-wrap { display: none; }
 }
 
 .category-bar {
@@ -1721,9 +1746,14 @@ summary:focus-visible,
   gap: 4px;
   /* 44x44 meets the standard minimum touch-target size — the three bars
      stay visually the same (see span width below) so this only grows
-     the invisible hit area, not the icon itself. */
+     the invisible hit area, not the icon itself. flex-shrink:0 holds
+     that exact size even at the narrowest tested widths (320px), where
+     the header-inner row is tight enough that the default flex-shrink:1
+     was quietly squeezing it to ~41px wide — a real, if small, touch
+     target regression. */
   width: 44px;
   height: 44px;
+  flex-shrink: 0;
   background: none;
   border: none;
   cursor: pointer;
@@ -1742,6 +1772,17 @@ summary:focus-visible,
 
 @media (max-width: 1180px) {
   .hamburger-btn { display: flex; }
+  /* .header-inner is a plain flex row (logo, main-nav, header-actions)
+     with .logo's own margin-right:auto (see .logo above) already doing
+     the work of pushing header-actions flush right and packing
+     whatever comes before .logo tight against the left edge — an auto
+     margin claims all the flex line's free space, so justify-content
+     has nothing left to distribute. That means simply having the
+     hamburger button appear as .header-inner's first child (see
+     partials/_header.html) is enough to land it top-left, right next
+     to the logo, with zero layout rules needed here beyond this
+     breathing-room gap between the two. */
+  .header-inner { gap: 12px; }
 }
 
 .mobile-menu-backdrop {
@@ -1758,11 +1799,16 @@ summary:focus-visible,
   top: 0;
   left: 0;
   bottom: 0;
-  width: 300px;
-  max-width: 85vw;
+  /* ~88% of the viewport up to 380px — wide enough for a nested tool
+     name at 3 levels of indentation to read comfortably without
+     wrapping into a cramped 2-3 words per line, narrow enough to still
+     read as a drawer (not a full-screen takeover) even on a small
+     phone. */
+  width: min(88vw, 380px);
   background: var(--white);
   padding: 20px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: slideInLeft 0.2s ease;
 }
 
@@ -1815,10 +1861,184 @@ summary:focus-visible,
   color: var(--text-muted);
 }
 
+.mobile-nav-links-secondary {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
 .mobile-nav-links-secondary a {
   font-size: 1.08rem;
   font-weight: 500;
   padding: 10px;
+}
+
+.mobile-nav-links-secondary a .icon {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  background-color: currentColor;
+}
+
+/* Privacy Policy / Terms of Service — present for completeness (they
+   were already in the old flat mobile menu) but not part of the 4
+   primary destinations, so they read as a quiet footnote rather than
+   competing with All Tools / About Us / Popular Tools / Contact Us. */
+.mobile-nav-links-legal {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: none;
+}
+
+.mobile-nav-links-legal a {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 8px 10px;
+}
+
+/* ---------- Mobile nav accordion (hamburger drawer) ----------
+   Replaces the old flat "All Tools / PDF / Image / Utilities" list
+   with a real disclosure tree — All Tools -> category -> tool — built
+   entirely from categoryTools/toolMeta by renderMobileNavAccordion()
+   in main.js (see partials/_header.html for the static shell). Every
+   link this produces is therefore a real, existing route; nothing here
+   is hand-typed. Kept to 3 nesting levels exactly, per the "All Tools
+   -> Category -> Tool" limit — the two disclosure levels (top toggle,
+   category toggle) share the same .mobile-acc-toggle look, distinguished
+   only by size/weight, so the tree still reads as one consistent
+   pattern rather than two different UI idioms stacked on each other. */
+.mobile-accordion { margin: 4px 0 2px; }
+
+.mobile-acc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 11px 10px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font: inherit;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.mobile-acc-toggle:hover { background: var(--gray-light); }
+.mobile-acc-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.mobile-acc-toggle .icon,
+.mobile-acc-toggle img.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.mobile-acc-toggle-top { font-size: 1.3rem; font-weight: 700; }
+
+/* "Active" = the category/tool the visitor is actually on right now —
+   tinted with that category's own --category-* accent (the same tokens
+   the tool grid, category-bar chips and desktop mega-menu badges
+   already use) via the --acc/--acc-bg pair each category row sets on
+   itself below, rather than a single site-wide color, so a glance at
+   the open drawer confirms which section you're in. "All Tools" has no
+   single category of its own, so it keeps the site's generic accent
+   red instead. */
+.mobile-acc-toggle-top.active { background: var(--red-light); color: var(--accent); }
+
+.mobile-acc-chevron {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  transition: transform var(--motion-fast);
+}
+
+/* Collapsed -> expanded rotates the chevron 90° (right-pointing ->
+   down-pointing) — driven off the toggle's own aria-expanded state, so
+   the visual state can never drift out of sync with what a screen
+   reader announces. */
+.mobile-acc-toggle[aria-expanded="true"] .mobile-acc-chevron { transform: rotate(90deg); }
+
+.mobile-acc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 0 2px 21px;
+  padding: 2px 0 6px 13px;
+  border-left: 2px solid var(--border);
+}
+
+/* [hidden] is a UA-stylesheet rule (display:none) that any same-or-
+   later author rule setting `display` on the same element silently
+   beats, regardless of specificity — the exact bug already hit twice
+   elsewhere in this file (.ad-slot[hidden], .site-search-clear[hidden]).
+   Same fix: restate display:none explicitly for the author origin. */
+.mobile-acc-body[hidden] { display: none; }
+
+.mobile-acc-viewall {
+  display: flex;
+  padding: 9px 10px;
+  min-height: 40px;
+  align-items: center;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.mobile-acc-viewall:hover, .mobile-acc-viewall:active { background: var(--gray-light); color: var(--text); }
+
+.mobile-acc-viewall-top { margin-bottom: 2px; }
+
+.mobile-acc-tool-link {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.96rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+  text-decoration: none;
+}
+.mobile-acc-tool-link:hover, .mobile-acc-tool-link:active { background: var(--gray-light); }
+
+/* Per-category accent pair, consumed generically by the two rules
+   below — one place to add a 7th category later instead of six
+   parallel .active blocks. */
+.mobile-acc-category[data-accent="pdf"] { --acc: var(--category-pdf); --acc-bg: var(--red-light); }
+.mobile-acc-category[data-accent="image"] { --acc: var(--category-image); --acc-bg: var(--purple-light); }
+.mobile-acc-category[data-accent="excel"] { --acc: var(--category-excel); --acc-bg: var(--green-light); }
+.mobile-acc-category[data-accent="word"] { --acc: var(--category-word); --acc-bg: var(--blue-light); }
+.mobile-acc-category[data-accent="ppt"] { --acc: var(--category-ppt); --acc-bg: var(--orange-light); }
+.mobile-acc-category[data-accent="utility"] { --acc: var(--category-utility); --acc-bg: var(--amber-light); }
+
+.mobile-acc-category .mobile-acc-toggle.active,
+.mobile-acc-category .mobile-acc-tool-link.active {
+  background: var(--acc-bg);
+  color: var(--acc);
+}
+.mobile-acc-category .mobile-acc-tool-link.active { font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-acc-chevron { transition: none; }
 }
 
 /* ---------- Search ---------- */
