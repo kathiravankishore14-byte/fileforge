@@ -619,6 +619,34 @@ summary:focus-visible,
 
 .logo-tagline span { color: var(--accent); margin: 0 1px; }
 
+/* Header logo mark + wordmark forced to solid white in dark mode only —
+   same brightness(0) invert(1) trick used on the footer logo (crushes
+   the artwork's opaque pixels to black, then flips to white, leaving
+   transparent areas untouched). Light mode keeps the artwork's own
+   gradient-blue color untouched. Also covers the mobile drawer's
+   header, which reuses these same classes. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .logo-mark-img,
+  :root:not([data-theme="light"]) .logo-wordmark-img {
+    filter: brightness(0) invert(1);
+  }
+  :root:not([data-theme="light"]) .logo-tagline,
+  :root:not([data-theme="light"]) .logo-tagline span {
+    /* Literal white, not var(--white) — that token aliases to
+       --surface, which is the dark theme's near-black card color, not
+       actual white, and would render this text almost invisible. */
+    color: #FFFFFF;
+  }
+}
+:root[data-theme="dark"] .logo-mark-img,
+:root[data-theme="dark"] .logo-wordmark-img {
+  filter: brightness(0) invert(1);
+}
+:root[data-theme="dark"] .logo-tagline,
+:root[data-theme="dark"] .logo-tagline span {
+  color: #FFFFFF;
+}
+
 /* white-space: nowrap above means this phrase never shrinks below its
    full width — on a real phone screen (≤600px) that refusal, combined
    with the header-actions cluster (sound/theme toggle + hamburger)
