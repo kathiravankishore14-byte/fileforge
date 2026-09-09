@@ -1622,8 +1622,10 @@ summary:focus-visible,
   transition: color 0.15s ease;
 }
 
-/* Fewer columns on narrower screens — 4-up down to a wide tablet, then
-   3-up, then 2-up, then a single full-width row card per tool on phones.
+/* Fewer columns on narrower screens — 4-up holds all the way down
+   through ordinary laptop/desktop widths (including scaled-down ones
+   like 1366px or 1280px), then drops to 2-up at genuine tablet widths,
+   then a single full-width row card per tool on phones.
    minmax(0, 1fr), not bare 1fr — a bare `1fr` track's minimum size still
    defaults to its item's content-based auto minimum, so on a page whose
    related-tools card had a slightly wider title/description, the track
@@ -1631,8 +1633,12 @@ summary:focus-visible,
    instead of actually shrinking to it. minmax(0, ...) removes that
    floor with no visible difference in the normal case where the card
    already fits. */
-@media (max-width: 1300px) {
-  .tool-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* Still 4-up here, just with tighter gutters/gap clawed back so the
+   narrower cards in this band (roughly common laptop widths at 125%+
+   OS display scaling) keep a bit more breathing room instead of
+   crowding titles onto a 3rd line. */
+@media (max-width: 1180px) {
+  .tool-grid { gap: 16px; padding: 0 20px; }
 }
 
 @media (max-width: 900px) {
