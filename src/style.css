@@ -3868,6 +3868,19 @@ body.tool-result-active #tpDropZone {
   margin-bottom: 12px;
 }
 
+/* Footer-only: force the brand mark + wordmark artwork to solid white,
+   regardless of their real baked-in brand colors (blue mark, blue/black
+   wordmark). brightness(0) crushes every opaque pixel to black while
+   leaving transparency untouched, then invert(1) flips that black to
+   white — a clean white silhouette of the exact artwork, no separate
+   white asset needed. Scoped to .footer-logo-mark-img/.footer-logo-
+   wordmark-img specifically so the header's own logo (same source
+   images, imported separately there) is completely unaffected. */
+.footer-logo-mark-img,
+.footer-logo-wordmark-img {
+  filter: brightness(0) invert(1);
+}
+
 .footer-logo-mark-img { display: block; height: 34px; width: auto; }
 .footer-logo-wordmark-img { display: block; height: 22px; width: auto; }
 
@@ -3875,36 +3888,23 @@ body.tool-result-active #tpDropZone {
   font-size: 1.05rem;
   line-height: 1.55;
   color: var(--footer-text-muted);
-  margin: 0 0 16px;
+  margin: 0;
 }
-
-.footer-trust-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.footer-trust-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.86rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--footer-border);
-  color: var(--footer-text);
-  padding: 5px 11px;
-  border-radius: 20px;
-  white-space: nowrap;
-}
-
-.footer-trust-badge .icon { width: 14px; height: 14px; }
 
 .footer-col { flex: 1 1 140px; }
 
 /* h3, not h4 — the footer used to skip straight from a page's last h2
    to h4 (no h3 in between), an illogical jump for any page whose last
-   heading before the footer landmark was an h1 or h2. */
+   heading before the footer landmark was an h1 or h2.
+   Sized/weighted so headers clearly outrank the links below them
+   (matching the iLovePDF/Smallpdf/Baltsoft reference footers) — the
+   links used to run larger than their own column heading, which read
+   backwards. */
 .footer-col h3 {
   color: var(--footer-heading);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;
-  font-weight: var(--font-weight-semibold);
+  font-size: 1.05rem;
+  font-weight: var(--font-weight-bold);
   margin: 0 0 12px;
 }
 
@@ -3912,7 +3912,8 @@ body.tool-result-active #tpDropZone {
   display: block;
   color: var(--footer-text);
   text-decoration: none;
-  font-size: 1.235rem;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
   /* Padding (not just margin) so the clickable box itself is taller —
      margin separates links visually but isn't part of the tap target. */
   padding: 5px 0;
@@ -3943,9 +3944,20 @@ body.tool-result-active #tpDropZone {
 @media (max-width: 700px) {
   .site-footer { padding: 36px 20px 20px; margin-top: 48px; }
   .footer-inner { flex-direction: column; gap: 28px; padding-bottom: 28px; }
-  .footer-brand-col { max-width: none; }
+  /* .footer-brand-col's desktop rule sets flex: 1 1 260px, where that
+     260px is a WIDTH basis in the desktop row layout. Once .footer-
+     inner switches to flex-direction:column here, the main axis is
+     vertical, so that same flex-basis silently becomes a 260px HEIGHT
+     instead — stretching this column well past its actual content
+     (logo + tagline, no badges now) and leaving a large blank gap
+     before "Categories". flex-basis: auto makes the height follow the
+     real content again, on this axis only. */
+  .footer-brand-col { max-width: none; flex-basis: auto; }
   .footer-col { flex: 1 1 auto; }
-  .footer-col a { padding: 8px 0; font-size: 1.15rem; }
+  /* Slightly larger than desktop for touch comfort, same semibold
+     weight as the new desktop sizing above (not the old 1.15rem, which
+     was sized for the old oversized desktop link text). */
+  .footer-col a { padding: 8px 0; font-size: 1rem; }
   .footer-bottom { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
 
