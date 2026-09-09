@@ -350,12 +350,12 @@ function renderIconBadge(fromCategory, toCategory, toolKey) {
 
 // ================= TOOL GRID RENDERING =================
 // Icon + name cards, background tinted per category, no description
-// text. Only the first 3 rows (6 per row = 18 cells) show by default;
-// when there are more tools than that, the 18th cell becomes a "⋯
+// text. Only the first 3 rows (4 per row = 12 cells) show by default;
+// when there are more tools than that, the 12th cell becomes a "⋯
 // Tools" tile that reveals the rest on click, so the grid still reads
 // as exactly 3 full rows either way.
 const TOOL_GRID_VISIBLE_ROWS = 3;
-const TOOL_GRID_COLUMNS = 6;
+const TOOL_GRID_COLUMNS = 4;
 const TOOL_GRID_VISIBLE_LIMIT = TOOL_GRID_VISIBLE_ROWS * TOOL_GRID_COLUMNS;
 
 function toolCardHtml(key, hidden) {

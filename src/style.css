@@ -1392,17 +1392,18 @@ summary:focus-visible,
 }
 
 /* ---------- Tool grid ---------- */
-/* 2 columns — cards run roughly 2x their original footprint (bigger
-   icon badge, bigger type, a guaranteed 2-line description), so half
-   as many fit per row. Also what's in effect on the "continue with..."
-   result-page grid and the static Related Tools grid on individual
-   tool pages, which both reuse .tool-grid. */
+/* 4 columns by default — cards run roughly 2x their original footprint
+   (bigger icon badge, bigger type, a guaranteed 2-line description), so
+   fewer fit per row than a plain icon+label tile would. Also what's in
+   effect on the "continue with..." result-page grid and the static
+   Related Tools grid on individual tool pages, which both reuse
+   .tool-grid. */
 .tool-grid {
-  max-width: 1400px;
+  max-width: 1520px;
   margin: 0 auto 60px;
   padding: 0 32px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 24px;
 }
 
@@ -1593,8 +1594,8 @@ summary:focus-visible,
   transition: color 0.15s ease;
 }
 
-/* Fewer columns on narrower screens — 3-up down to a wide tablet, then
-   2-up, then a single full-width row card per tool on phones.
+/* Fewer columns on narrower screens — 4-up down to a wide tablet, then
+   3-up, then 2-up, then a single full-width row card per tool on phones.
    minmax(0, 1fr), not bare 1fr — a bare `1fr` track's minimum size still
    defaults to its item's content-based auto minimum, so on a page whose
    related-tools card had a slightly wider title/description, the track
@@ -1602,7 +1603,11 @@ summary:focus-visible,
    instead of actually shrinking to it. minmax(0, ...) removes that
    floor with no visible difference in the normal case where the card
    already fits. */
-@media (max-width: 1080px) {
+@media (max-width: 1300px) {
+  .tool-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
   .tool-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
