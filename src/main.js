@@ -1049,7 +1049,7 @@ async function showBgRemoveTouchUpState(cutoutBlob, sourceFile) {
           <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#378ADD" style="background:#378ADD" title="Blue" aria-label="Blue"></button>
           <button type="button" class="bgr-swatch" data-bg-type="color" data-bg-value="#EAF3DE" style="background:#EAF3DE" title="Light green" aria-label="Light green"></button>
           <label class="bgr-swatch bgr-swatch-custom" title="Custom color" aria-label="Custom color">
-            <span class="icon icon-palette" aria-hidden="true"></span><input type="color" id="bgrCustomColor" value="#E24B4A" />
+            <span class="icon icon-palette" aria-hidden="true"></span><input type="color" id="bgrCustomColor" value="#0B57D0" />
           </label>
           <label class="bgr-swatch bgr-swatch-upload" title="Upload a background photo" aria-label="Upload a background photo">
             <span class="icon icon-image" aria-hidden="true"></span><input type="file" accept="image/*" id="bgrUploadInput" hidden />

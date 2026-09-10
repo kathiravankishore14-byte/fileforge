@@ -18,8 +18,16 @@
   --border: #E7EBF0;
   --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.05), 0 1px 1px rgba(17, 24, 39, 0.03);
   --shadow-md: 0 10px 28px rgba(17, 24, 39, 0.08), 0 2px 8px rgba(17, 24, 39, 0.04);
-  --accent: #E24B4A;
-  --accent-dark: #C43837;
+  /* Site-wide accent — deliberately its own token, separate from
+     --category-pdf, even though the two used to share the same red
+     hex by coincidence. This blue is sampled from the logo's own
+     gradient (icons/logo-mark.png / logo-wordmark.png) so every
+     hover/focus/CTA on the site reads as "the brand," while PDF
+     tooling keeps its own red identity via --category-pdf below,
+     untouched. */
+  --accent: #0B57D0;
+  --accent-dark: #0A46A8;
+  --accent-light: #E8F0FE;
 
   --category-pdf: #E24B4A;
   --category-image: #7F77DD;
@@ -53,7 +61,15 @@
   --paper: var(--bg);
   --white: var(--surface);
   --text-muted: var(--text-secondary);
-  --red: var(--category-pdf);
+  /* --red used to alias --category-pdf back when the PDF category
+     color and the sitewide accent were the same red on purpose. Every
+     var(--red)/var(--red-dark) consumer in this file (buttons, hovers,
+     focus rings, drag states, ...) is generic UI chrome, not PDF
+     branding, so both now alias the accent instead — repainting all of
+     it blue in one place. --red-light is left as a real light-red tint
+     (not aliased to --accent-light) because its one remaining consumer
+     (.mobile-acc-category[data-accent="pdf"]) is genuine PDF branding. */
+  --red: var(--accent);
   --red-dark: var(--accent-dark);
   --red-light: #FCEBEB;
   --blue: var(--category-word);
@@ -134,8 +150,9 @@
     --border: #232B3D;
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
     --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.35);
-    --accent: #FF6B68;
-    --accent-dark: #FF8280;
+    --accent: #4C8DFF;
+    --accent-dark: #6BA0FF;
+    --accent-light: rgba(76, 141, 255, 0.14);
 
     --category-pdf: #FF6B68;
     --category-image: #A79FFF;
@@ -172,8 +189,9 @@
   --border: #232B3D;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.35);
-  --accent: #FF6B68;
-  --accent-dark: #FF8280;
+  --accent: #4C8DFF;
+  --accent-dark: #6BA0FF;
+  --accent-light: rgba(76, 141, 255, 0.14);
 
   --category-pdf: #FF6B68;
   --category-image: #A79FFF;
@@ -1989,7 +2007,7 @@ summary:focus-visible,
    the open drawer confirms which section you're in. "All Tools" has no
    single category of its own, so it keeps the site's generic accent
    red instead. */
-.mobile-acc-toggle-top.active { background: var(--red-light); color: var(--accent); }
+.mobile-acc-toggle-top.active { background: var(--accent-light); color: var(--accent); }
 
 .mobile-acc-chevron {
   margin-left: auto;
@@ -2911,8 +2929,11 @@ body.tool-result-active #tpDropZone {
 .tp-sidebar .config-panel input:focus,
 .tp-sidebar .config-panel select:focus {
   outline: none;
-  border-color: var(--red);
-  box-shadow: 0 0 0 4px rgba(226, 75, 74, 0.15);
+  border-color: var(--accent);
+  /* A literal rgba tied to the old red's exact RGB, not a var() — swapped
+     for a color-mix so this focus ring tracks --accent (and both themes)
+     instead of silently staying red. */
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 .tp-sidebar .result-done-badge { animation: tpPopIn 0.45s cubic-bezier(.34, 1.56, .64, 1) both; }
@@ -3320,8 +3341,8 @@ body.tool-result-active #tpDropZone {
 }
 
 .bgr-swatch.active {
-  border-color: var(--red);
-  box-shadow: 0 0 0 2px var(--red-light);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
 }
 
 .bgr-swatch .icon { width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
@@ -3406,7 +3427,7 @@ body.tool-result-active #tpDropZone {
 .file-card[draggable="true"] { cursor: grab; }
 .file-card[draggable="true"]:active { cursor: grabbing; }
 .file-card.dragging { opacity: 0.5; transform: scale(1.04) rotate(-2deg); box-shadow: 0 14px 26px rgba(0, 0, 0, 0.22); }
-.file-card.drag-over { border-color: var(--red); box-shadow: 0 0 0 3px rgba(226, 75, 74, 0.25) inset; transform: scale(1.02); }
+.file-card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent) inset; transform: scale(1.02); }
 .file-card-remove { transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
 .file-card-remove:hover { transform: scale(1.15); }
 
