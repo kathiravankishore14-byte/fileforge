@@ -76,11 +76,18 @@ function relatedKeysFor(key, meta) {
 // ---------- per-tool SEO content derivation ----------
 function deriveSeo(key, meta) {
   const slug = TOOL_SLUGS[key];
-  const title = `${meta.label} Online Free | OnlineToolsWeb`;
+  // A tool can override the auto-derived <title>/meta-description via
+  // heroCopy.title / heroCopy.metaDescription (see toolMeta in main.js)
+  // to target a specific search phrase — used for tools with a known
+  // high-intent long-tail query (e.g. a target file-size search) the
+  // generic "<Label> Online Free" title wouldn't otherwise capture.
+  // meta.label itself is left untouched since it also drives on-site
+  // UI (nav, cards, buttons) where that phrasing wouldn't fit.
+  const title = meta.heroCopy?.title || `${meta.label} Online Free | OnlineToolsWeb`;
   const privacyClause = meta.usesServer
     ? 'Free, fast AI processing, no signup, nothing stored.'
     : 'Free, private, and runs right in your browser: no upload, no signup.';
-  let description = `${meta.desc} ${privacyClause}`;
+  let description = meta.heroCopy?.metaDescription || `${meta.desc} ${privacyClause}`;
   if (description.length > 158) description = meta.usesServer ? `${meta.desc} No signup, nothing stored.` : `${meta.desc} No upload, no signup, runs in your browser.`;
   // A tool can supply its own hand-written hero copy (see toolMeta in
   // main.js) when the generic auto-derived phrasing undersells it —

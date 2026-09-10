@@ -110,7 +110,20 @@ const TOOL_ICON_OVERRIDES = {
 
 const toolMeta = {
   resize: { label: 'Resize Image', desc: 'Set exact pixel dimensions for any photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
-  compress: { label: 'Compress Image', desc: 'Shrink file size with a quality slider.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
+  compress: {
+    label: 'Compress Image', desc: 'Shrink a photo down to a target file size, like 30KB.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image',
+    // SEO: targets the "compress image to 30kb" long-tail search (a
+    // common target size for form uploads/ID photos) — overrides only
+    // the dedicated landing page's title/description/hero copy; the
+    // on-site label above is untouched since it also drives the nav,
+    // tool cards, and buttons where this phrasing wouldn't fit.
+    heroCopy: {
+      title: 'Compress Image to 30KB Online Free | OnlineToolsWeb',
+      metaDescription: 'Compress an image to 30KB for free. Pick your target size and this tool automatically finds the best quality that fits. Runs entirely in your browser — no upload, no signup needed.',
+      h1: 'Compress Image to 30KB Online',
+      intro: 'Need a photo under 30KB for a form upload, ID photo, or faster page loads? Pick your target size — 30KB is the default — and this tool automatically finds the highest quality that still fits, nothing ever leaves your device. Drop your image and get your result in seconds.',
+    },
+  },
   crop: { label: 'Crop Image', desc: 'Trim an image down to the area you need.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   pdf: { label: 'Convert to PDF', desc: 'Turn one or more images into a PDF.', needsConfig: true, multiFile: true, accept: 'image/*', category: 'image', iconTo: 'pdf' },
   imagetoexcel: { label: 'Image to Excel', desc: 'Extract tabular data from a photo.', needsConfig: false, accept: 'image/*', category: 'image', iconTo: 'excel' },
@@ -148,7 +161,18 @@ const toolMeta = {
   memecreator: { label: 'Meme Creator', desc: 'Add top and bottom caption text.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   collagemaker: { label: 'Collage Maker', desc: 'Combine several photos into a grid.', needsConfig: true, multiFile: true, accept: 'image/*', category: 'image', iconTo: 'image' },
 
-  wordtoexcel: { label: 'Word to Excel', desc: 'Pull tables from a Word doc into a spreadsheet.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'excel' },
+  wordtoexcel: {
+    label: 'Word to Excel', desc: 'Pull tables from a Word doc into a spreadsheet.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'excel',
+    // SEO: targets the "convert word to excel" search phrase — see the
+    // heroCopy note on the `compress` tool above for how this override
+    // works and why the on-site label is left alone.
+    heroCopy: {
+      title: 'Convert Word to Excel Online Free | OnlineToolsWeb',
+      metaDescription: 'Convert Word to Excel for free — pull tables from a .docx file straight into a spreadsheet. Runs in your browser, no upload or signup needed.',
+      h1: 'Convert Word to Excel Online',
+      intro: 'Convert Word to Excel in seconds: drop your .docx file and this tool pulls every table straight into a downloadable spreadsheet, so you don’t have to copy and paste rows by hand.',
+    },
+  },
   wordtopdf: { label: 'Word to PDF', desc: 'Turn a DOCX file into a PDF.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'pdf' },
   wordtotext: { label: 'Word to Text', desc: 'Extract plain text from a Word doc.', needsConfig: true, accept: '.docx', category: 'word', iconTo: 'text' },
 
@@ -162,7 +186,18 @@ const toolMeta = {
   pdfdelete: { label: 'Delete Pages', desc: 'Remove specific pages from a PDF.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfwatermark: { label: 'Watermark PDF', desc: 'Stamp text across every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfsplit: { label: 'Split PDF', desc: 'Break a PDF into separate files by page range.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
-  pdfcompress: { label: 'Compress PDF', desc: 'Shrink file size by recompressing images and trimming unused data. Text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
+  pdfcompress: {
+    label: 'Compress PDF', desc: 'Shrink a PDF down to a target file size, like 30KB, by recompressing images and trimming unused data. Text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf',
+    // SEO: targets the "compress pdf to 30kb" long-tail search (a common
+    // required size for online form/portal uploads) — see the heroCopy
+    // note on the `compress` tool above for how this override works.
+    heroCopy: {
+      title: 'Compress PDF to 30KB Online Free | OnlineToolsWeb',
+      metaDescription: 'Compress a PDF to 30KB for free. Pick your target size and this tool automatically finds the best quality that fits — runs in your browser, no upload needed.',
+      h1: 'Compress PDF to 30KB Online',
+      intro: 'Need a PDF under 30KB for an online form, application, or email attachment? Pick your target size — 30KB is the default — and this tool automatically recompresses images and trims unused data to fit, without touching your text. Drop your file and get your result in seconds.',
+    },
+  },
   pdftoword: { label: 'PDF to Word', desc: 'Extract text into an editable Word document.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'word' },
   pdftoexcel: { label: 'PDF to Excel', desc: 'Pull tabular data into a spreadsheet.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'excel' },
   pdftojpg: { label: 'PDF to JPG', desc: 'Export every page as an image.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'image' },
@@ -697,6 +732,84 @@ function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// ---------- Target-file-size JPEG fitting ----------
+// Shared by the Compress Image tool (directly) and used as the model for
+// the Compress PDF tool's own quality search (which drives pdf-lib's
+// re-encode instead of this canvas path, but follows the same strategy).
+//
+// Goal: hit `targetBytes` while losing as little visible quality as
+// possible. Quality alone is the first and cheapest lever — most photos
+// can shed 70-90% of their size with barely visible loss just by lowering
+// JPEG quality, so we binary-search quality *at full resolution* first.
+// Only when even minimum quality can't fit the target (typically a very
+// large/detailed source image against a very small target like 30KB) do
+// we fall back to shrinking the pixel dimensions themselves, since a
+// smaller-but-clean image usually looks better than a full-size one
+// mangled by extreme quality loss.
+async function fitJpegToTargetSize(source, naturalWidth, naturalHeight, targetBytes, opts = {}) {
+  const maxQuality = opts.maxQuality ?? 0.92;
+  const minQuality = opts.minQuality ?? 0.05;
+  const maxIterations = opts.maxIterations ?? 6;
+  const scaleSteps = opts.scaleSteps ?? [1, 0.8, 0.6, 0.45, 0.3, 0.15];
+  const onProgress = opts.onProgress || (() => {});
+
+  const encodeAt = (scale, quality) => new Promise((resolve) => {
+    const w = Math.max(1, Math.round(naturalWidth * scale));
+    const h = Math.max(1, Math.round(naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(source, 0, 0, w, h);
+    canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+  });
+
+  let fallbackBest = null; // smallest blob found so far, in case nothing ever fits
+  const considerFallback = (blob, scale, quality) => {
+    if (blob && (!fallbackBest || blob.size < fallbackBest.blob.size)) {
+      fallbackBest = { blob, scale, quality };
+    }
+  };
+
+  for (const scale of scaleSteps) {
+    onProgress(scale);
+    const hiBlob = await encodeAt(scale, maxQuality);
+    if (hiBlob && hiBlob.size <= targetBytes) {
+      // Best case: even near-maximum quality already fits — no search needed.
+      return { blob: hiBlob, scale, quality: maxQuality, fit: true };
+    }
+    considerFallback(hiBlob, scale, maxQuality);
+    const loBlob = await encodeAt(scale, minQuality);
+    considerFallback(loBlob, scale, minQuality);
+    if (!loBlob || loBlob.size > targetBytes) {
+      // Even minimum quality is too big at this resolution — a smaller
+      // resolution is the only way forward, so move to the next scale
+      // step rather than spending iterations on a binary search that
+      // can't possibly succeed at this size.
+      continue;
+    }
+    // minQuality fits, maxQuality doesn't — binary-search for the highest
+    // quality that still fits at this resolution.
+    let lo = minQuality, hi = maxQuality, bestBlob = loBlob, bestQuality = minQuality;
+    for (let iter = 0; iter < maxIterations; iter++) {
+      const mid = (lo + hi) / 2;
+      const blob = await encodeAt(scale, mid);
+      if (blob && blob.size <= targetBytes) {
+        bestBlob = blob;
+        bestQuality = mid;
+        lo = mid;
+      } else {
+        hi = mid;
+      }
+    }
+    return { blob: bestBlob, scale, quality: bestQuality, fit: true };
+  }
+
+  // Nothing fit, even at the smallest scale step and minimum quality —
+  // hand back the smallest result we found so the caller can still show
+  // something, clearly marked as not having reached the target.
+  return { ...fallbackBest, fit: false };
 }
 
 // ---------- Toast confirmations (post-upload workspace only) ----------
@@ -1639,57 +1752,77 @@ function renderSingleFileConfig() {
   if (currentToolKey === 'compress') {
     area.insertAdjacentHTML('beforeend', `
       <div class="config-panel">
-        <label>Quality
-          <select id="cfgQuality">
-            <option value="0.3">Low (smallest file)</option>
-            <option value="0.6" selected>Medium</option>
-            <option value="0.9">Extraordinary (largest file)</option>
+        <label>Target file size
+          <select id="cfgTargetSize">
+            <option value="30" selected>30 KB (smallest — forms &amp; ID uploads)</option>
+            <option value="50">50 KB</option>
+            <option value="100">100 KB</option>
+            <option value="300">300 KB</option>
+            <option value="1024">1 MB</option>
           </select>
         </label>
         <button class="config-action-btn" id="cfgApply">Compress</button>
       </div>
       <p class="tp-live-hint" id="compressLiveHint">Estimating…</p>
     `);
-    const qualitySelect = document.querySelector('#cfgQuality');
+    const targetSelect = document.querySelector('#cfgTargetSize');
     const liveHint = document.querySelector('#compressLiveHint');
-    // Real, not simulated: actually compresses at the selected quality
-    // right now so the size estimate shown is the true output size, not
-    // a guess — just without committing to the full processing screen.
+    // Real, not simulated: actually runs the same quality/resolution
+    // search used on Apply, so the size estimate shown is the true
+    // achievable output, not a guess — just without committing to the
+    // full processing screen.
     let livePreviewGeneration = 0;
-    const updateCompressLivePreview = () => {
+    const updateCompressLivePreview = async () => {
       if (!currentImg.naturalWidth) return; // preview image hasn't finished loading yet — the load handler below will retry
       const myPreview = ++livePreviewGeneration;
-      const quality = parseFloat(qualitySelect.value);
+      const targetKB = parseFloat(targetSelect.value);
+      const targetBytes = targetKB * 1024;
       const originalKB = currentFile.size / 1024;
-      const canvas = document.createElement('canvas');
-      canvas.width = currentImg.naturalWidth;
-      canvas.height = currentImg.naturalHeight;
-      canvas.getContext('2d').drawImage(currentImg, 0, 0);
-      canvas.toBlob((blob) => {
-        if (!blob || myPreview !== livePreviewGeneration) return; // a newer selection has since been made
-        const newKB = blob.size / 1024;
-        const pct = Math.round(100 - (newKB / originalKB) * 100);
-        liveHint.innerHTML = `Estimated size: <strong>${newKB.toFixed(0)}KB</strong>${pct > 0 ? ` <span class="tp-live-good">(${pct}% smaller)</span>` : ' (similar size)'}`;
-      }, 'image/jpeg', quality);
+      if (currentFile.size <= targetBytes) {
+        liveHint.innerHTML = `Already <strong>${originalKB.toFixed(0)}KB</strong> — under your ${targetKB >= 1024 ? '1MB' : targetKB + 'KB'} target, no compression needed.`;
+        return;
+      }
+      liveHint.textContent = 'Estimating…';
+      const fit = await fitJpegToTargetSize(currentImg, currentImg.naturalWidth, currentImg.naturalHeight, targetBytes);
+      if (myPreview !== livePreviewGeneration) return; // a newer selection has since been made
+      const newKB = fit.blob.size / 1024;
+      const pct = Math.round(100 - (newKB / originalKB) * 100);
+      const scaleNote = fit.scale < 1 ? ` at ${Math.round(fit.scale * 100)}% resolution` : '';
+      liveHint.innerHTML = fit.fit
+        ? `Estimated size: <strong>${newKB.toFixed(0)}KB</strong> <span class="tp-live-good">(${pct}% smaller)</span>${scaleNote}`
+        : `Best possible: <strong>${newKB.toFixed(0)}KB</strong> — this image can't quite reach ${targetKB}KB without losing too much detail`;
     };
-    qualitySelect.addEventListener('change', updateCompressLivePreview);
+    targetSelect.addEventListener('change', updateCompressLivePreview);
     if (currentImg.complete && currentImg.naturalWidth) updateCompressLivePreview();
     else currentImg.addEventListener('load', updateCompressLivePreview, { once: true });
     document.querySelector('#cfgApply').addEventListener('click', async () => {
-      const quality = parseFloat(document.querySelector('#cfgQuality').value); // captured before the DOM gets wiped
+      const targetKB = parseFloat(document.querySelector('#cfgTargetSize').value); // captured before the DOM gets wiped
+      const targetBytes = targetKB * 1024;
       const originalKB = currentFile.size / 1024;
-      const canvas = document.createElement('canvas');
-      canvas.width = currentImg.naturalWidth;
-      canvas.height = currentImg.naturalHeight;
-      canvas.getContext('2d').drawImage(currentImg, 0, 0);
-      canvas.toBlob(async (blob) => {
-        const newKB = blob.size / 1024;
+      const targetLabel = targetKB >= 1024 ? '1MB' : `${targetKB}KB`;
+      showProcessingState('Compressing...');
+      try {
+        if (currentFile.size <= targetBytes) {
+          // Already under target — recompressing would only lose quality
+          // for no size benefit, so hand the original file straight back.
+          await minWait(500);
+          showResultState(currentFile, currentFile.name, `${originalKB.toFixed(0)}KB — already under your ${targetLabel} target, no compression needed.`);
+          return;
+        }
+        const fit = await fitJpegToTargetSize(currentImg, currentImg.naturalWidth, currentImg.naturalHeight, targetBytes, {
+          onProgress: (scale) => updateProcessingCaption(scale < 1 ? `Reducing resolution to ${Math.round(scale * 100)}% and recompressing...` : 'Compressing...'),
+        });
+        const newKB = fit.blob.size / 1024;
         const pct = Math.round(100 - (newKB / originalKB) * 100);
-        const note = `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct > 0 ? pct + '% smaller' : 'similar size'})`;
-        showProcessingState('Compressing...');
-        await minWait(700);
-        showResultState(blob, `compressed-${currentFile.name.split('.')[0]}.jpg`, note);
-      }, 'image/jpeg', quality);
+        const scaleNote = fit.scale < 1 ? ', resolution reduced to fit' : '';
+        const note = fit.fit
+          ? `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller)${scaleNote} — meets your ${targetLabel} target.`
+          : `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller)${scaleNote} — this is the smallest we can get this image while keeping it usable; couldn't quite reach ${targetLabel}.`;
+        await minWait(300);
+        showResultState(fit.blob, `compressed-${currentFile.name.split('.')[0]}.jpg`, note);
+      } catch (err) {
+        showErrorState(err.message);
+      }
     });
   }
 
@@ -2831,18 +2964,22 @@ function renderSingleFileConfig() {
     area.insertAdjacentHTML('beforeend', `
       <p style="font-size:0.85rem; color:var(--text-muted); margin-top:10px;">Recompresses embedded JPEG images and trims unused data and metadata. All text and vector content stays exactly as-is, fully selectable and sharp.</p>
       <div class="config-panel">
-        <label>Image quality
-          <select id="cfgQuality">
-            <option value="0.3">Low (smallest file)</option>
-            <option value="0.6" selected>Medium</option>
-            <option value="0.9">Extraordinary (largest file)</option>
+        <label>Target file size
+          <select id="cfgTargetSize">
+            <option value="30" selected>30 KB (smallest — forms &amp; portal uploads)</option>
+            <option value="50">50 KB</option>
+            <option value="100">100 KB</option>
+            <option value="300">300 KB</option>
+            <option value="1024">1 MB</option>
           </select>
         </label>
         <button class="config-action-btn" id="cfgApply">Compress</button>
       </div>
     `);
     document.querySelector('#cfgApply').addEventListener('click', async () => {
-      const quality = parseFloat(document.querySelector('#cfgQuality').value);
+      const targetKB = parseFloat(document.querySelector('#cfgTargetSize').value);
+      const targetBytes = targetKB * 1024;
+      const targetLabel = targetKB >= 1024 ? '1MB' : `${targetKB}KB`;
       const originalKB = currentFile.size / 1024;
       showProcessingState('Scanning embedded images...');
       try {
@@ -2850,15 +2987,32 @@ function renderSingleFileConfig() {
         const bytes = await currentFile.arrayBuffer();
         const originalPageCount = (await PDFDocument.load(bytes)).getPageCount();
 
-        // Runs the full compress pass — JPEG recompression, then (unless
-        // disabled) stripping tool-fingerprint metadata and dropping any
-        // object nobody in the document actually points to any more. That
-        // last part is what lets a text/vector-only PDF shrink at all:
-        // pdf-lib keeps every object it loaded, including leftovers from a
-        // prior editor's incremental saves, unless something removes them.
-        // `withGc: false` is the safety fallback if that pass ever produces
-        // a file that doesn't reopen cleanly — see the validation below.
-        async function runCompressPass({ withGc }) {
+        if (currentFile.size <= targetBytes) {
+          // Already under target — recompressing would only lose quality
+          // for no size benefit, so hand the original file straight back.
+          await minWait(400);
+          showResultState(currentFile, currentFile.name, `${originalKB.toFixed(0)}KB — already under your ${targetLabel} target, no compression needed.`);
+          return;
+        }
+
+        // Runs the full compress pass — JPEG recompression at a given
+        // quality (and, if `scale` < 1, at reduced pixel dimensions too),
+        // then (unless disabled) stripping tool-fingerprint metadata and
+        // dropping any object nobody in the document actually points to
+        // any more. That last part is what lets a text/vector-only PDF
+        // shrink at all: pdf-lib keeps every object it loaded, including
+        // leftovers from a prior editor's incremental saves, unless
+        // something removes them. `withGc: false` is the safety fallback
+        // if that pass ever produces a file that doesn't reopen cleanly —
+        // see the verification wrapper below.
+        //
+        // `quality` and `scale` are the two levers the outer search below
+        // sweeps to hit the target size: quality is tried first (cheapest
+        // in visual cost), and `scale` — which shrinks each recompressed
+        // image's actual pixel dimensions, updating its declared Width/
+        // Height so viewers render it correctly — only kicks in if even
+        // minimum quality can't get there.
+        async function runCompressPass({ withGc, quality, scale }) {
           const doc = await PDFDocument.load(bytes);
 
           function decodeAscii85(input) {
@@ -2896,14 +3050,16 @@ function renderSingleFileConfig() {
             const url = URL.createObjectURL(blob);
             const img = new Image();
             img.onload = () => {
+              const w = Math.max(1, Math.round(img.naturalWidth * scale));
+              const h = Math.max(1, Math.round(img.naturalHeight * scale));
               const canvas = document.createElement('canvas');
-              canvas.width = img.naturalWidth;
-              canvas.height = img.naturalHeight;
-              canvas.getContext('2d').drawImage(img, 0, 0);
+              canvas.width = w;
+              canvas.height = h;
+              canvas.getContext('2d').drawImage(img, 0, 0, w, h);
               canvas.toBlob((newBlob) => {
                 URL.revokeObjectURL(url);
                 if (!newBlob) { reject(new Error('Could not re-encode image')); return; }
-                newBlob.arrayBuffer().then((buf) => resolve(new Uint8Array(buf)));
+                newBlob.arrayBuffer().then((buf) => resolve({ bytes: new Uint8Array(buf), width: w, height: h }));
               }, 'image/jpeg', quality);
             };
             img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not decode embedded image')); };
@@ -2913,7 +3069,6 @@ function renderSingleFileConfig() {
           let recompressedCount = 0;
           let imagesFound = 0;
           const entries = Array.from(doc.context.enumerateIndirectObjects());
-          console.log(`[Compress PDF] Scanning ${entries.length} objects...`);
           for (let i = 0; i < entries.length; i++) {
             const [ref, obj] = entries[i];
             if (!obj || typeof obj.dict === 'undefined') continue;
@@ -2922,9 +3077,7 @@ function renderSingleFileConfig() {
             imagesFound++;
             let filterObj = obj.dict.get(PDFName.of('Filter'));
             const filterChain = filterObj && filterObj.array ? filterObj.array.map((f) => f.toString()) : filterObj ? [filterObj.toString()] : [];
-            console.log(`[Compress PDF] Image #${imagesFound} filter chain:`, filterChain);
             if (!filterChain.length || filterChain[filterChain.length - 1] !== '/DCTDecode') {
-              console.log(`[Compress PDF] Skipping — last filter isn't DCTDecode`);
               continue;
             }
             const hasAscii85 = filterChain.includes('/ASCII85Decode');
@@ -2932,27 +3085,30 @@ function renderSingleFileConfig() {
             updateProcessingCaption(`Recompressing image ${recompressedCount + 1}...`);
             try {
               const originalBytes = obj.contents;
-              console.log(`[Compress PDF] originalBytes length: ${originalBytes.length}, hasAscii85: ${hasAscii85}, first bytes:`, Array.from(originalBytes.slice(0, 10)));
               const actualJpegBytes = hasAscii85 ? decodeAscii85(originalBytes) : originalBytes;
-              console.log(`[Compress PDF] decoded JPEG bytes length: ${actualJpegBytes.length}, starts with FFD8:`, actualJpegBytes[0] === 0xFF && actualJpegBytes[1] === 0xD8);
-              const newBytes = await recompressJpeg(actualJpegBytes);
-              console.log(`[Compress PDF] recompressed bytes length: ${newBytes.length} (vs original ${originalBytes.length})`);
+              const { bytes: newBytes, width: newWidth, height: newHeight } = await recompressJpeg(actualJpegBytes);
               if (newBytes.length < originalBytes.length) {
                 const newDict = obj.dict.clone(doc.context);
                 newDict.set(PDFName.of('Length'), doc.context.obj(newBytes.length));
                 // New bytes are plain JPEG — filter chain must drop ASCII85Decode now that we're not re-encoding to it
                 newDict.set(PDFName.of('Filter'), PDFName.of('DCTDecode'));
+                if (scale < 1) {
+                  // Raster dimensions actually shrank — the XObject dict's
+                  // declared Width/Height must match the new JPEG, but the
+                  // page content stream's own display matrix (how big the
+                  // image is drawn) is independent of this, so nothing
+                  // else on the page needs to change.
+                  newDict.set(PDFName.of('Width'), doc.context.obj(newWidth));
+                  newDict.set(PDFName.of('Height'), doc.context.obj(newHeight));
+                }
                 const newStream = PDFRawStream.of(newDict, newBytes);
                 doc.context.assign(ref, newStream);
                 recompressedCount++;
-              } else {
-                console.log(`[Compress PDF] Skipped — new bytes (${newBytes.length}) not smaller than original (${originalBytes.length})`);
               }
             } catch (imgErr) {
               console.log(`[Compress PDF] Image #${imagesFound} failed:`, imgErr.message);
             }
           }
-          console.log(`[Compress PDF] Done. Found ${imagesFound} image(s), recompressed ${recompressedCount}.`);
 
           // Tool-fingerprint metadata (Producer/Creator + the XMP packet) is
           // pure bloat from whatever software last wrote the file — never
@@ -3006,7 +3162,6 @@ function renderSingleFileConfig() {
               for (const [ref] of doc.context.enumerateIndirectObjects()) {
                 if (!visited.has(ref)) { doc.context.delete(ref); orphansRemoved++; }
               }
-              console.log(`[Compress PDF] GC removed ${orphansRemoved} unreferenced object(s).`);
             } catch (gcErr) {
               console.log('[Compress PDF] GC pass skipped:', gcErr.message);
             }
@@ -3017,34 +3172,94 @@ function renderSingleFileConfig() {
           return { outBytes, recompressedCount, imagesFound, metadataTrimmed, orphansRemoved };
         }
 
-        let result = await runCompressPass({ withGc: true });
-        // Safety net: confirm the GC'd file still opens and has every page
-        // before trusting it. If a document has some non-standard reference
-        // our mark-and-sweep didn't know to follow, fall back to the same
-        // pass without object removal rather than risk handing back a file
-        // that's smaller but broken.
-        if (result.orphansRemoved > 0) {
-          try {
-            const check = await PDFDocument.load(result.outBytes);
-            if (check.getPageCount() !== originalPageCount) throw new Error('page count mismatch');
-          } catch (verifyErr) {
-            console.log('[Compress PDF] GC output failed verification, redoing without it:', verifyErr.message);
-            result = await runCompressPass({ withGc: false });
+        // Verified pass: runs the GC'd compression, then confirms the
+        // result still opens and has every page before trusting it. If a
+        // document has some non-standard reference our mark-and-sweep
+        // didn't know to follow, falls back to the same pass without
+        // object removal rather than risk handing back a file that's
+        // smaller but broken.
+        async function runVerifiedPass(quality, scale) {
+          let result = await runCompressPass({ withGc: true, quality, scale });
+          if (result.orphansRemoved > 0) {
+            try {
+              const check = await PDFDocument.load(result.outBytes);
+              if (check.getPageCount() !== originalPageCount) throw new Error('page count mismatch');
+            } catch (verifyErr) {
+              console.log('[Compress PDF] GC output failed verification, redoing without it:', verifyErr.message);
+              result = await runCompressPass({ withGc: false, quality, scale });
+            }
+          }
+          return result;
+        }
+
+        // Global quality binary search: the target size applies to the
+        // whole document, and it may contain several embedded images, so
+        // rather than optimizing each image's byte budget independently
+        // (a much harder problem) we sweep one quality value applied to
+        // every embedded JPEG, re-running the full verified pass per
+        // trial. Quality alone is tried first (cheapest in visual cost);
+        // only if minimum quality still can't reach the target do we fall
+        // back to shrinking the images' actual pixel dimensions too.
+        const maxQuality = 0.9, minQuality = 0.05;
+        updateProcessingCaption('Recompressing images...');
+        let best = { result: await runVerifiedPass(maxQuality, 1), quality: maxQuality, scale: 1 };
+        if (best.result.outBytes.length > targetBytes) {
+          const loResult = await runVerifiedPass(minQuality, 1);
+          best = { result: loResult, quality: minQuality, scale: 1 };
+          if (loResult.outBytes.length > targetBytes) {
+            // Even minimum quality at full resolution is too big — quality
+            // alone can't get there, so reduce the images' pixel
+            // dimensions instead of spending iterations on a binary
+            // search that can't succeed at this resolution.
+            const fallbackScales = [0.5, 0.3, 0.15];
+            for (const scale of fallbackScales) {
+              updateProcessingCaption(`Reducing image resolution to ${Math.round(scale * 100)}% and recompressing...`);
+              const scaledResult = await runVerifiedPass(minQuality, scale);
+              if (scaledResult.outBytes.length < best.result.outBytes.length) {
+                best = { result: scaledResult, quality: minQuality, scale };
+              }
+              if (scaledResult.outBytes.length <= targetBytes) break;
+            }
+          } else {
+            // minQuality fits, maxQuality doesn't — binary-search for the
+            // highest quality that still fits at full resolution.
+            let lo = minQuality, hi = maxQuality, bestQ = minQuality, bestResult = loResult;
+            const maxIterations = 5;
+            for (let iter = 0; iter < maxIterations; iter++) {
+              const mid = (lo + hi) / 2;
+              updateProcessingCaption(`Optimizing image quality (pass ${iter + 1} of ${maxIterations})...`);
+              const midResult = await runVerifiedPass(mid, 1);
+              if (midResult.outBytes.length <= targetBytes) {
+                bestResult = midResult;
+                bestQ = mid;
+                lo = mid;
+              } else {
+                hi = mid;
+              }
+            }
+            best = { result: bestResult, quality: bestQ, scale: 1 };
           }
         }
 
-        const { outBytes, recompressedCount, metadataTrimmed, orphansRemoved } = result;
+        const { outBytes, recompressedCount, metadataTrimmed, orphansRemoved } = best.result;
         const blob = new Blob([outBytes], { type: 'application/pdf' });
         const newKB = blob.size / 1024;
         const pct = Math.round(100 - (newKB / originalKB) * 100);
         const savedSomething = pct > 0;
+        const hitTarget = blob.size <= targetBytes;
         const extras = [];
         if (recompressedCount > 0) extras.push(`${recompressedCount} image(s) recompressed`);
+        if (best.scale < 1) extras.push('image resolution reduced');
         if (orphansRemoved > 0) extras.push('unused data removed');
         if (metadataTrimmed) extras.push('metadata cleaned');
-        const note = savedSomething
-          ? `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller); ${extras.length ? extras.join(', ') + ', ' : ''}text untouched.`
-          : 'This PDF is already about as small as it gets: no embedded JPEGs to recompress and no extra data to trim without changing its content.';
+        let note;
+        if (!savedSomething) {
+          note = 'This PDF is already about as small as it gets: no embedded JPEGs to recompress and no extra data to trim without changing its content.';
+        } else if (hitTarget) {
+          note = `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller); ${extras.length ? extras.join(', ') + ', ' : ''}text untouched. Meets your ${targetLabel} target.`;
+        } else {
+          note = `${originalKB.toFixed(0)}KB → ${newKB.toFixed(0)}KB (${pct}% smaller); ${extras.length ? extras.join(', ') + ', ' : ''}text untouched. This is the smallest we could get it — couldn't quite reach ${targetLabel} (this PDF's images may use a format we can't recompress further, or there's little more to trim).`;
+        }
         await minWait(300);
         showResultState(blob, `compressed-${currentFile.name}`, note);
       } catch (err) { showErrorState(err.message); }
