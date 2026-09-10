@@ -15,9 +15,9 @@
     "category": "image",
     "slug": "compress-image",
     "oldUrl": "/image?tool=compress",
-    "title": "Compress Image Online Free | OnlineToolsWeb",
-    "h1": "Compress Image Online",
-    "description": "Shrink file size with a quality slider. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Compress Image to 50KB Online Free | OnlineToolsWeb",
+    "h1": "Compress Image to 50KB Online",
+    "description": "Compress an image to 50KB for free. Pick a target size and get the best quality that fits, right in your browser: no upload, no signup."
   },
   {
     "key": "crop",
@@ -185,9 +185,9 @@
     "category": "word",
     "slug": "word-to-excel",
     "oldUrl": "/word?tool=wordtoexcel",
-    "title": "Word to Excel Online Free | OnlineToolsWeb",
-    "h1": "Word to Excel Online",
-    "description": "Pull tables from a Word doc into a spreadsheet. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Convert Word to Excel Online Free | OnlineToolsWeb",
+    "h1": "Convert Word to Excel Online",
+    "description": "Convert Word to Excel for free — pull tables from a .docx file straight into a spreadsheet. Runs in your browser, no upload or signup needed."
   },
   {
     "key": "wordtopdf",
@@ -305,9 +305,9 @@
     "category": "pdf",
     "slug": "compress-pdf",
     "oldUrl": "/pdf?tool=pdfcompress",
-    "title": "Compress PDF Online Free | OnlineToolsWeb",
-    "h1": "Compress PDF Online",
-    "description": "Shrink file size by recompressing images and trimming unused data. Text and vectors stay untouched. No upload, no signup, runs in your browser."
+    "title": "Compress PDF to 50KB Online Free | OnlineToolsWeb",
+    "h1": "Compress PDF to 50KB Online",
+    "description": "Compress a PDF to 50KB for free. Pick your target size and this tool automatically finds the best quality that fits — runs in your browser, no upload needed."
   },
   {
     "key": "pdftoword",

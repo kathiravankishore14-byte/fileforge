@@ -111,17 +111,17 @@ const TOOL_ICON_OVERRIDES = {
 const toolMeta = {
   resize: { label: 'Resize Image', desc: 'Set exact pixel dimensions for any photo.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
   compress: {
-    label: 'Compress Image', desc: 'Shrink a photo down to a target file size, like 30KB.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image',
-    // SEO: targets the "compress image to 30kb" long-tail search (a
+    label: 'Compress Image', desc: 'Shrink a photo down to a target file size, like 50KB.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image',
+    // SEO: targets the "compress image to 50kb" long-tail search (a
     // common target size for form uploads/ID photos) — overrides only
     // the dedicated landing page's title/description/hero copy; the
     // on-site label above is untouched since it also drives the nav,
     // tool cards, and buttons where this phrasing wouldn't fit.
     heroCopy: {
-      title: 'Compress Image to 30KB Online Free | OnlineToolsWeb',
-      metaDescription: 'Compress an image to 30KB for free. Pick your target size and this tool automatically finds the best quality that fits. Runs entirely in your browser — no upload, no signup needed.',
-      h1: 'Compress Image to 30KB Online',
-      intro: 'Need a photo under 30KB for a form upload, ID photo, or faster page loads? Pick your target size — 30KB is the default — and this tool automatically finds the highest quality that still fits, nothing ever leaves your device. Drop your image and get your result in seconds.',
+      title: 'Compress Image to 50KB Online Free | OnlineToolsWeb',
+      metaDescription: 'Compress an image to 50KB for free. Pick a target size and get the best quality that fits, right in your browser: no upload, no signup.',
+      h1: 'Compress Image to 50KB Online',
+      intro: 'Need a photo under 50KB for a form upload, ID photo, or faster page loads? Pick your target size — 50KB is the default — and this tool automatically finds the highest quality that still fits, nothing ever leaves your device. Drop your image and get your result in seconds.',
     },
   },
   crop: { label: 'Crop Image', desc: 'Trim an image down to the area you need.', needsConfig: true, accept: 'image/*', category: 'image', iconTo: 'image' },
@@ -187,15 +187,15 @@ const toolMeta = {
   pdfwatermark: { label: 'Watermark PDF', desc: 'Stamp text across every page.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfsplit: { label: 'Split PDF', desc: 'Break a PDF into separate files by page range.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf' },
   pdfcompress: {
-    label: 'Compress PDF', desc: 'Shrink a PDF down to a target file size, like 30KB, by recompressing images and trimming unused data. Text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf',
-    // SEO: targets the "compress pdf to 30kb" long-tail search (a common
+    label: 'Compress PDF', desc: 'Shrink a PDF down to a target file size, like 50KB, by recompressing images and trimming unused data. Text and vectors stay untouched.', needsConfig: true, accept: '.pdf', category: 'pdf', iconTo: 'pdf',
+    // SEO: targets the "compress pdf to 50kb" long-tail search (a common
     // required size for online form/portal uploads) — see the heroCopy
     // note on the `compress` tool above for how this override works.
     heroCopy: {
-      title: 'Compress PDF to 30KB Online Free | OnlineToolsWeb',
-      metaDescription: 'Compress a PDF to 30KB for free. Pick your target size and this tool automatically finds the best quality that fits — runs in your browser, no upload needed.',
-      h1: 'Compress PDF to 30KB Online',
-      intro: 'Need a PDF under 30KB for an online form, application, or email attachment? Pick your target size — 30KB is the default — and this tool automatically recompresses images and trims unused data to fit, without touching your text. Drop your file and get your result in seconds.',
+      title: 'Compress PDF to 50KB Online Free | OnlineToolsWeb',
+      metaDescription: 'Compress a PDF to 50KB for free. Pick your target size and this tool automatically finds the best quality that fits — runs in your browser, no upload needed.',
+      h1: 'Compress PDF to 50KB Online',
+      intro: 'Need a PDF under 50KB for an online form, application, or email attachment? Pick your target size — 50KB is the default — and this tool automatically recompresses images and trims unused data to fit, without touching your text. Drop your file and get your result in seconds.',
     },
   },
   pdftoword: { label: 'PDF to Word', desc: 'Extract text into an editable Word document.', needsConfig: false, accept: '.pdf', category: 'pdf', iconTo: 'word' },
@@ -1754,8 +1754,8 @@ function renderSingleFileConfig() {
       <div class="config-panel">
         <label>Target file size
           <select id="cfgTargetSize">
-            <option value="30" selected>30 KB (smallest — forms &amp; ID uploads)</option>
-            <option value="50">50 KB</option>
+            <option value="30">30 KB (smallest)</option>
+            <option value="50" selected>50 KB (forms &amp; ID uploads)</option>
             <option value="100">100 KB</option>
             <option value="300">300 KB</option>
             <option value="1024">1 MB</option>
@@ -2966,8 +2966,8 @@ function renderSingleFileConfig() {
       <div class="config-panel">
         <label>Target file size
           <select id="cfgTargetSize">
-            <option value="30" selected>30 KB (smallest — forms &amp; portal uploads)</option>
-            <option value="50">50 KB</option>
+            <option value="30">30 KB (smallest)</option>
+            <option value="50" selected>50 KB (forms &amp; portal uploads)</option>
             <option value="100">100 KB</option>
             <option value="300">300 KB</option>
             <option value="1024">1 MB</option>
