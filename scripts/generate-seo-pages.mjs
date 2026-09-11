@@ -28,6 +28,10 @@ const SITE_ORIGIN = 'https://onlinetoolsweb.com';
 // burden this phase, and a single accurate, on-brand image beats a
 // missing or generic one everywhere it's shared.
 const OG_IMAGE_URL = `${SITE_ORIGIN}/images/social-preview.jpg`;
+// <lastmod> value written for every sitemap URL. Bump this by hand when
+// page content meaningfully changes — a date that moves on every build
+// is noise search engines quickly learn to ignore.
+const SITE_LASTMOD = '2026-09-11';
 
 const { toolMeta, categoryNavConfig, pageUrlMap, categoryLabels, categoryIcons, toolIconOverrides } =
   extractMainData(resolve(ROOT, 'src/main.js'));
@@ -73,6 +77,122 @@ function relatedKeysFor(key, meta) {
   return ordered.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon).slice(0, 6);
 }
 
+
+// ---------- hand-written long-form SEO content ----------
+// Per-tool editorial copy for pages we're actively trying to rank. Each
+// entry may override the auto-derived title/description/h1/intro, replace
+// the generated FAQ list outright, and supply a `body` block rendered as
+// an extra <section class="tp-section tp-content"> between "How it works"
+// and "Related Tools".
+//
+// Values here are author-written HTML and are deliberately NOT escaped, so
+// inline <strong>, <em> and <a> work. Never put user input in this map.
+//
+// To add another tool: copy the wordtoexcel entry, change the key to the
+// toolMeta key, and rerun `node scripts/generate-seo-pages.mjs`.
+const PAGE_SEO = {
+  wordtoexcel: {
+    title: `Word to Excel Converter Online Free | OnlineToolsWeb`,
+    description: `Free Word to Excel converter online. Turn tables in your .docx into a clean .xlsx spreadsheet in seconds — no signup, no upload, works in any browser.`,
+    appName: `Word to Excel Converter | OnlineToolsWeb`,
+    h1: `Word to Excel Converter — Online and Free`,
+    intro: `Convert Word to Excel online free with no signup and no software to install. Drop in a .docx file and this Word to Excel converter pulls every table straight into a downloadable .xlsx spreadsheet — rows, columns and cells intact — so you never have to copy and paste a table by hand again.`,
+    faq: [
+      {
+        q: `Is the Word to Excel converter free to use?`,
+        a: `Yes. Converting Word to Excel on OnlineToolsWeb is completely free — no trial period, no credit card and no locked premium export. Optional premium features may be introduced later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `How do I convert Word to Excel online for free?`,
+        a: `Open this page, drop your .docx file into the upload box, check the preview and download the .xlsx file. It's free, there's no signup, and nothing is uploaded to a server.`,
+      },
+      {
+        q: `Can I convert Word to Excel without installing software?`,
+        a: `Yes. This Word to Excel converter runs entirely in your web browser, so there is nothing to download, install or update — on Windows, Mac, Android or iPhone.`,
+      },
+      {
+        q: `Is my file safe when I convert Word to Excel?`,
+        a: `Yes. Your file is processed entirely on your own device and is never uploaded anywhere, so confidential documents like contracts, invoices and payroll sheets never leave your computer.`,
+      },
+      {
+        q: `Will my formatting be kept when I convert Word to Excel?`,
+        a: `Table structure — rows, columns and cell contents — is preserved. Page-level Word styling such as fonts, colours, images, headers and footers isn't carried into the spreadsheet, because Excel stores data in a grid rather than a printed page.`,
+      },
+      {
+        q: `Does the Word to Excel converter work on mobile?`,
+        a: `Yes. It works in Chrome, Safari, Firefox and Edge on phones and tablets, the same way it works on a laptop.`,
+      },
+      {
+        q: `Can I convert an old .doc file to Excel?`,
+        a: `This tool accepts Word (.docx) files. To convert an older .doc file, open it in Word or Google Docs and save it as .docx first, then bring it back here.`,
+      },
+      {
+        q: `Is there a limit on file size or the number of conversions?`,
+        a: `No. Because the conversion happens on your own device, there's no server quota — you can convert as many Word files to Excel as you need.`,
+      },
+    ],
+    body: {
+      h2: `Word to Excel converter — free, private and online`,
+      blocks: [
+        { p: `Searching for a <strong>Word to Excel converter online free</strong> usually means one thing: you have a .docx file with tables in it, and you need that data in a spreadsheet you can actually sort, total and filter. This tool does exactly that job — in your browser, in a few seconds, without an account.` },
+
+        { h3: `How to convert Word to Excel online free` },
+        { ol: [
+          `<strong>Upload your Word file.</strong> Drag your .docx onto the box above, or tap <em>Browse files</em> to pick it from your device. Nothing is sent to a server — the conversion runs inside your browser.`,
+          `<strong>Let the converter read your tables.</strong> The tool scans the document and detects every table in it, keeping each row and column exactly where it was.`,
+          `<strong>Check the preview.</strong> You'll see how the spreadsheet will look before you commit, so you can spot a stray header or a merged cell early.`,
+          `<strong>Download your Excel file.</strong> Save the finished .xlsx and open it in Microsoft Excel, Google Sheets, LibreOffice Calc or Apple Numbers.`,
+        ] },
+        { p: `The whole process takes a few seconds, and you can convert Word to Excel as many times as you like — there's no daily limit and no account to create.` },
+
+        { h3: `Why use this free Word to Excel converter` },
+        { ul: [
+          `<strong>Completely free.</strong> No trial period, no credit card, no locked “premium” export. Convert Word to Excel online free, every time.`,
+          `<strong>No signup or email required.</strong> Most Word to Excel converters ask for an email before they hand over the file. This one doesn't.`,
+          `<strong>Your file never leaves your device.</strong> The conversion happens locally in your browser, so confidential invoices, payroll sheets, student marks and client data stay private.`,
+          `<strong>No watermarks, no file-size games.</strong> The spreadsheet you download is the complete one.`,
+          `<strong>Works on any device.</strong> Windows, Mac, Linux, Android and iPhone — if it runs a modern browser, it runs this Word to Excel converter. Nothing to download or install.`,
+          `<strong>Instant results.</strong> No upload queue, no waiting for a server to free up.`,
+        ] },
+
+        { h3: `What this Word to Excel converter handles` },
+        { p: `The tool is built around the job most people actually mean when they search for a way to convert a Word document to Excel: <strong>getting tables out of a .docx and into a spreadsheet</strong>.` },
+        { ul: [
+          `Every table in the document becomes rows and cells in the .xlsx file`,
+          `Column and row order is preserved exactly as it appears in Word`,
+          `Numbers land in cells as numbers, so you can total, sort and filter them straight away`,
+          `Multiple tables in one document are kept separate and clearly laid out`,
+          `Header rows stay at the top where you expect them`,
+        ] },
+        { p: `Because Word is a page-layout format and Excel is a grid, heavy visual styling — page borders, fonts, colours, images, headers and footers — isn't carried across. You get clean, usable data rather than a picture of your document.` },
+
+        { h3: `Who uses a Word to Excel converter` },
+        { ul: [
+          `<strong>Students and researchers</strong> moving survey results or data tables out of a report and into a sheet for charts and calculations`,
+          `<strong>Teachers</strong> turning a list of marks typed in Word into a gradebook`,
+          `<strong>Accountants and small-business owners</strong> pulling line items from invoices, quotes and expense statements`,
+          `<strong>HR and admin teams</strong> converting attendance registers, shift rosters and candidate lists`,
+          `<strong>Anyone</strong> who was handed a Word file when they really needed a spreadsheet`,
+        ] },
+
+        { h3: `Word to Excel converter vs copy and paste` },
+        { p: `You <em>can</em> select a table in Word, copy it, and paste it into Excel. It works for one small table. It falls apart when the document has ten tables, when rows are merged, when numbers paste in as text, or when you have twenty documents to get through. A Word to Excel converter does the whole file in one pass and keeps the cell structure consistent — which is why it's usually faster even for a single document.` },
+
+        { h3: `Tips for a cleaner conversion` },
+        { ul: [
+          `Save your file as <strong>.docx</strong> first. If you have an older .doc file, open it in Word or Google Docs and save it in the newer format.`,
+          `Make sure your data is in a <strong>real Word table</strong>, not text lined up with tabs or spaces — real tables convert far more accurately.`,
+          `Remove blank rows and stray notes inside tables before converting, so you don't have to clean them up in Excel afterwards.`,
+          `If a table spans several pages, keep it as one continuous table rather than splitting it.`,
+        ] },
+
+        { h3: `Related spreadsheet and document tools` },
+        { p: `Working the other way round or with a different format? You can also <a href="/pdf-to-excel">convert PDF to Excel</a>, <a href="/excel-to-pdf">turn an Excel file into a PDF</a>, <a href="/image-to-excel">pull a table out of a screenshot</a> or <a href="/word-to-pdf">convert Word to PDF</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+};
+
 // ---------- per-tool SEO content derivation ----------
 function deriveSeo(key, meta) {
   const slug = TOOL_SLUGS[key];
@@ -83,17 +203,19 @@ function deriveSeo(key, meta) {
   // generic "<Label> Online Free" title wouldn't otherwise capture.
   // meta.label itself is left untouched since it also drives on-site
   // UI (nav, cards, buttons) where that phrasing wouldn't fit.
-  const title = meta.heroCopy?.title || `${meta.label} Online Free | OnlineToolsWeb`;
+  // PAGE_SEO (hand-written, highest priority) > heroCopy (main.js) > auto.
+  const page = PAGE_SEO[key] || {};
+  const title = page.title || meta.heroCopy?.title || `${meta.label} Online Free | OnlineToolsWeb`;
   const privacyClause = meta.usesServer
     ? 'Free, fast AI processing, no signup, nothing stored.'
     : 'Free, private, and runs right in your browser: no upload, no signup.';
-  let description = meta.heroCopy?.metaDescription || `${meta.desc} ${privacyClause}`;
-  if (description.length > 158) description = meta.usesServer ? `${meta.desc} No signup, nothing stored.` : `${meta.desc} No upload, no signup, runs in your browser.`;
+  let description = page.description || meta.heroCopy?.metaDescription || `${meta.desc} ${privacyClause}`;
+  if (!page.description && description.length > 158) description = meta.usesServer ? `${meta.desc} No signup, nothing stored.` : `${meta.desc} No upload, no signup, runs in your browser.`;
   // A tool can supply its own hand-written hero copy (see toolMeta in
   // main.js) when the generic auto-derived phrasing undersells it —
   // used for Remove Background, which leads with real use cases rather
   // than the generic "drop or select your file" pattern.
-  const h1 = meta.heroCopy?.h1 || `${meta.label} Online`;
+  const h1 = page.h1 || meta.heroCopy?.h1 || `${meta.label} Online`;
   // Trimmed to a two-line hero: the tool's own value line, then one short
   // action line. The trust badges just below the hero already carry the
   // "runs in your browser, nothing uploaded" promise, so the intro no
@@ -101,7 +223,7 @@ function deriveSeo(key, meta) {
   const actionHint = meta.noFile
     ? 'Fill in the details'
     : (meta.multiFile ? 'Drop your files' : 'Drop your file');
-  const intro = meta.heroCopy?.intro || `${meta.desc} ${actionHint} and get your result in seconds.`;
+  const intro = page.intro || meta.heroCopy?.intro || `${meta.desc} ${actionHint} and get your result in seconds.`;
 
   const faq = [];
   faq.push({
@@ -152,7 +274,12 @@ function deriveSeo(key, meta) {
         'Download your result, or process another file.',
       ];
 
-  return { slug, title, description, h1, intro, faq, steps };
+  // A PAGE_SEO entry with its own `faq` replaces the generated list
+  // outright (rather than appending), so a hand-tuned page controls both
+  // the visible accordion and the FAQPage JSON-LD in one place.
+  const finalFaq = page.faq && page.faq.length ? page.faq : faq;
+  const appName = page.appName || `${meta.label} | OnlineToolsWeb`;
+  return { slug, title, description, h1, intro, faq: finalFaq, steps, appName, body: page.body || null };
 }
 
 // ---------- HTML building blocks ----------
@@ -299,6 +426,28 @@ function popularToolsHtml(key, meta) {
     </section>`;
 }
 
+
+// Hand-written long-form copy block for pages that have a PAGE_SEO entry
+// with a `body` (see PAGE_SEO above). Rendered between "How it works" and
+// "Related Tools" so the editorial copy sits above the link sections but
+// below the tool itself — visitors still land straight on the dropzone.
+// Content is author-written HTML and is intentionally not escaped.
+function seoContentHtml(seo) {
+  if (!seo.body || !seo.body.blocks || !seo.body.blocks.length) return '';
+  const blocks = seo.body.blocks.map((b) => {
+    if (b.h3) return `      <h3>${b.h3}</h3>`;
+    if (b.p) return `      <p>${b.p}</p>`;
+    if (b.ul) return `      <ul>\n${b.ul.map((li) => `        <li>${li}</li>`).join('\n')}\n      </ul>`;
+    if (b.ol) return `      <ol>\n${b.ol.map((li) => `        <li>${li}</li>`).join('\n')}\n      </ol>`;
+    return '';
+  }).filter(Boolean).join('\n');
+  return `
+    <section class="tp-section tp-content" data-reveal>
+      <h2>${seo.body.h2}</h2>
+${blocks}
+    </section>`;
+}
+
 function jsonLd(key, meta, seo, categoryUrl) {
   const breadcrumb = {
     '@context': 'https://schema.org',
@@ -312,7 +461,7 @@ function jsonLd(key, meta, seo, categoryUrl) {
   const app = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: `${meta.label} | OnlineToolsWeb`,
+    name: seo.appName,
     url: `${SITE_ORIGIN}/${seo.slug}`,
     applicationCategory: 'UtilitiesApplication',
     operatingSystem: 'Any (runs in browser)',
@@ -416,7 +565,7 @@ function buildPage(key) {
     </div>
 
     ${popularToolsHtml(key, meta)}
-    ${stepsCartoonHtml()}
+    ${stepsCartoonHtml()}${seoContentHtml(seo)}
     ${relatedToolsHtml(key, meta)}
     ${faqHtml(seo.faq)}
     </main>
@@ -456,11 +605,21 @@ const staticPages = [
   { loc: '/ppt', priority: '0.8' },
   { loc: '/other-tools', priority: '0.8' },
 ];
+// Informational pages linked from the site footer. They belong in the
+// sitemap — they were previously missing, so they relied entirely on
+// crawlers following footer links — but at a low priority, since a
+// search result should land on a tool ahead of the terms page.
+const infoPages = [
+  { loc: '/about', priority: '0.3' },
+  { loc: '/contact', priority: '0.3' },
+  { loc: '/privacy-policy', priority: '0.3' },
+  { loc: '/terms-of-service', priority: '0.3' },
+];
 const toolPages = routingMap.map((r) => ({ loc: `/${r.slug}`, priority: '0.7' }));
-const allPages = [...staticPages, ...toolPages];
+const allPages = [...staticPages, ...toolPages, ...infoPages];
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allPages.map((p) => `  <url>\n    <loc>${SITE_ORIGIN}${p.loc}</loc>\n    <priority>${p.priority}</priority>\n  </url>`).join('\n')}
+${allPages.map((p) => `  <url>\n    <loc>${SITE_ORIGIN}${p.loc}</loc>\n    <lastmod>${SITE_LASTMOD}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`).join('\n')}
 </urlset>
 `;
 writeFileSync(resolve(ROOT, 'public/sitemap.xml'), sitemapXml, 'utf-8');
