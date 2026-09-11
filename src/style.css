@@ -2158,11 +2158,13 @@ summary:focus-visible,
 
 .site-search-input {
   width: 100%;
-  /* Left padding matches the right side now that the leading magnifier
-     icon is gone — the field's own blue search button at the trailing
-     edge is the only search affordance left, so nothing needs to make
-     room for an icon on the left. */
-  padding: 14px 60px;
+  /* The leading magnifier icon is gone, so the left side no longer has
+     to make room for one — placeholder and typed text start close to
+     the field's leading edge (just clear of the pill's curve) instead
+     of floating 60px in, which read as centered on the wide homepage
+     bar. The right side keeps its 60px for the clear button and the
+     blue search button that sit at the trailing edge. */
+  padding: 14px 60px 14px 24px;
   /* Light mode sits quiet at rest — a plain neutral border, no glow —
      and only lights up on hover/focus (see below). Dark mode is the
      exception: its always-on glow is set unconditionally further down
