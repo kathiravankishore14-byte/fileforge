@@ -31,7 +31,7 @@ const OG_IMAGE_URL = `${SITE_ORIGIN}/images/social-preview.jpg`;
 // <lastmod> value written for every sitemap URL. Bump this by hand when
 // page content meaningfully changes — a date that moves on every build
 // is noise search engines quickly learn to ignore.
-const SITE_LASTMOD = '2026-09-11';
+const SITE_LASTMOD = '2026-09-12';
 
 const { toolMeta, categoryNavConfig, pageUrlMap, categoryLabels, categoryIcons, toolIconOverrides } =
   extractMainData(resolve(ROOT, 'src/main.js'));
@@ -495,6 +495,220 @@ const PAGE_SEO = {
 
         { h3: `Related PDF tools` },
         { p: `You can also <a href="/merge-pdf">merge several PDFs into one</a>, <a href="/split-pdf">split a PDF by page range</a>, <a href="/delete-pdf-pages">delete pages</a>, <a href="/extract-pdf-pages">pull specific pages out</a>, <a href="/pdf-to-word">convert a PDF to Word</a> or <a href="/pdf-to-jpg">export pages as images</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+  texttoppt: {
+    title: `Text to PPT Converter Online Free | OnlineToolsWeb`,
+    description: `Paste your text, get a PowerPoint. A blank line starts a new slide and the first line becomes its title. Free, no signup, and nothing is uploaded.`,
+    appName: `Text to PPT Converter | OnlineToolsWeb`,
+    h1: `Text to PPT Converter — Free and Online`,
+    intro: `Paste your text and download a PowerPoint file. Separate slides with a blank line: the first line of each block becomes the slide title and the lines under it become bullets. Everything runs in your browser, so nothing you type is uploaded.`,
+    faq: [
+      {
+        q: `Is the Text to PPT converter free to use?`,
+        a: `Yes. Turning text into a PowerPoint on OnlineToolsWeb is completely free — no trial, no credit card and no locked export. Optional premium features may be introduced later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `How do I convert text into PowerPoint slides?`,
+        a: `Paste or type your text into the box, then press Generate PPTX. Leave a blank line between slides: the first line of each block becomes the slide title, and every line under it becomes a bullet on that slide. The .pptx file downloads straight away.`,
+      },
+      {
+        q: `Does this use AI to write my presentation?`,
+        a: `No. It doesn't write content, pick images or invent slides — it takes text you have already written and builds the slide structure from it. That makes it predictable: what you paste is exactly what ends up on the slides, with no made-up facts to check.`,
+      },
+      {
+        q: `Do I need to install anything or create an account?`,
+        a: `No. The converter runs directly in your browser on any modern desktop or mobile browser. There is nothing to download, no signup, and no email address to hand over before you get your file.`,
+      },
+      {
+        q: `Does the tool store or send what I type?`,
+        a: `No. The presentation is built on your own device and never leaves it, so lecture notes, meeting agendas and client material stay private. Nothing you type here is uploaded or saved on a server.`,
+      },
+      {
+        q: `Can I edit the slides after I download them?`,
+        a: `Yes. You get a normal .pptx file, not an image or a PDF. Open it in PowerPoint, Google Slides, Keynote or LibreOffice Impress and edit every title, bullet and layout as usual.`,
+      },
+      {
+        q: `Can I add a theme, template or images?`,
+        a: `Not in this tool — the slides come out plain, with a bold title and bulleted text. Apply a look after downloading: in PowerPoint use the Design tab, or in Google Slides use Theme. Because the text sits in real placeholders, a theme restyles the whole deck in one click.`,
+      },
+      {
+        q: `How many slides can I make at once?`,
+        a: `As many as you have blocks of text. The tool adds one slide per block, and since the work happens on your own device there is no server quota and no daily limit.`,
+      },
+      {
+        q: `Does the Text to PPT converter work on mobile?`,
+        a: `Yes. It works in Chrome, Safari, Firefox and Edge on phones and tablets exactly as it does on a laptop, which is handy for turning notes into a deck on the way to a class or meeting.`,
+      },
+      {
+        q: `What file do I get at the end?`,
+        a: `A PowerPoint file named presentation.pptx. It is a standard Office file, so it opens in Microsoft PowerPoint and in every common alternative without conversion.`,
+      },
+    ],
+    body: {
+      h2: `Text to PPT converter — turn an outline into slides`,
+      blocks: [
+        { p: `Most searches for a <strong>text to PPT converter</strong> come down to one job: you already have the words — notes, an outline, a list of talking points — and you need them laid out as PowerPoint slides without typing each one by hand. This tool does that job in your browser, in a few seconds, with no account.` },
+
+        { h3: `How to convert text to PPT` },
+        { ol: [
+          `<strong>Open the tool above</strong> and paste your text into the box. There's no file to upload — you can type straight into it.`,
+          `<strong>Put a blank line between slides.</strong> Each block of text becomes one slide.`,
+          `<strong>Put the slide title on the first line</strong> of each block. Every line below it becomes a bullet point on that slide.`,
+          `<strong>Press Generate PPTX</strong> and the presentation downloads to your device, ready to open and edit.`,
+        ] },
+
+        { h3: `How to format your text` },
+        { p: `The formatting rule is deliberately simple — one blank line between slides, title on top:` },
+        { p: `<code>Quarterly results<br>Revenue up 12%<br>Two new regions opened</code><br><br><code>Next quarter<br>Hire two engineers<br>Ship the mobile app</code>` },
+        { p: `That input produces two slides. The first is titled "Quarterly results" with two bullets under it; the second is titled "Next quarter" with two bullets. A block with only one line becomes a title-only slide, which is useful for section dividers.` },
+
+        { h3: `Why use this text to PPT converter` },
+        { ul: [
+          `<strong>Completely free.</strong> No trial, no credit card, no watermark on the deck you download.`,
+          `<strong>No signup or email.</strong> Most text-to-slides sites ask you to create an account before they hand over the file. This one doesn't.`,
+          `<strong>Your text never leaves your device.</strong> The .pptx is built locally in your browser, so unpublished results, internal agendas and student work stay private.`,
+          `<strong>Real, editable slides.</strong> The output is a genuine .pptx with text in proper placeholders — not an image of a slide.`,
+          `<strong>Works on any device.</strong> Windows, Mac, Linux, Android and iPhone. Nothing to install or update.`,
+          `<strong>Predictable.</strong> One block in, one slide out. No AI rewriting your wording or padding the deck with filler.`,
+        ] },
+
+        { h3: `A converter, not an AI slide generator` },
+        { p: `Most tools ranking for this search are AI presentation makers: you give them a topic and they invent the content, the images and the layout. This is a different thing, and worth knowing before you start. It converts text <em>you</em> wrote into slides, exactly as written. If you want a machine to draft the presentation for you, this isn't that tool. If you already have your notes and want them on slides in ten seconds without an account, credits or a subscription, this is faster and there is nothing to fact-check afterwards.` },
+
+        { h3: `Who uses a text to PPT converter` },
+        { ul: [
+          `<strong>Students</strong> turning lecture notes or an essay outline into a presentation the night before a seminar`,
+          `<strong>Teachers and trainers</strong> converting a lesson plan or workshop outline into slides`,
+          `<strong>Managers</strong> putting a meeting agenda on screen without opening PowerPoint and formatting each slide`,
+          `<strong>Developers and writers</strong> who keep notes in plain text or Markdown and need a deck from them`,
+          `<strong>Anyone</strong> who finds typing into PowerPoint slower than typing into a text box`,
+        ] },
+
+        { h3: `After you download the deck` },
+        { ul: [
+          `Apply a theme in PowerPoint (Design tab) or Google Slides (Theme) to restyle every slide at once.`,
+          `Drag in images, charts and logos where they help — the text placeholders leave room for them.`,
+          `Reorder slides in the thumbnail pane; nothing in the file is locked.`,
+          `Need a handout instead? Paste the same text into our <a href="/text-to-pdf">text to PDF tool</a>.`,
+        ] },
+
+        { h3: `Related text and presentation tools` },
+        { p: `Working with slides or plain text elsewhere? You can also <a href="/ppt-to-text">pull the text back out of a PowerPoint</a>, <a href="/pdf-to-ppt">turn a PDF into slides</a>, <a href="/image-to-ppt">build a deck from images</a>, <a href="/text-to-pdf">make a PDF from text</a> or <a href="/word-counter">check your word count</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+  imagetoexcel: {
+    title: `Image to Excel Converter Online Free | OnlineToolsWeb`,
+    description: `Free image to Excel converter. Turn a photo or screenshot of a table into an .xlsx spreadsheet — the text is read on your device, never uploaded.`,
+    appName: `Image to Excel Converter | OnlineToolsWeb`,
+    h1: `Image to Excel Converter — Online and Free`,
+    intro: `Convert a picture of a table into a spreadsheet. Drop in a JPG, PNG or screenshot and the table is read on your own device, then written into a downloadable .xlsx file — no upload, no signup and no page limit.`,
+    faq: [
+      {
+        q: `Is the Image to Excel converter free to use?`,
+        a: `Yes. Converting an image to Excel on OnlineToolsWeb is completely free — no credit card, no page credits and no locked export. Optional premium features may be introduced later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `Is my image uploaded anywhere?`,
+        a: `No. The text recognition runs inside your browser on your own device, so the picture is never sent to a server. That matters for the things people usually photograph — invoices, payslips, bank statements, medical forms and marksheets — because none of it leaves your computer or phone.`,
+      },
+      {
+        q: `Do I need to install anything?`,
+        a: `No installation needed. Image to Excel runs directly in your browser on any modern desktop or mobile browser — just open this page and use it.`,
+      },
+      {
+        q: `What image formats does it support?`,
+        a: `JPG, PNG, WebP and other common image formats. If you have an iPhone HEIC photo, run it through the free HEIC to JPG converter on this site first, then bring the JPG back here.`,
+      },
+      {
+        q: `Can I convert a screenshot of a table to Excel?`,
+        a: `Yes, and screenshots usually give the best results. Screen captures are sharp, straight and evenly lit, which is exactly what the text recognition needs. A photo of a printed page works too, as long as it's in focus and shot square-on.`,
+      },
+      {
+        q: `Is there a file size limit or a limit on how many images I can convert?`,
+        a: `No. Because everything happens on your own device there is no server quota and no daily cap. Very large images simply take a little longer, since your own processor is doing the reading.`,
+      },
+      {
+        q: `Can it read handwriting?`,
+        a: `No. The tool is built for printed or typed text — a scanned table, a screenshot, a photo of a report. Handwritten notes won't convert reliably, so those still need to be typed in by hand.`,
+      },
+      {
+        q: `What languages can it read?`,
+        a: `English. The text recognition is set up for English characters, so tables in English convert well while other scripts won't be read accurately. Numbers and standard punctuation are handled as part of that.`,
+      },
+      {
+        q: `How accurate is image to Excel conversion?`,
+        a: `It depends almost entirely on the picture. A sharp, straight, well-lit image of a printed table with clear gaps between the columns converts cleanly. A blurry, tilted or low-contrast photo will produce mistakes. Always compare the spreadsheet against the original image before you use the numbers.`,
+      },
+      {
+        q: `Why did my table come out in the wrong columns?`,
+        a: `Columns are detected from the visible gaps between them, so anything that blurs those gaps confuses the split — a tilted photo, text that runs into the next column, or extra page content around the table. Crop the image down to just the table, shoot it square-on, and convert again.`,
+      },
+      {
+        q: `Will the file open in Google Sheets?`,
+        a: `Yes. You get a standard .xlsx file, so it opens in Microsoft Excel, Google Sheets, LibreOffice Calc and Apple Numbers, and every cell is editable.`,
+      },
+      {
+        q: `Does the Image to Excel converter work on mobile?`,
+        a: `Yes. It works in Chrome, Safari, Firefox and Edge on phones and tablets, so you can photograph a table and convert it without moving the picture to a computer first.`,
+      },
+    ],
+    body: {
+      h2: `Image to Excel converter — free, private and in your browser`,
+      blocks: [
+        { p: `Searching for an <strong>image to Excel converter</strong> usually means you're staring at a table you can't select: a screenshot someone sent on WhatsApp, a scanned report, a photo of a printed price list. This tool reads the table out of the picture and writes it into an .xlsx spreadsheet you can sort, total and edit — without uploading the image anywhere.` },
+
+        { h3: `How to convert an image to Excel` },
+        { ol: [
+          `<strong>Add your image.</strong> Drag a JPG, PNG or WebP onto the box above, or tap <em>Browse files</em> to pick it from your device or camera roll.`,
+          `<strong>Let it read the table.</strong> The tool finds the rows and columns from the spacing in the image, then reads each cell one at a time. Nothing is sent to a server — the recognition runs on your own device.`,
+          `<strong>Download the spreadsheet.</strong> Save the .xlsx and open it in Excel, Google Sheets, LibreOffice Calc or Apple Numbers.`,
+          `<strong>Check it against the image.</strong> Text recognition is never perfect. Scan the sheet for odd characters before you rely on the numbers.`,
+        ] },
+
+        { h3: `Why use this image to Excel converter` },
+        { ul: [
+          `<strong>Your image never leaves your device.</strong> Almost every other image-to-Excel site uploads your file, processes it on a server and promises to delete it later. Here there is no upload at all, so an invoice, payslip or medical form stays on your own machine.`,
+          `<strong>No signup and no page credits.</strong> No account, no email, no "3 free pages this month" meter.`,
+          `<strong>No file-size cap.</strong> Free tiers on server-based converters commonly stop at around 10 MB. This one has no cap, because there is no server.`,
+          `<strong>No upload queue.</strong> There is no server to wait for and no file to send up a slow connection — the work starts the moment you drop the image in.`,
+          `<strong>Editable output.</strong> Real cells in a real .xlsx file — not an image pasted into a sheet.`,
+          `<strong>Any device.</strong> Windows, Mac, Linux, Android and iPhone, with nothing to install.`,
+        ] },
+
+        { h3: `What converts well — and what doesn't` },
+        { p: `Being straight about this saves you time. The tool reads <strong>printed or typed English text</strong> and finds columns from the blank space between them. That means:` },
+        { ul: [
+          `<strong>Works well:</strong> screenshots of spreadsheets and web tables, scanned reports, clear photos of printed invoices, marksheets and price lists`,
+          `<strong>Works less well:</strong> photos taken at an angle, low-light or blurry shots, tables with columns crammed together, faint or coloured text on a busy background`,
+          `<strong>Not supported:</strong> handwriting, and scripts other than English`,
+        ] },
+
+        { h3: `Tips for a cleaner conversion` },
+        { ul: [
+          `<strong>Crop to the table.</strong> Remove headings, logos and page edges so only the grid is left — this is the single biggest improvement you can make.`,
+          `<strong>Shoot square-on.</strong> Hold the camera parallel to the page rather than at an angle, or use a scanner app that straightens the page for you.`,
+          `<strong>Get the light even.</strong> Avoid shadows across the page and glare from a flash.`,
+          `<strong>Use the biggest version you have.</strong> A full-resolution screenshot reads far better than a small one that's been resized or re-shared through chat.`,
+          `<strong>Take a screenshot instead of a photo</strong> whenever the table is already on a screen.`,
+        ] },
+
+        { h3: `Who uses an image to Excel converter` },
+        { ul: [
+          `<strong>Accountants and small-business owners</strong> pulling line items off photographed invoices, bills and receipts`,
+          `<strong>Students and researchers</strong> lifting a data table out of a scanned paper or a slide photo`,
+          `<strong>Teachers</strong> turning a printed marksheet into a gradebook`,
+          `<strong>Admin and data-entry teams</strong> digitising attendance registers, stock lists and old paper records`,
+          `<strong>Anyone</strong> sent a screenshot of a table when they needed the actual numbers`,
+        ] },
+
+        { h3: `Image to Excel vs retyping by hand` },
+        { p: `For five rows, typing is fine. For a fifty-row stock list it isn't, and hand-typed numbers carry their own error rate — transposed digits are easy to make and hard to spot. Converting gives you every row in one pass and leaves you proofreading instead of transcribing, which is faster and easier to check against the original.` },
+
+        { h3: `Related image and spreadsheet tools` },
+        { p: `Need something else from the same picture or file? You can also <a href="/pdf-to-excel">convert a PDF to Excel</a>, <a href="/word-to-excel">pull tables out of a Word document</a>, <a href="/excel-to-csv">turn a spreadsheet into CSV</a>, <a href="/heic-to-jpg">convert an iPhone HEIC photo to JPG</a> or <a href="/crop-image">crop the image first</a> — all free and all running in your browser.` },
       ],
     },
   },

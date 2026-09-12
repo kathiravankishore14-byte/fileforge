@@ -45,9 +45,9 @@
     "category": "image",
     "slug": "image-to-excel",
     "oldUrl": "/image?tool=imagetoexcel",
-    "title": "Image to Excel Online Free | OnlineToolsWeb",
-    "h1": "Image to Excel Online",
-    "description": "Extract tabular data from a photo. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Image to Excel Converter Online Free | OnlineToolsWeb",
+    "h1": "Image to Excel Converter — Online and Free",
+    "description": "Free image to Excel converter. Turn a photo or screenshot of a table into an .xlsx spreadsheet — the text is read on your device, never uploaded."
   },
   {
     "key": "imagetoppt",
@@ -445,9 +445,9 @@
     "category": "utilities",
     "slug": "text-to-ppt",
     "oldUrl": "/other-tools?tool=texttoppt",
-    "title": "Text to PPT Online Free | OnlineToolsWeb",
-    "h1": "Text to PPT Online",
-    "description": "Turn pasted text into slides. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Text to PPT Converter Online Free | OnlineToolsWeb",
+    "h1": "Text to PPT Converter — Free and Online",
+    "description": "Paste your text, get a PowerPoint. A blank line starts a new slide and the first line becomes its title. Free, no signup, and nothing is uploaded."
   },
   {
     "key": "textopdf",
