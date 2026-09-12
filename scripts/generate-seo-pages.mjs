@@ -305,7 +305,7 @@ const PAGE_SEO = {
     faq: [
       {
         q: `How do I compress an image to an exact KB size?`,
-        a: `Drop your photo into the box above and pick a target from the list — 30KB, 50KB, 100KB, 300KB or 1MB. Before you commit to anything you'll see a live estimate of the size you'd actually get, then press Compress and download the result.`,
+        a: `Drop your photo into the box above and pick a target from the list — 10KB, 20KB, 30KB, 50KB, 100KB, 300KB or 1MB. Before you commit to anything you'll see a live estimate of the size you'd actually get, then press Compress and download the result.`,
       },
       {
         q: `Is the image compressor free?`,
@@ -317,7 +317,7 @@ const PAGE_SEO = {
       },
       {
         q: `What size should I compress my image to?`,
-        a: `It depends where it's going. Online forms and ID photo uploads usually ask for 50KB or 100KB. Email attachments are comfortable at 300KB. For a website, aim at 100–300KB so pages stay fast. If a form states a maximum, pick the option at or just under it.`,
+        a: `It depends where it's going. Government exam portals usually want 10–20KB for a signature and 20–50KB for a photo. Other online forms and ID uploads ask for 50KB or 100KB. Email attachments are comfortable at 300KB. For a website, aim at 100–300KB so pages stay fast. If a form states a maximum, pick the option at or just under it.`,
       },
       {
         q: `What if my image can't reach the size I picked?`,
@@ -344,7 +344,7 @@ const PAGE_SEO = {
         { h3: `How to compress an image to a target size` },
         { ol: [
           `<strong>Add your image.</strong> Drag a JPG, PNG or WebP onto the box above, or tap <em>Browse files</em>.`,
-          `<strong>Pick your target size.</strong> Choose 30KB, 50KB, 100KB, 300KB or 1MB. 50KB is the default because it's the most commonly requested limit for form and ID uploads.`,
+          `<strong>Pick your target size.</strong> Choose 10KB, 20KB, 30KB, 50KB, 100KB, 300KB or 1MB. 50KB is the default because it's the most commonly requested limit for form and ID uploads — but 10KB and 20KB are there for exam signatures and photos.`,
           `<strong>Check the live estimate.</strong> Before you commit, the page shows the size you would actually get and how much smaller that is — so there are no surprises after the fact.`,
           `<strong>Compress and download.</strong> Your file is ready in seconds.`,
         ] },
@@ -358,8 +358,18 @@ const PAGE_SEO = {
           `<strong>Email attachments</strong> — 300KB is comfortable and keeps several photos well under any mailbox limit.`,
           `<strong>Website and blog images</strong> — 100KB to 300KB. Large images are one of the most common causes of slow pages.`,
           `<strong>Messaging and social uploads</strong> — 300KB or 1MB, since these platforms recompress anyway.`,
-          `<strong>Absolute smallest</strong> — 30KB, when a strict limit matters more than fine detail.`,
+          `<strong>Government exam forms</strong> — 10KB or 20KB, the sizes most application portals demand for signatures and photos (see the table below).`,
+          `<strong>Absolute smallest</strong> — 10KB, when a strict limit matters more than fine detail.`,
         ] },
+
+        { h3: `Sizes Indian government exam forms ask for` },
+        { p: `Application portals are strict about this, and a rejected upload can cost you a form. These are the limits the main exams publish — always check the current notification, since they do change between cycles:` },
+        { ul: [
+          `<strong>UPSC</strong> — photo 20–200KB, signature 20–100KB, both JPG on a plain white background. The signature must be 350–500 pixels wide, in black ink.`,
+          `<strong>IBPS PO</strong> — photo 200 × 230 pixels at 20–50KB, signature 140 × 60 pixels at 10–20KB, both JPG.`,
+          `<strong>Most SSC and state exams</strong> — photo 20–50KB, signature 10–20KB, JPG.`,
+        ] },
+        { p: `Pick 10KB for a signature or 20KB for a photo and this tool will find the best quality that fits. If the form also specifies exact pixel dimensions, run <a href="/resize-image">Resize Image</a> first to set the width and height, then compress.` },
 
         { h3: `How the compression actually works` },
         { p: `The tool searches rather than guesses. It starts at near-maximum JPEG quality and full resolution, and checks whether that already fits your target — if it does, you keep every pixel. If not, it narrows in on the highest quality that fits. Only when even the lowest usable quality is still too big does it begin reducing the image's actual dimensions, stepping down through 80%, 60%, 45%, 30% and 15% of the original size.` },
@@ -399,7 +409,7 @@ const PAGE_SEO = {
     faq: [
       {
         q: `How do I compress a PDF to a specific size?`,
-        a: `Drop your PDF into the box above and choose a target — 30KB, 50KB, 100KB, 300KB or 1MB. The tool recompresses the images inside the file and trims data nothing is using, aiming for the best quality that fits your target, then gives you the file to download.`,
+        a: `Drop your PDF into the box above and choose a target — 10KB, 20KB, 30KB, 50KB, 100KB, 300KB or 1MB. The tool recompresses the images inside the file and trims data nothing is using, aiming for the best quality that fits your target, then gives you the file to download.`,
       },
       {
         q: `Is the PDF compressor free?`,
@@ -438,7 +448,7 @@ const PAGE_SEO = {
         { h3: `How to compress a PDF to an exact size` },
         { ol: [
           `<strong>Add your PDF.</strong> Drag the file onto the box above or tap <em>Browse files</em>. It's opened in your browser, not uploaded.`,
-          `<strong>Choose your target size.</strong> 30KB, 50KB, 100KB, 300KB or 1MB.`,
+          `<strong>Choose your target size.</strong> 10KB, 20KB, 30KB, 50KB, 100KB, 300KB or 1MB. Small targets suit text-only documents; scans need more room.`,
           `<strong>Compress.</strong> The tool scans the embedded images, recompresses them, and clears out data nothing references any more.`,
           `<strong>Download.</strong> You're told exactly what happened — the old and new size, the percentage saved, how many images were recompressed, and that your text was left untouched.`,
         ] },

@@ -1754,7 +1754,9 @@ function renderSingleFileConfig() {
       <div class="config-panel">
         <label>Target file size
           <select id="cfgTargetSize">
-            <option value="30">30 KB (smallest)</option>
+            <option value="10">10 KB (signatures)</option>
+            <option value="20">20 KB (exam form photos)</option>
+            <option value="30">30 KB</option>
             <option value="50" selected>50 KB (forms &amp; ID uploads)</option>
             <option value="100">100 KB</option>
             <option value="300">300 KB</option>
@@ -2966,7 +2968,9 @@ function renderSingleFileConfig() {
       <div class="config-panel">
         <label>Target file size
           <select id="cfgTargetSize">
-            <option value="30">30 KB (smallest)</option>
+            <option value="10">10 KB (smallest)</option>
+            <option value="20">20 KB</option>
+            <option value="30">30 KB</option>
             <option value="50" selected>50 KB (forms &amp; portal uploads)</option>
             <option value="100">100 KB</option>
             <option value="300">300 KB</option>
