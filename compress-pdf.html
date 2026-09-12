@@ -24,7 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://onlinetoolsweb.com/"},{"@type":"ListItem","position":2,"name":"PDF","item":"https://onlinetoolsweb.com/pdf"},{"@type":"ListItem","position":3,"name":"Compress PDF","item":"https://onlinetoolsweb.com/compress-pdf"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Compress PDF | OnlineToolsWeb","url":"https://onlinetoolsweb.com/compress-pdf","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (runs in browser)","description":"Compress a PDF to 50KB for free. Pick your target size and this tool automatically finds the best quality that fits — runs in your browser, no upload needed.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Compress PDF free to use?","acceptedAnswer":{"@type":"Answer","text":"Yes, core OnlineToolsWeb tools are free to use, including Compress PDF. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free."}},{"@type":"Question","name":"Do I need to install anything to use Compress PDF?","acceptedAnswer":{"@type":"Answer","text":"No installation needed. Compress PDF runs directly in your browser on any modern desktop or mobile browser, just open this page and use it."}},{"@type":"Question","name":"Is my file safe when I use Compress PDF?","acceptedAnswer":{"@type":"Answer","text":"Yes. Compress PDF processes your file entirely on your own device. It's never uploaded anywhere, so no one else ever sees it."}},{"@type":"Question","name":"What file types does Compress PDF support?","acceptedAnswer":{"@type":"Answer","text":"Compress PDF works with PDF files."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I compress a PDF to a specific size?","acceptedAnswer":{"@type":"Answer","text":"Drop your PDF into the box above and choose a target — 30KB, 50KB, 100KB, 300KB or 1MB. The tool recompresses the images inside the file and trims data nothing is using, aiming for the best quality that fits your target, then gives you the file to download."}},{"@type":"Question","name":"Is the PDF compressor free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Compressing PDFs here is free with no signup, no email and no watermark on the result. Optional premium features may be added later for advanced workflows like batch processing, but this tool's core functionality stays free."}},{"@type":"Question","name":"Will compressing blur the text in my PDF?","acceptedAnswer":{"@type":"Answer","text":"No. Text and vector graphics are never touched — they're left exactly as they were, so they stay perfectly sharp at any zoom level and remain selectable and searchable. Only the images embedded in the document are recompressed."}},{"@type":"Question","name":"Can every PDF be compressed to 50KB?","acceptedAnswer":{"@type":"Answer","text":"No, and the tool is honest about it. A long scanned document simply contains too much image data to fit in 50KB at readable quality. In that case you're shown the smallest size it could reach and told why, so you can pick a larger target instead. PDFs that are mostly text usually shrink comfortably."}},{"@type":"Question","name":"Why didn't my text-only PDF get much smaller?","acceptedAnswer":{"@type":"Answer","text":"There's little to squeeze. Compression works mainly by recompressing images, and a text-only file has none. It can still shrink somewhat — the tool removes leftover objects that previous editors left behind and strips metadata — but don't expect a dramatic reduction."}},{"@type":"Question","name":"Does compressing remove pages or change the layout?","acceptedAnswer":{"@type":"Answer","text":"No. Every page, its order and its layout stay exactly as they were. Only the data inside the file changes. To remove pages, use the Delete Pages or Extract Pages tools instead."}},{"@type":"Question","name":"Is my PDF uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. The entire compression happens in your browser on your own device. Your file is never uploaded, which matters for contracts, bank statements, medical records, ID documents and anything else confidential."}},{"@type":"Question","name":"Does it work on mobile?","acceptedAnswer":{"@type":"Answer","text":"Yes, in Chrome, Safari, Firefox and Edge on phones and tablets, with nothing to install. Very large scanned PDFs will naturally take longer on a phone than on a laptop."}}]}</script>
   </head>
   <body class="tool-landing-page" data-tool-landing="pdfcompress">
     <!--HEADER-->
@@ -244,6 +244,53 @@
         </div>
         </div>
     </section>
+    <section class="tp-section tp-content" data-reveal>
+      <h2>Compress a PDF to a target file size — free and private</h2>
+      <p>Nearly every PDF compressor asks you to pick "low, medium or high" compression and hope. That's no help when a portal rejects anything over 100KB. This tool inverts it: <strong>you choose the file size you need, and it works out how to get there</strong> — without ever touching your text.</p>
+      <h3>How to compress a PDF to an exact size</h3>
+      <ol>
+        <li><strong>Add your PDF.</strong> Drag the file onto the box above or tap <em>Browse files</em>. It's opened in your browser, not uploaded.</li>
+        <li><strong>Choose your target size.</strong> 30KB, 50KB, 100KB, 300KB or 1MB.</li>
+        <li><strong>Compress.</strong> The tool scans the embedded images, recompresses them, and clears out data nothing references any more.</li>
+        <li><strong>Download.</strong> You're told exactly what happened — the old and new size, the percentage saved, how many images were recompressed, and that your text was left untouched.</li>
+      </ol>
+      <h3>Your text stays sharp</h3>
+      <p>This is the difference that matters most. Some compressors flatten pages into images, which makes text fuzzy, unselectable and unsearchable — fine for a photo album, disastrous for a contract or a CV. Here, <strong>text and vector graphics are never re-encoded</strong>. They come out exactly as they went in: crisp at any zoom, still selectable, still searchable, still copy-pasteable. Only the photographs and scans inside the document are recompressed.</p>
+      <h3>How the compression actually works</h3>
+      <p>Three things happen to your file:</p>
+      <ul>
+        <li><strong>Embedded images are recompressed.</strong> The tool starts at high quality and steps down only as far as it must to reach your target. If even the lowest quality isn't enough, it then reduces the images' pixel dimensions as a last resort.</li>
+        <li><strong>Unused objects are removed.</strong> PDFs accumulate junk — leftovers from previous editors saving changes incrementally, fragments nothing in the document points to any more. Clearing these out is the main reason a PDF with no images can shrink at all, and most compressors skip it entirely.</li>
+        <li><strong>Tool-fingerprint metadata is stripped.</strong> Small, but it also removes traces of which software touched the file.</li>
+      </ul>
+      <p>Every result is verified before you get it: if the cleaned-up file doesn't reopen perfectly, the tool automatically redoes the pass more conservatively. You never receive a smaller file that won't open.</p>
+      <h3>What target size should I choose?</h3>
+      <ul>
+        <li><strong>Online forms and portal uploads</strong> — 50KB or 100KB is the usual cap. Pick the option at or just under the stated limit.</li>
+        <li><strong>Email attachments</strong> — 300KB keeps you comfortably within any mailbox limit, even with several files.</li>
+        <li><strong>Scanned documents</strong> — start at 300KB or 1MB. Scans are photographs of pages, so they carry far more data than they look like they should.</li>
+        <li><strong>Mostly-text documents</strong> — 50KB or 100KB is usually easy to hit.</li>
+      </ul>
+      <h3>What it can't do</h3>
+      <ul>
+        <li><strong>It can't make a long scanned document tiny.</strong> Fifty scanned pages will not become 50KB and still be readable. You'll be told the smallest size achievable rather than handed something unusable.</li>
+        <li><strong>It won't shrink a file already under your target.</strong> The original is handed straight back — recompressing would cost quality for nothing.</li>
+        <li><strong>Some image formats can't be recompressed further.</strong> If a PDF's images are already in a format the tool can't re-encode, savings will be limited, and the result message says so.</li>
+        <li><strong>It doesn't remove pages.</strong> If the real problem is length, Delete Pages or Split PDF will do more than compression can.</li>
+      </ul>
+      <h3>Who uses a PDF compressor</h3>
+      <ul>
+        <li><strong>Applicants uploading documents</strong> to portals with strict file-size limits</li>
+        <li><strong>Job seekers</strong> whose CV or certificate scans are rejected as too large</li>
+        <li><strong>Students</strong> submitting assignments and scanned reports</li>
+        <li><strong>Anyone emailing a document</strong> that bounced back as too big</li>
+        <li><strong>Offices</strong> archiving scanned paperwork without filling the drive</li>
+      </ul>
+      <h3>Private by design</h3>
+      <p>Your PDF never leaves your computer. Everything — reading the file, recompressing the images, writing the new version — happens inside your browser. Nothing is uploaded, nothing is stored, and there's no account to create. For contracts, bank statements, medical records and ID documents, that's the only sensible way to do it.</p>
+      <h3>Related PDF tools</h3>
+      <p>You can also <a href="/merge-pdf">merge several PDFs into one</a>, <a href="/split-pdf">split a PDF by page range</a>, <a href="/delete-pdf-pages">delete pages</a>, <a href="/extract-pdf-pages">pull specific pages out</a>, <a href="/pdf-to-word">convert a PDF to Word</a> or <a href="/pdf-to-jpg">export pages as images</a> — all free and all running in your browser.</p>
+    </section>
     
     <section class="tp-section tp-related" data-reveal>
       <h2>Related Tools</h2>
@@ -309,20 +356,36 @@
         <h2>Frequently Asked Questions</h2>
         <div class="faq-list">
         <details class="faq-item">
-          <summary class="faq-question">Is Compress PDF free to use?</summary>
-          <p class="faq-answer">Yes, core OnlineToolsWeb tools are free to use, including Compress PDF. Optional premium features may be introduced later for advanced workflows like batch processing or saved presets, but this tool's core functionality stays free.</p>
+          <summary class="faq-question">How do I compress a PDF to a specific size?</summary>
+          <p class="faq-answer">Drop your PDF into the box above and choose a target — 30KB, 50KB, 100KB, 300KB or 1MB. The tool recompresses the images inside the file and trims data nothing is using, aiming for the best quality that fits your target, then gives you the file to download.</p>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">Do I need to install anything to use Compress PDF?</summary>
-          <p class="faq-answer">No installation needed. Compress PDF runs directly in your browser on any modern desktop or mobile browser, just open this page and use it.</p>
+          <summary class="faq-question">Is the PDF compressor free?</summary>
+          <p class="faq-answer">Yes. Compressing PDFs here is free with no signup, no email and no watermark on the result. Optional premium features may be added later for advanced workflows like batch processing, but this tool's core functionality stays free.</p>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">Is my file safe when I use Compress PDF?</summary>
-          <p class="faq-answer">Yes. Compress PDF processes your file entirely on your own device. It's never uploaded anywhere, so no one else ever sees it.</p>
+          <summary class="faq-question">Will compressing blur the text in my PDF?</summary>
+          <p class="faq-answer">No. Text and vector graphics are never touched — they're left exactly as they were, so they stay perfectly sharp at any zoom level and remain selectable and searchable. Only the images embedded in the document are recompressed.</p>
         </details>
         <details class="faq-item">
-          <summary class="faq-question">What file types does Compress PDF support?</summary>
-          <p class="faq-answer">Compress PDF works with PDF files.</p>
+          <summary class="faq-question">Can every PDF be compressed to 50KB?</summary>
+          <p class="faq-answer">No, and the tool is honest about it. A long scanned document simply contains too much image data to fit in 50KB at readable quality. In that case you're shown the smallest size it could reach and told why, so you can pick a larger target instead. PDFs that are mostly text usually shrink comfortably.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Why didn't my text-only PDF get much smaller?</summary>
+          <p class="faq-answer">There's little to squeeze. Compression works mainly by recompressing images, and a text-only file has none. It can still shrink somewhat — the tool removes leftover objects that previous editors left behind and strips metadata — but don't expect a dramatic reduction.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Does compressing remove pages or change the layout?</summary>
+          <p class="faq-answer">No. Every page, its order and its layout stay exactly as they were. Only the data inside the file changes. To remove pages, use the Delete Pages or Extract Pages tools instead.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Is my PDF uploaded to a server?</summary>
+          <p class="faq-answer">No. The entire compression happens in your browser on your own device. Your file is never uploaded, which matters for contracts, bank statements, medical records, ID documents and anything else confidential.</p>
+        </details>
+        <details class="faq-item">
+          <summary class="faq-question">Does it work on mobile?</summary>
+          <p class="faq-answer">Yes, in Chrome, Safari, Firefox and Edge on phones and tablets, with nothing to install. Very large scanned PDFs will naturally take longer on a phone than on a laptop.</p>
         </details></div>
       </div>
     </section>

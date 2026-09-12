@@ -74,6 +74,14 @@ function relatedKeysFor(key, meta) {
   Object.keys(toolMeta).forEach((k) => {
     if (k !== key && toolMeta[k].category === meta.category && !ordered.includes(k)) ordered.push(k);
   });
+  // Fallback for a tool that is the only one in its category (e.g.
+  // ppttotext is the sole 'ppt' entry), which would otherwise render
+  // with no Popular and no Related Tools section at all — leaving the
+  // page with zero contextual internal links. A PAGE_SEO entry can name
+  // its own related keys by hand to fill that gap.
+  if (!ordered.length && PAGE_SEO[key]?.relatedKeys) {
+    ordered = PAGE_SEO[key].relatedKeys.filter((k) => k !== key);
+  }
   return ordered.filter((k) => toolMeta[k] && !toolMeta[k].comingSoon).slice(0, 6);
 }
 
@@ -188,6 +196,295 @@ const PAGE_SEO = {
 
         { h3: `Related spreadsheet and document tools` },
         { p: `Working the other way round or with a different format? You can also <a href="/pdf-to-excel">convert PDF to Excel</a>, <a href="/excel-to-pdf">turn an Excel file into a PDF</a>, <a href="/image-to-excel">pull a table out of a screenshot</a> or <a href="/word-to-pdf">convert Word to PDF</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+  ppttotext: {
+    title: `PPT to Text Converter Online Free | OnlineToolsWeb`,
+    description: `Free PPT to Text converter. Extract all the text from a PowerPoint (.pptx) into a plain .txt file, slide by slide — no signup, no upload, runs in your browser.`,
+    appName: `PPT to Text Converter | OnlineToolsWeb`,
+    h1: `PPT to Text Converter — Online and Free`,
+    intro: `Pull every word out of a slide deck in seconds. This free PPT to Text converter reads your .pptx file and writes out the text of each slide as a plain .txt file, clearly labelled slide by slide — no signup, no software, and your deck never leaves your device.`,
+    relatedKeys: ['texttoppt', 'wordtotext', 'pdftoppt', 'pdftomarkdown', 'imagetoppt', 'wordcounter'],
+    faq: [
+      {
+        q: `Is the PPT to Text converter free to use?`,
+        a: `Yes. Extracting text from a PowerPoint on OnlineToolsWeb is completely free, with no trial, no credit card and no signup. Optional premium features may be added later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `How do I extract text from a PowerPoint online?`,
+        a: `Drop your .pptx file into the box on this page. The converter reads each slide in order, pulls out every piece of text on it, and hands you a .txt file to download. The whole thing happens in your browser — nothing is uploaded.`,
+      },
+      {
+        q: `What does the downloaded text file look like?`,
+        a: `Plain text, in slide order, with a clear "--- Slide 1 ---", "--- Slide 2 ---" header before each slide's content. That makes it easy to see which words came from which slide, and easy to search, paste or edit afterwards.`,
+      },
+      {
+        q: `Does it extract speaker notes as well?`,
+        a: `No. This tool reads the text that appears on the slides themselves — titles, bullet points, text boxes and tables. Speaker notes are stored separately inside a PowerPoint file and are not included in the output.`,
+      },
+      {
+        q: `Can I convert an old .ppt file to text?`,
+        a: `This converter accepts the modern .pptx format. If you have an older .ppt file, open it in PowerPoint, Google Slides or LibreOffice Impress and save it as .pptx first, then bring it back here.`,
+      },
+      {
+        q: `Will it read text that is inside an image on a slide?`,
+        a: `No. Text baked into a picture or screenshot is part of the image, not the slide's text, so it can't be extracted this way. Only real, editable text on the slide is picked up.`,
+      },
+      {
+        q: `Is my presentation safe when I convert PPT to text?`,
+        a: `Yes. Your deck is opened and read entirely on your own device and is never uploaded to a server, so confidential pitch decks, internal reports and unpublished research stay private.`,
+      },
+      {
+        q: `Does the PPT to Text converter work on mobile?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on phones and tablets exactly as it does on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `PPT to Text converter — pull the words out of any slide deck`,
+      blocks: [
+        { p: `A slide deck is a terrible place to keep text you actually need to use. You can't search it properly, you can't paste it into a document without dragging in fonts and boxes, and reading fifty slides just to find one sentence is a waste of an afternoon. A <strong>PPT to Text converter</strong> solves that in one step: hand it a .pptx, get back a clean .txt file with every word, in slide order.` },
+
+        { h3: `How to convert PPT to text online free` },
+        { ol: [
+          `<strong>Add your PowerPoint file.</strong> Drag your .pptx onto the box above, or tap <em>Browse files</em> to choose it. The file is opened in your browser — it is never uploaded.`,
+          `<strong>The converter reads each slide in order.</strong> It walks through slide 1, 2, 3 and so on, collecting the text from every title, bullet, text box and table it finds.`,
+          `<strong>Download your .txt file.</strong> You get a plain text file you can open in Notepad, TextEdit, Word, Google Docs, or paste anywhere you like.`,
+        ] },
+
+        { h3: `What the text file actually looks like` },
+        { p: `The output is deliberately simple and readable. Each slide's text is written out under its own header, so you always know where a line came from:` },
+        { ul: [
+          `<strong>Slide markers.</strong> Every slide starts with a <em>--- Slide 1 ---</em>, <em>--- Slide 2 ---</em> line, so a 60-slide deck stays navigable.`,
+          `<strong>Original slide order.</strong> Slides are processed in their real deck order, not the order shapes happen to be stored in the file.`,
+          `<strong>All on-slide text.</strong> Titles, bullet points, text boxes and table cells are all collected.`,
+          `<strong>Plain .txt, nothing proprietary.</strong> No fonts, no layout, no formatting to strip out later — just the words.`,
+        ] },
+
+        { h3: `What people use a PPT to Text converter for` },
+        { ul: [
+          `<strong>Making notes from lecture slides.</strong> Students turn a term's worth of decks into searchable text they can revise from, summarise or print.`,
+          `<strong>Feeding a deck into an AI tool.</strong> ChatGPT, Claude and similar tools work far better with clean text than with a slide file — this is the fastest way to get there.`,
+          `<strong>Translation.</strong> Extract the text, translate it, then rebuild the deck — much quicker than editing inside PowerPoint box by box.`,
+          `<strong>Word counts and proofreading.</strong> Copy-editors and reviewers want the words in one place, not spread across slides.`,
+          `<strong>Repurposing a deck.</strong> Turning a presentation into a blog post, report, script or handout starts with getting the text out.`,
+          `<strong>Searching and archiving.</strong> A .txt file is indexable and searchable by your operating system in a way a .pptx really isn't.`,
+        ] },
+
+        { h3: `What it does not do` },
+        { p: `Being straight about the limits saves you a wasted upload:` },
+        { ul: [
+          `<strong>Speaker notes are not included.</strong> PowerPoint stores notes separately from the slides, and this tool reads the slides.`,
+          `<strong>Text inside images isn't read.</strong> If a slide has a screenshot with words in it, those words are pixels, not text. That needs OCR, not extraction.`,
+          `<strong>Formatting is not preserved.</strong> That's the point — you're asking for plain text. Bold, colours, fonts and positions are all dropped.`,
+          `<strong>.ppt (the old format) isn't accepted.</strong> Save it as .pptx first in PowerPoint, Google Slides or LibreOffice Impress.`,
+        ] },
+
+        { h3: `Why use this converter instead of copying slides by hand` },
+        { p: `Selecting every text box across forty slides and pasting them one at a time is the kind of task that takes twenty minutes and produces mistakes — skipped boxes, lost ordering, stray formatting pasted along with the words. A converter does the full deck in one pass and keeps the slide order intact. It is also the only sane option when you have several decks to get through.` },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> Most PPT to Text converters want an address before they hand over your file. This one doesn't.`,
+          `<strong>Nothing is uploaded.</strong> The conversion runs locally in your browser, which matters when the deck is an unreleased pitch, a client report or unpublished research.`,
+          `<strong>No file limits or watermarks.</strong> Convert as many decks as you need.`,
+          `<strong>Works anywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser, nothing to install.`,
+        ] },
+
+        { h3: `Related presentation and text tools` },
+        { p: `Going the other way or working with a different format? You can also <a href="/text-to-ppt">turn plain text into slides</a>, <a href="/pdf-to-ppt">convert a PDF into a PowerPoint</a>, <a href="/word-to-text">extract plain text from a Word document</a>, <a href="/pdf-to-markdown">convert a PDF to Markdown</a> or <a href="/word-counter">count the words</a> once you have your text — all free and all running in your browser.` },
+      ],
+    },
+  },
+  // Compress Image — title/h1/intro deliberately NOT overridden here: the
+  // existing heroCopy in main.js already targets "compress image to 50kb"
+  // and there's no reason to churn a working long-tail target. This entry
+  // adds the body copy and the size-specific FAQ set only.
+  compress: {
+    relatedKeys: ['resize', 'convertformat', 'crop', 'pdf', 'socialresize', 'heictojpg'],
+    faq: [
+      {
+        q: `How do I compress an image to an exact KB size?`,
+        a: `Drop your photo into the box above and pick a target from the list — 30KB, 50KB, 100KB, 300KB or 1MB. Before you commit to anything you'll see a live estimate of the size you'd actually get, then press Compress and download the result.`,
+      },
+      {
+        q: `Is the image compressor free?`,
+        a: `Yes, completely — no signup, no email, no watermark and no limit on how many images you compress. Optional premium features may be added later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `Will compressing ruin the quality of my photo?`,
+        a: `The tool works hard to avoid that. It searches for the highest JPEG quality that still fits inside your target size, and only reduces the pixel dimensions if quality alone can't get there. You get the best-looking file that fits, not just any file that fits.`,
+      },
+      {
+        q: `What size should I compress my image to?`,
+        a: `It depends where it's going. Online forms and ID photo uploads usually ask for 50KB or 100KB. Email attachments are comfortable at 300KB. For a website, aim at 100–300KB so pages stay fast. If a form states a maximum, pick the option at or just under it.`,
+      },
+      {
+        q: `What if my image can't reach the size I picked?`,
+        a: `You'll be told, plainly. Instead of silently handing you a blurry file, the tool reports the smallest size it could reach — for example "Best possible: 62KB" — so you can decide whether to accept it or choose a larger target.`,
+      },
+      {
+        q: `What format is the compressed image?`,
+        a: `A JPEG. JPEG is what makes big size reductions possible, and it's the format most forms and portals ask for. If you need PNG or WebP instead, use the Convert Image Format tool after compressing.`,
+      },
+      {
+        q: `Are my photos uploaded to a server?`,
+        a: `No. The compression runs entirely inside your browser using your own device's processing power. Your photo is never uploaded, which matters when it's an ID photo, a passport photo or anything personal.`,
+      },
+      {
+        q: `Does the image compressor work on a phone?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on Android and iPhone just as it does on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `Compress an image to an exact file size, free`,
+      blocks: [
+        { p: `Most image compressors give you a vague "low / medium / high" slider and leave you guessing. That's useless when a form refuses anything over 50KB. This tool works the other way round: <strong>you name the file size you need, and it finds the best quality that fits</strong>.` },
+
+        { h3: `How to compress an image to a target size` },
+        { ol: [
+          `<strong>Add your image.</strong> Drag a JPG, PNG or WebP onto the box above, or tap <em>Browse files</em>.`,
+          `<strong>Pick your target size.</strong> Choose 30KB, 50KB, 100KB, 300KB or 1MB. 50KB is the default because it's the most commonly requested limit for form and ID uploads.`,
+          `<strong>Check the live estimate.</strong> Before you commit, the page shows the size you would actually get and how much smaller that is — so there are no surprises after the fact.`,
+          `<strong>Compress and download.</strong> Your file is ready in seconds.`,
+        ] },
+
+        { h3: `See the result before you commit` },
+        { p: `This is the part most compressors get wrong. Elsewhere you upload the file, wait, and only then find out whether the result is usable. Here the estimate shown under the dropdown is produced by <strong>actually running the real compression search</strong> — it is the true achievable size, not a guess. Change the target and the estimate updates. You only press Compress once you already know what you're getting.` },
+
+        { h3: `What target size should I choose?` },
+        { ul: [
+          `<strong>Online forms and ID photo uploads</strong> — usually 50KB or 100KB. Check the form's stated maximum and pick the option at or just below it.`,
+          `<strong>Email attachments</strong> — 300KB is comfortable and keeps several photos well under any mailbox limit.`,
+          `<strong>Website and blog images</strong> — 100KB to 300KB. Large images are one of the most common causes of slow pages.`,
+          `<strong>Messaging and social uploads</strong> — 300KB or 1MB, since these platforms recompress anyway.`,
+          `<strong>Absolute smallest</strong> — 30KB, when a strict limit matters more than fine detail.`,
+        ] },
+
+        { h3: `How the compression actually works` },
+        { p: `The tool searches rather than guesses. It starts at near-maximum JPEG quality and full resolution, and checks whether that already fits your target — if it does, you keep every pixel. If not, it narrows in on the highest quality that fits. Only when even the lowest usable quality is still too big does it begin reducing the image's actual dimensions, stepping down through 80%, 60%, 45%, 30% and 15% of the original size.` },
+        { p: `The order matters: quality is sacrificed before resolution, and resolution is only touched as a last resort. That's why the output tends to look noticeably better than a tool that simply crushes everything to a fixed quality setting.` },
+
+        { h3: `What it can't do` },
+        { ul: [
+          `<strong>It can't beat physics.</strong> A large, detailed photograph cannot become 30KB and still look good. When a target is unreachable the tool says so and gives you the smallest file it could produce, rather than pretending.`,
+          `<strong>It won't shrink an already-small image.</strong> If your file is already under the target it's handed back untouched — recompressing would cost quality for no benefit.`,
+          `<strong>It doesn't set exact pixel dimensions.</strong> If you need a specific width and height, use the Resize Image tool.`,
+          `<strong>The output is always JPEG.</strong> Transparency in a PNG will be lost, since JPEG has no transparent background.`,
+        ] },
+
+        { h3: `Who uses an image compressor` },
+        { ul: [
+          `<strong>Anyone filling in an online application</strong> where the photo upload is capped at a fixed size`,
+          `<strong>Job seekers and students</strong> attaching photos and documents to portals that reject anything larger`,
+          `<strong>People emailing photos</strong> that bounce back as too large`,
+          `<strong>Website owners and bloggers</strong> whose pages load slowly because of oversized images`,
+          `<strong>Anyone sending holiday photos</strong> over a slow or metered connection`,
+        ] },
+
+        { h3: `Private by design` },
+        { p: `Your image is compressed inside your own browser, on your own device. It is never uploaded to a server, never stored, and never seen by anyone else — which is exactly what you want when the photo is an ID, a passport photo or a personal document. There's no account to create and no email to hand over.` },
+
+        { h3: `Related image tools` },
+        { p: `Need something else? You can <a href="/resize-image">resize an image to exact dimensions</a>, <a href="/convert-image-format">convert between JPG, PNG and WebP</a>, <a href="/crop-image">crop a photo</a>, <a href="/image-to-pdf">turn images into a PDF</a> or <a href="/social-media-image-resize">resize for Instagram and YouTube</a> — all free, all in your browser.` },
+      ],
+    },
+  },
+
+  // Compress PDF — as with `compress` above, the existing heroCopy in
+  // main.js already targets "compress pdf to 50kb", so only body copy and
+  // FAQs are supplied here.
+  pdfcompress: {
+    relatedKeys: ['pdfmerge', 'pdfsplit', 'pdftoword', 'pdfextract', 'pdftojpg', 'pdfdelete'],
+    faq: [
+      {
+        q: `How do I compress a PDF to a specific size?`,
+        a: `Drop your PDF into the box above and choose a target — 30KB, 50KB, 100KB, 300KB or 1MB. The tool recompresses the images inside the file and trims data nothing is using, aiming for the best quality that fits your target, then gives you the file to download.`,
+      },
+      {
+        q: `Is the PDF compressor free?`,
+        a: `Yes. Compressing PDFs here is free with no signup, no email and no watermark on the result. Optional premium features may be added later for advanced workflows like batch processing, but this tool's core functionality stays free.`,
+      },
+      {
+        q: `Will compressing blur the text in my PDF?`,
+        a: `No. Text and vector graphics are never touched — they're left exactly as they were, so they stay perfectly sharp at any zoom level and remain selectable and searchable. Only the images embedded in the document are recompressed.`,
+      },
+      {
+        q: `Can every PDF be compressed to 50KB?`,
+        a: `No, and the tool is honest about it. A long scanned document simply contains too much image data to fit in 50KB at readable quality. In that case you're shown the smallest size it could reach and told why, so you can pick a larger target instead. PDFs that are mostly text usually shrink comfortably.`,
+      },
+      {
+        q: `Why didn't my text-only PDF get much smaller?`,
+        a: `There's little to squeeze. Compression works mainly by recompressing images, and a text-only file has none. It can still shrink somewhat — the tool removes leftover objects that previous editors left behind and strips metadata — but don't expect a dramatic reduction.`,
+      },
+      {
+        q: `Does compressing remove pages or change the layout?`,
+        a: `No. Every page, its order and its layout stay exactly as they were. Only the data inside the file changes. To remove pages, use the Delete Pages or Extract Pages tools instead.`,
+      },
+      {
+        q: `Is my PDF uploaded to a server?`,
+        a: `No. The entire compression happens in your browser on your own device. Your file is never uploaded, which matters for contracts, bank statements, medical records, ID documents and anything else confidential.`,
+      },
+      {
+        q: `Does it work on mobile?`,
+        a: `Yes, in Chrome, Safari, Firefox and Edge on phones and tablets, with nothing to install. Very large scanned PDFs will naturally take longer on a phone than on a laptop.`,
+      },
+    ],
+    body: {
+      h2: `Compress a PDF to a target file size — free and private`,
+      blocks: [
+        { p: `Nearly every PDF compressor asks you to pick "low, medium or high" compression and hope. That's no help when a portal rejects anything over 100KB. This tool inverts it: <strong>you choose the file size you need, and it works out how to get there</strong> — without ever touching your text.` },
+
+        { h3: `How to compress a PDF to an exact size` },
+        { ol: [
+          `<strong>Add your PDF.</strong> Drag the file onto the box above or tap <em>Browse files</em>. It's opened in your browser, not uploaded.`,
+          `<strong>Choose your target size.</strong> 30KB, 50KB, 100KB, 300KB or 1MB.`,
+          `<strong>Compress.</strong> The tool scans the embedded images, recompresses them, and clears out data nothing references any more.`,
+          `<strong>Download.</strong> You're told exactly what happened — the old and new size, the percentage saved, how many images were recompressed, and that your text was left untouched.`,
+        ] },
+
+        { h3: `Your text stays sharp` },
+        { p: `This is the difference that matters most. Some compressors flatten pages into images, which makes text fuzzy, unselectable and unsearchable — fine for a photo album, disastrous for a contract or a CV. Here, <strong>text and vector graphics are never re-encoded</strong>. They come out exactly as they went in: crisp at any zoom, still selectable, still searchable, still copy-pasteable. Only the photographs and scans inside the document are recompressed.` },
+
+        { h3: `How the compression actually works` },
+        { p: `Three things happen to your file:` },
+        { ul: [
+          `<strong>Embedded images are recompressed.</strong> The tool starts at high quality and steps down only as far as it must to reach your target. If even the lowest quality isn't enough, it then reduces the images' pixel dimensions as a last resort.`,
+          `<strong>Unused objects are removed.</strong> PDFs accumulate junk — leftovers from previous editors saving changes incrementally, fragments nothing in the document points to any more. Clearing these out is the main reason a PDF with no images can shrink at all, and most compressors skip it entirely.`,
+          `<strong>Tool-fingerprint metadata is stripped.</strong> Small, but it also removes traces of which software touched the file.`,
+        ] },
+        { p: `Every result is verified before you get it: if the cleaned-up file doesn't reopen perfectly, the tool automatically redoes the pass more conservatively. You never receive a smaller file that won't open.` },
+
+        { h3: `What target size should I choose?` },
+        { ul: [
+          `<strong>Online forms and portal uploads</strong> — 50KB or 100KB is the usual cap. Pick the option at or just under the stated limit.`,
+          `<strong>Email attachments</strong> — 300KB keeps you comfortably within any mailbox limit, even with several files.`,
+          `<strong>Scanned documents</strong> — start at 300KB or 1MB. Scans are photographs of pages, so they carry far more data than they look like they should.`,
+          `<strong>Mostly-text documents</strong> — 50KB or 100KB is usually easy to hit.`,
+        ] },
+
+        { h3: `What it can't do` },
+        { ul: [
+          `<strong>It can't make a long scanned document tiny.</strong> Fifty scanned pages will not become 50KB and still be readable. You'll be told the smallest size achievable rather than handed something unusable.`,
+          `<strong>It won't shrink a file already under your target.</strong> The original is handed straight back — recompressing would cost quality for nothing.`,
+          `<strong>Some image formats can't be recompressed further.</strong> If a PDF's images are already in a format the tool can't re-encode, savings will be limited, and the result message says so.`,
+          `<strong>It doesn't remove pages.</strong> If the real problem is length, Delete Pages or Split PDF will do more than compression can.`,
+        ] },
+
+        { h3: `Who uses a PDF compressor` },
+        { ul: [
+          `<strong>Applicants uploading documents</strong> to portals with strict file-size limits`,
+          `<strong>Job seekers</strong> whose CV or certificate scans are rejected as too large`,
+          `<strong>Students</strong> submitting assignments and scanned reports`,
+          `<strong>Anyone emailing a document</strong> that bounced back as too big`,
+          `<strong>Offices</strong> archiving scanned paperwork without filling the drive`,
+        ] },
+
+        { h3: `Private by design` },
+        { p: `Your PDF never leaves your computer. Everything — reading the file, recompressing the images, writing the new version — happens inside your browser. Nothing is uploaded, nothing is stored, and there's no account to create. For contracts, bank statements, medical records and ID documents, that's the only sensible way to do it.` },
+
+        { h3: `Related PDF tools` },
+        { p: `You can also <a href="/merge-pdf">merge several PDFs into one</a>, <a href="/split-pdf">split a PDF by page range</a>, <a href="/delete-pdf-pages">delete pages</a>, <a href="/extract-pdf-pages">pull specific pages out</a>, <a href="/pdf-to-word">convert a PDF to Word</a> or <a href="/pdf-to-jpg">export pages as images</a> — all free and all running in your browser.` },
       ],
     },
   },
