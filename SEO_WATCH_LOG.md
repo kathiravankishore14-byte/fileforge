@@ -438,3 +438,75 @@ page content, which strips `<script>` blocks, so "no FAQPage schema" is strong b
    ppt-to-text (09-13 morning) **and** image-to-ppt, excel-to-csv, heic-to-jpg (this run).
    Twelve pages, one push.
 4. Trigger fired ~4h45m late this run — see the schedule note at the top.
+
+---
+
+## 2026-09-13 · 23:30 UTC · Generator change (not a page-copy run) — per-URL `<lastmod>`
+
+Requested by Kathir after the sitemap was flagged in conversation. **No page copy was
+touched**; all 64 generated `.html` files are byte-identical before and after.
+
+### The problem
+`SITE_LASTMOD` was stamped on all 75 sitemap URLs, so every page claimed to change on
+the same day. Google only uses `lastmod` when it is consistently accurate; a sitemap
+where all 75 dates advance together teaches it to ignore the field — exactly backwards
+when three pages have just been rewritten and those three are what should stand out.
+
+### What changed in `scripts/generate-seo-pages.mjs`
+- Added a content fingerprint per sitemap URL, persisted to the new committed file
+  **`scripts/page-lastmod.json`** (`{ "<loc>": { hash, lastmod } }`, 75 entries, sorted
+  for a readable diff).
+- Each build re-fingerprints every URL. Unchanged fingerprint → the page keeps its
+  recorded date. Changed or new → it takes `SITE_LASTMOD`.
+- **`SITE_LASTMOD` keeps its name and its meaning for the twice-daily run:** it is still
+  bumped by hand to today's date, it is just now "the date stamped on pages that actually
+  changed" rather than on all 75. The standing instruction in the task prompt still works
+  unmodified. Using the constant rather than a runtime `new Date()` also keeps builds
+  deterministic.
+- **Tool pages are fingerprinted on page-specific content only** — the derived `seo`
+  object, the `PAGE_SEO` override, and the `toolMeta` fields the auto-derived copy reads
+  (`label`, `desc`, `accept`, `usesServer`, `heroCopy`). Deliberately NOT the rendered
+  HTML: hashing that would make a header or footer tweak bump all 64 dates at once and
+  put us straight back where we started.
+- Static and info pages have no such separation, so they are fingerprinted on their
+  source file (`index.html`, `pdf.html`, `about.html`, …), with **line endings normalised
+  before hashing** — this repo is edited on Windows with git's autocrlf on, and hashing
+  raw bytes would make all 11 claim a change on a fresh clone.
+- Console output now reports what actually moved, e.g.
+  `Wrote sitemap.xml with 75 URLs (3 changed this build).`
+
+### Seeding
+The map was seeded with real dates rather than letting the first run stamp everything
+today (which would have reproduced the original problem once more):
+- The 11 rewritten pages got the dates recorded in this log — word-to-excel 09-11;
+  compress-image, compress-pdf, text-to-ppt, image-to-excel 09-12; ppt-to-text,
+  word-to-text, pdf-to-markdown, image-to-ppt, excel-to-csv, heic-to-jpg 09-13.
+- The 53 untouched tool pages got 2026-09-10, the last generator run that wrote them.
+- The 11 static/info pages got 2026-09-05, from their file timestamps.
+
+Resulting distribution: **11 × 09-05, 53 × 09-10, 1 × 09-11, 4 × 09-12, 6 × 09-13.**
+
+### Verification performed (all passed)
+- All 64 generated `.html` files byte-identical to the pre-change build.
+- `public/robots.txt` and `scripts/routing-map.json` byte-identical — the only changed
+  outputs are `sitemap.xml` and the new `page-lastmod.json`.
+- Idempotent: three consecutive runs report `0 changed this build` and produce an
+  identical sitemap.
+- Change detection tested by simulation: editing one character of the heic-to-jpg
+  description made the run report exactly `1 changed this build: /heic-to-jpg`, and
+  reverting it flipped back cleanly.
+- CRLF-insensitivity tested: converting `index.html`, `pdf.html` and `about.html` to CRLF
+  and rebuilding still reported `0 changed`.
+- Sitemap still 75 URLs, still valid XML, priorities untouched.
+
+### Note for future runs
+`scripts/page-lastmod.json` **must be committed**. If it is deleted or gitignored, the
+next build treats all 75 URLs as new and stamps them all with `SITE_LASTMOD` — the exact
+failure this change removes. It is also now part of the normal write-back set, alongside
+`generate-seo-pages.mjs`, the changed `.html` files, `sitemap.xml`, `robots.txt` and
+`routing-map.json`.
+
+### Repo state at the time of this change
+Kathir merged `seo/2026-09-13-night` into `main` (fast-forward, `6412e80` → `6cd8fcb`)
+and pushed at ~23:16 UTC, so all 11 rewritten pages are now on `main` and deploying.
+This generator change sits on top of that and still needs its own commit.

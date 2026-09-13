@@ -14,6 +14,7 @@
 // output file is a real, complete, self-contained HTML document — no
 // server-side rendering or rewrite rules are required to serve it.
 import { writeFileSync, readFileSync } from 'fs';
+import { createHash } from 'crypto';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { extractMainData } from './extract-main-data.mjs';
@@ -28,9 +29,16 @@ const SITE_ORIGIN = 'https://onlinetoolsweb.com';
 // burden this phase, and a single accurate, on-brand image beats a
 // missing or generic one everywhere it's shared.
 const OG_IMAGE_URL = `${SITE_ORIGIN}/images/social-preview.jpg`;
-// <lastmod> value written for every sitemap URL. Bump this by hand when
-// page content meaningfully changes — a date that moves on every build
-// is noise search engines quickly learn to ignore.
+// The date stamped on pages whose content ACTUALLY CHANGED in this build.
+// Bump this by hand to today's date whenever you edit page copy.
+//
+// It is no longer written to every URL. Each URL now carries its own
+// <lastmod>, tracked in scripts/page-lastmod.json: a page keeps the date
+// it last genuinely changed, and only picks up this value when its
+// content fingerprint moves. A sitemap where all 75 dates advance
+// together tells Google nothing, so Google learns to ignore the field —
+// which is exactly backwards when three pages have just been rewritten
+// and you want those three to stand out.
 const SITE_LASTMOD = '2026-09-13';
 
 const { toolMeta, categoryNavConfig, pageUrlMap, categoryLabels, categoryIcons, toolIconOverrides } =
@@ -1633,8 +1641,66 @@ function buildPage(key) {
 `;
 }
 
+// ---------- per-URL <lastmod> tracking ----------
+// scripts/page-lastmod.json maps each sitemap URL to the fingerprint of
+// its content at the time it last changed, plus the date of that change.
+// On every build we re-fingerprint each page: an unchanged fingerprint
+// keeps its recorded date, a changed (or new) one takes SITE_LASTMOD.
+// The file is committed, so a fresh clone or a CI build produces the
+// same dates rather than declaring the whole site modified today.
+//
+// Tool pages are fingerprinted on their page-specific content (the
+// derived SEO object plus the PAGE_SEO override and the toolMeta fields
+// the auto-derived copy reads), NOT on the rendered HTML — otherwise a
+// header or footer tweak would bump all 64 dates at once and put us
+// straight back where we started. Static and info pages have no such
+// separation, so those are fingerprinted on their source file.
+const LASTMOD_PATH = resolve(ROOT, 'scripts/page-lastmod.json');
+let previousLastmod = {};
+try {
+  previousLastmod = JSON.parse(readFileSync(LASTMOD_PATH, 'utf-8'));
+} catch {
+  previousLastmod = {}; // first run, or the file was deleted — everything is "new"
+}
+const nextLastmod = {};
+// URLs whose fingerprint actually moved in THIS build — not merely those
+// whose stored date happens to equal SITE_LASTMOD from an earlier one.
+const changedThisRun = [];
+
+function fingerprint(value) {
+  return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 16);
+}
+
+// Records this URL's fingerprint and returns the date its <lastmod>
+// should carry: the stored date if nothing changed, otherwise today's.
+function resolveLastmod(loc, hash) {
+  const prev = previousLastmod[loc];
+  const unchanged = prev && prev.hash === hash;
+  const lastmod = unchanged ? prev.lastmod : SITE_LASTMOD;
+  nextLastmod[loc] = { hash, lastmod };
+  if (!unchanged) changedThisRun.push(loc);
+  return lastmod;
+}
+
+function fileFingerprint(relPath) {
+  try {
+    // Line endings are normalised first: this repo is edited on Windows
+    // with git's autocrlf on, so the same file can be CRLF in one
+    // working tree and LF in another. Hashing the raw bytes would make
+    // all 11 static pages claim a change on a fresh clone.
+    return fingerprint(readFileSync(resolve(ROOT, relPath), 'utf-8').replace(/\r\n/g, '\n'));
+  } catch {
+    // Missing source file: return a stable placeholder rather than a
+    // fresh value each run, so a page we cannot read does not flap its
+    // date on every single build.
+    console.warn(`lastmod: cannot read ${relPath} — date will not update for it`);
+    return 'unreadable';
+  }
+}
+
 // ---------- run ----------
 const routingMap = [];
+const toolFingerprints = {};
 let written = 0;
 Object.keys(toolMeta).forEach((key) => {
   const html = buildPage(key);
@@ -1646,39 +1712,59 @@ Object.keys(toolMeta).forEach((key) => {
   written++;
   const oldUrl = `${pageUrlMap[meta.category] || '/'}?tool=${key}`;
   routingMap.push({ key, label: meta.label, category: meta.category, slug: seo.slug, oldUrl, title: seo.title, h1: seo.h1, description: seo.description });
+  // Everything that can change this page's visible copy, and nothing
+  // that is shared with the other 63 pages.
+  toolFingerprints[seo.slug] = fingerprint([
+    seo,
+    PAGE_SEO[key] || null,
+    { label: meta.label, desc: meta.desc, accept: meta.accept || null, usesServer: !!meta.usesServer, heroCopy: meta.heroCopy || null },
+  ]);
 });
 
 console.log(`Generated ${written} tool pages.`);
 
 // ---------- sitemap.xml ----------
 const staticPages = [
-  { loc: '/', priority: '1.0' },
-  { loc: '/pdf', priority: '0.8' },
-  { loc: '/image', priority: '0.8' },
-  { loc: '/excel', priority: '0.8' },
-  { loc: '/word', priority: '0.8' },
-  { loc: '/ppt', priority: '0.8' },
-  { loc: '/other-tools', priority: '0.8' },
+  { loc: '/', priority: '1.0', src: 'index.html' },
+  { loc: '/pdf', priority: '0.8', src: 'pdf.html' },
+  { loc: '/image', priority: '0.8', src: 'image.html' },
+  { loc: '/excel', priority: '0.8', src: 'excel.html' },
+  { loc: '/word', priority: '0.8', src: 'word.html' },
+  { loc: '/ppt', priority: '0.8', src: 'ppt.html' },
+  { loc: '/other-tools', priority: '0.8', src: 'other-tools.html' },
 ];
 // Informational pages linked from the site footer. They belong in the
 // sitemap — they were previously missing, so they relied entirely on
 // crawlers following footer links — but at a low priority, since a
 // search result should land on a tool ahead of the terms page.
 const infoPages = [
-  { loc: '/about', priority: '0.3' },
-  { loc: '/contact', priority: '0.3' },
-  { loc: '/privacy-policy', priority: '0.3' },
-  { loc: '/terms-of-service', priority: '0.3' },
+  { loc: '/about', priority: '0.3', src: 'about.html' },
+  { loc: '/contact', priority: '0.3', src: 'contact.html' },
+  { loc: '/privacy-policy', priority: '0.3', src: 'privacy-policy.html' },
+  { loc: '/terms-of-service', priority: '0.3', src: 'terms-of-service.html' },
 ];
-const toolPages = routingMap.map((r) => ({ loc: `/${r.slug}`, priority: '0.7' }));
+const toolPages = routingMap.map((r) => ({ loc: `/${r.slug}`, priority: '0.7', hash: toolFingerprints[r.slug] }));
 const allPages = [...staticPages, ...toolPages, ...infoPages];
+// Resolve each URL's own <lastmod> before rendering. Order matters only
+// in that every URL must be visited, so nextLastmod ends up complete and
+// pages dropped from the sitemap fall out of the store on their own.
+const datedPages = allPages.map((p) => ({
+  ...p,
+  lastmod: resolveLastmod(p.loc, p.hash || fileFingerprint(p.src)),
+}));
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allPages.map((p) => `  <url>\n    <loc>${SITE_ORIGIN}${p.loc}</loc>\n    <lastmod>${SITE_LASTMOD}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`).join('\n')}
+${datedPages.map((p) => `  <url>\n    <loc>${SITE_ORIGIN}${p.loc}</loc>\n    <lastmod>${p.lastmod}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`).join('\n')}
 </urlset>
 `;
 writeFileSync(resolve(ROOT, 'public/sitemap.xml'), sitemapXml, 'utf-8');
-console.log(`Wrote sitemap.xml with ${allPages.length} URLs.`);
+console.log(`Wrote sitemap.xml with ${allPages.length} URLs (${changedThisRun.length} changed this build).`);
+if (changedThisRun.length) console.log(`  now dated ${SITE_LASTMOD}: ${changedThisRun.join(', ')}`);
+
+// Sorted so the committed file has a stable, reviewable diff.
+const sortedLastmod = Object.fromEntries(Object.keys(nextLastmod).sort().map((k) => [k, nextLastmod[k]]));
+writeFileSync(LASTMOD_PATH, JSON.stringify(sortedLastmod, null, 2) + '\n', 'utf-8');
+console.log(`Wrote scripts/page-lastmod.json (${Object.keys(sortedLastmod).length} URLs tracked).`);
 
 // ---------- robots.txt ----------
 const robotsTxt = `User-agent: *
