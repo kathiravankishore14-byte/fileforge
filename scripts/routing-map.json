@@ -205,9 +205,9 @@
     "category": "word",
     "slug": "word-to-text",
     "oldUrl": "/word?tool=wordtotext",
-    "title": "Word to Text Online Free | OnlineToolsWeb",
-    "h1": "Word to Text Online",
-    "description": "Extract plain text from a Word doc. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Word to Text Converter Online Free | OnlineToolsWeb",
+    "h1": "Word to Text Converter — Online and Free",
+    "description": "Free Word to Text converter. Turn a .docx into a plain .txt file in your browser — no upload, no signup, and your document never leaves your device."
   },
   {
     "key": "exceltopdf",
@@ -385,9 +385,9 @@
     "category": "pdf",
     "slug": "pdf-to-markdown",
     "oldUrl": "/pdf?tool=pdftomarkdown",
-    "title": "PDF to Markdown Online Free | OnlineToolsWeb",
-    "h1": "PDF to Markdown Online",
-    "description": "Convert pages into basic Markdown text. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "PDF to Markdown Converter Online Free | OnlineToolsWeb",
+    "h1": "PDF to Markdown Converter — Online and Free",
+    "description": "Free PDF to Markdown converter. Turn a PDF into a plain .md file with a heading per page — no signup, nothing uploaded, runs in your browser."
   },
   {
     "key": "pdfsign",
@@ -437,7 +437,7 @@
     "oldUrl": "/ppt?tool=ppttotext",
     "title": "PPT to Text Converter Online Free | OnlineToolsWeb",
     "h1": "PPT to Text Converter — Online and Free",
-    "description": "Free PPT to Text converter. Extract all the text from a PowerPoint (.pptx) into a plain .txt file, slide by slide — no signup, no upload, runs in your browser."
+    "description": "Free PPT to Text converter. Pull every word out of a PowerPoint (.pptx) into a plain .txt file, slide by slide — no signup, nothing uploaded."
   },
   {
     "key": "texttoppt",

@@ -131,3 +131,140 @@ English-only and printed text only.
 5. There is unpushed work in the folder: the word-to-excel, ppt-to-text,
    compress-image, compress-pdf, text-to-ppt and image-to-excel changes from
    2026-09-11 and 2026-09-12 all still need a commit and push.
+
+---
+
+## 2026-09-13 · 09:35 UTC (15:05 IST) · SLOT 0 — 3 PM run · group 2
+**Pages in scope:** ppt-to-text, word-to-text, pdf-to-markdown
+(dayOfYear 256 → runIndex 512 → group 2)
+
+### Changes written: 2 full builds + 1 one-line fix
+
+**word-to-text — new full `PAGE_SEO` entry (was auto-copy, 263 words / 0 custom FAQs).**
+- title: `Word to Text Online Free | OnlineToolsWeb` → `Word to Text Converter Online Free | OnlineToolsWeb` (51 ch).
+  Every ranking competitor titles on "Converter"; the old title omitted the head term.
+- description: 104 ch, no reason-to-click → 148 ch leading with free + .docx→.txt +
+  "never leaves your device".
+- h1 `Word to Text Online` → `Word to Text Converter — Online and Free`.
+- 12 FAQs added. Deliberately includes the two questions **no competitor in the top
+  set answers**: UTF-8 / accented-character survival, and whether headers, footers
+  and comments are included. Also covers free / how-to / preview / .doc vs .docx /
+  formatting-images-tables loss / privacy / size limit / batch / what opens .txt / mobile.
+- ~1,000-word body. Page 263 → 1,327 words.
+- Accuracy check against `src/main.js`: tool is `wordtotext` → mammoth
+  `extractRawText` on `.docx` only, outputs `.txt`, shows a 400-character preview
+  before conversion (a real differentiator — written up, not invented). No size limit
+  is imposed anywhere in the code, so the FAQ says "the tool does not impose one"
+  rather than quoting a number. One file at a time — stated honestly.
+
+**pdf-to-markdown — new full `PAGE_SEO` entry (was auto-copy, 324 words / 0 custom FAQs).**
+- title → `PDF to Markdown Converter Online Free | OnlineToolsWeb` (54 ch).
+- description: 108 ch generic → 141 ch.
+- h1 `PDF to Markdown Online` → `PDF to Markdown Converter — Online and Free`.
+- 13 FAQs + ~1,100-word body, including a dedicated **"PDF to Markdown for AI tools
+  and RAG pipelines"** section — that is where the commercial intent on this keyword
+  now sits (markitdown.online, anythingmd.com, blazedocs.io all built their pages
+  around it) and the client-side angle is genuinely stronger there than anywhere else
+  on the site: converting locally means the PDF is seen by one fewer third party
+  before it reaches a model.
+- Page 324 → 1,555 words.
+- Accuracy check against `src/main.js` (`runPdfToMarkdown` + `extractPdfTextPages`):
+  output is `## Page N` per page plus paragraph splits, nothing more. So the page
+  states plainly that it does **not** reconstruct heading levels, bold/italic, links
+  or Markdown tables, does **not** OCR scanned PDFs, and can interleave multi-column
+  layouts. This is the opposite of iLovePDF's "headings, tables, lists and links stay
+  intact" claim — we cannot make that claim, so the page turns the limits into
+  routing instead (tables → /pdf-to-excel, images → /pdf-to-jpg, structure → /pdf-to-word).
+
+**ppt-to-text — one-line fix only, otherwise left alone.**
+Rewritten in full on 2026-09-11 (1,321 words, 8 FAQs); gap analysis against the
+current SERP (slidespilot, magicslides, convertio, autoslide, sharayeh) turned up
+nothing it does not already answer — speaker notes, .ppt, text-in-images, privacy,
+mobile and output shape are all covered. Per the no-churn rule the copy was not
+touched. The one real defect was the meta description at **159 characters**, over
+the ~155 limit and at risk of truncation. Trimmed to 141 ch:
+`Extract all the text from a PowerPoint (.pptx) into a plain .txt file, slide by
+slide — no signup, no upload, runs in your browser.` →
+`Pull every word out of a PowerPoint (.pptx) into a plain .txt file, slide by
+slide — no signup, nothing uploaded.`
+Diff confirms the only changes to `ppt-to-text.html` are that description in its
+four places (meta, og, twitter, WebApplication schema).
+
+`SITE_LASTMOD` bumped `2026-09-12` → `2026-09-13`.
+
+### Verification performed (all passed)
+- Only `word-to-text.html`, `pdf-to-markdown.html` and `ppt-to-text.html` differ from
+  the pre-run baseline of all 64 generated pages. No shared page affected.
+- FAQPage JSON-LD parses as valid JSON on all three (12 / 13 / 8 questions);
+  WebApplication and BreadcrumbList also valid.
+- Tag balance clean on all three (`<p>`/`</p>`, `<h3>`, `<li>` all matched).
+- No backticks, no `${`, no `undefined`, no placeholder text in output.
+- Titles 51 / 54 / 50 ch; descriptions 148 / 141 / 141 ch — all within limits.
+- `sitemap.xml` still 75 URLs, diff is the lastmod bump only.
+
+### Ranking observed (2026-09-13)
+**onlinetoolsweb.com does not appear in results for any of the three keyword
+clusters.** Checked: `word to text converter`, `docx to txt converter online`,
+`convert word to text free`, `extract text from word document online`,
+`pdf to markdown converter online free`, `convert pdf to md`,
+`pdf to markdown for LLM RAG`, `ppt to text converter online free`, plus the
+site-scoped `onlinetoolsweb.com word to text` and `pdf to markdown onlinetoolsweb`.
+Absent, not low-ranked — same finding as 2026-09-12. **Indexing remains the most
+likely binding constraint; copy work cannot rank an unindexed page.** Search Console
+coverage status is still the highest-value thing to check.
+
+### Competitive picture (research done this run)
+**word to text** — cloudconvert.com/docx-to-txt (~190 words, no FAQ) and
+convertio.co/docx-txt (~2,200 words, 6 FAQs: why convert / what opens TXT / images
+and tables preserved / batch / free / no install) anchor the SERP, with
+freeconvert.com (~1,200 words, 3 how-to questions), zamzar.com (~2,100 words, all
+trust and cross-sell, no Q&A) and products.aspose.app (~1,150 words, 7 FAQs: free /
+how many at a time / max size / how to get result / how long files are stored /
+safety / why slow). Every one of them uploads to a server, and every one therefore
+spends a section reassuring you about deletion. **Nobody covers text encoding, and
+only Convertio covers formatting/table loss** — both now answered on his page.
+FAQPage JSON-LD was not detected on any of the five.
+
+**pdf to markdown** — two distinct clusters. The plain converters: ilovepdf.com
+(~150 words, no FAQ, but already advertising "reuse in LLMs"), cloudconvert.com
+(~190 words), vertopal.com (~580 words), zamzar.com (~1,900 words, trust-heavy).
+The AI-angle pages, which are where the depth is: markitdown.online (~1,400 words,
+13 FAQs), anythingmd.com (~1,200 words, 7 FAQs, spec-sheet style with an explicit
+Limits section), blazedocs.io (~4,300 words, 9 FAQs, answers "why can't ChatGPT read
+PDFs" and RAG-prep directly), notegpt.io (~1,300 words, 6 FAQs). All upload.
+No FAQPage JSON-LD detected on any of them.
+
+*Caveat on the schema findings: they come from fetched-and-converted page content,
+which strips `<script>` blocks, so "no FAQPage schema" is strong-but-not-certain.*
+
+### Sources consulted
+- https://convertio.co/docx-txt/
+- https://cloudconvert.com/docx-to-txt
+- https://www.freeconvert.com/docx-to-txt
+- https://www.zamzar.com/convert/docx-to-txt/
+- https://products.aspose.app/words/conversion/docx-to-txt
+- https://www.ilovepdf.com/pdf-to-markdown
+- https://cloudconvert.com/pdf-to-md
+- https://www.zamzar.com/convert/pdf-to-md/
+- https://www.vertopal.com/en/convert/pdf-to-markdown
+- https://notegpt.io/pdf-to-markdown-converter
+- https://markitdown.online/
+- https://anythingmd.com/
+- https://blazedocs.io/
+- https://convertio.co/ppt-txt/
+- https://www.slidespilot.com/features/ppt-to-text
+- https://www.magicslides.app/tools/ppt-to-text
+
+### Notes for the next run
+1. `PAGE_SEO` now covers: `wordtoexcel`, `ppttotext`, `compress`, `pdfcompress`,
+   `texttoppt`, `imagetoexcel`, `wordtotext`, `pdftomarkdown`. Everything else is
+   still thin auto-derived copy (~280–330 words, 3–4 generic FAQs).
+2. **Still no HowTo schema anywhere on the site**, and no competitor checked across
+   two runs uses FAQPage. Adding HowTo JSON-LD to the generator from the existing
+   ordered `body.blocks` data remains the biggest single site-wide win available.
+3. Unpushed work in the folder now includes: word-to-excel, ppt-to-text,
+   compress-image, compress-pdf, text-to-ppt, image-to-excel (2026-09-11/12) **and**
+   word-to-text, pdf-to-markdown, ppt-to-text (this run). All of it needs one commit
+   and push.
+4. A second session was writing this repo on 2026-09-12. `generate-seo-pages.mjs`
+   mtime was re-checked immediately before committing this run and had not moved.
