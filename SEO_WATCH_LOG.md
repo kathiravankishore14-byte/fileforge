@@ -268,3 +268,173 @@ which strips `<script>` blocks, so "no FAQPage schema" is strong-but-not-certain
    and push.
 4. A second session was writing this repo on 2026-09-12. `generate-seo-pages.mjs`
    mtime was re-checked immediately before committing this run and had not moved.
+
+---
+
+## 2026-09-13 · 20:15 UTC (01:45 IST, 14 Sep) · SLOT 1 — 9 PM run (fired late) · group 3
+**Pages in scope:** image-to-ppt, excel-to-csv, heic-to-jpg
+(dayOfYear 256 → runIndex 513 → group 3)
+
+**Schedule note:** the trigger fired at **20:15 UTC**, not the configured 15:30 UTC.
+Nearly five hours late, and no 15:30 run is recorded in this log, so this is the
+delayed slot-1 firing rather than an extra one. Slot taken as 1, which is consistent
+with the 09:35 slot-0 run earlier today (group 2) — the two daily branches did not
+collide. If the drift repeats, the cron (`30 9,15 * * *` UTC) is worth re-checking.
+
+### Changes written: 3 new full `PAGE_SEO` entries
+
+All three slugs were still on auto-derived copy — no custom title, description, h1,
+intro, FAQ or body between them. Every one was a build-from-nothing, not a rewrite,
+so the no-churn rule did not bite on any of them.
+
+**image-to-ppt — new full entry (was 502 words / 0 custom FAQs → 2,011 words / 12 FAQs).**
+- title: `Image to PPT Online Free | OnlineToolsWeb` → `Image to PPT Converter Online Free | OnlineToolsWeb` (51 ch). Every ranking page titles on "Converter"; the old title dropped the head term.
+- description: `Place one or more images onto slides. Free, private, and runs right in your browser: no upload, no signup.` (106 ch, tool-meta boilerplate) → `Free image to PPT converter. Turn JPG or PNG pictures into PowerPoint slides, one image per slide — no signup, and nothing leaves your browser.` (143 ch).
+- h1 `Image to PPT Online` → `Image to PPT Converter — Online and Free`.
+- The keyword gap that mattered: this SERP holds **two different products under one name.**
+  Canva, CopySlides and AiPPT sell AI "editable PPTX" — OCR the picture, rebuild it as
+  text boxes, charge per slide. Simple picture-placers (generateppt.com) are the other
+  half. His tool is the second kind, and the page now says so in a dedicated section
+  rather than letting a visitor arrive expecting OCR and bounce.
+- New FAQs include the three that generateppt.com — the closest functional competitor —
+  answers and nobody else does: **will images be stretched**, **what slide size**,
+  **can I edit the text inside the pptx**. All three are answered against the code, not
+  guessed (see accuracy check).
+- Accuracy check against `src/main.js` (`renderMultiFileTool` + the single-file
+  `imagetoppt` branch): pptxgenjs, `slide.addImage({x:0, y:0, w:10, h:5.63})` per file,
+  one slide per image, order = the order files were added. So the page states plainly
+  that images are **stretched to fill a 16:9 slide** (10 × 5.63 in) and routes to
+  /crop-image for anything not already widescreen — an honest limitation turned into a
+  useful instruction. Drag-to-reorder is `pdfmerge`-only in the code, so the page does
+  **not** claim reordering; it says to reorder in PowerPoint afterwards. The >22-file
+  memory warning is described as it actually behaves; no invented file cap.
+
+**excel-to-csv — new full entry (was 407 words / 0 custom FAQs → 2,046 words / 13 FAQs).**
+- title → `Excel to CSV Converter Online Free | OnlineToolsWeb` (51 ch).
+- description: 103 ch boilerplate → `Free Excel to CSV converter. Turn an .xlsx or .xls sheet into a plain .csv in your browser — no upload, no signup, your data stays on your device.` (146 ch).
+- h1 `Excel to CSV Online` → `Excel to CSV Converter — Online and Free`.
+- **Biggest gap on this keyword: multi-sheet workbooks.** Zamzar, FreeConvert and
+  CoolUtils all leave it unanswered, and it is the first thing that surprises people —
+  a CSV holds one table. His tool converts `workbook.SheetNames[0]`, the first sheet,
+  so the page says exactly that and tells you how to get at a different sheet.
+- Second gap: **the UTF-8 / accented-characters problem.** TableConvert is the only
+  competitor checked that covers it. `sheet_to_csv` writes UTF-8 with no BOM, so Excel
+  on Windows garbles accents on a double-click. The page gives the actual fix
+  (Data → From Text/CSV → File Origin: UTF-8) instead of pretending it does not happen.
+- Also covers formulas-become-values, comma/quote escaping, .xls as well as .xlsx, what
+  formatting is lost, and the five-row preview — the preview is a genuine differentiator
+  (sheet name + total row count + first 5 rows before you commit) and is real, not invented.
+- Accuracy check against `excelToCsvBlob` and the `exceltopdf/exceltocsv` config branch
+  in `src/main.js`: SheetJS `XLSX.read` → `sheet_to_csv` on sheet 0. One file at a time —
+  stated honestly, no batch claim. No size limit imposed anywhere in the code, so the
+  FAQ says "the tool does not impose one" rather than quoting a number.
+
+**heic-to-jpg — new full entry (was 488 words / 0 custom FAQs → 1,961 words / 12 FAQs).**
+- title → `HEIC to JPG Converter Online Free | OnlineToolsWeb` (50 ch).
+- description: 108 ch boilerplate → `Free HEIC to JPG converter. Turn an iPhone .heic photo into a JPG that opens anywhere — no signup, no upload, and the photo stays on your device.` (145 ch).
+- h1 `HEIC to JPG Online` → `HEIC to JPG Converter — Online and Free`.
+- **Honest read of this keyword: the privacy angle is weakest here of anywhere on the site.**
+  Unlike every other page worked so far, this SERP is full of client-side competitors —
+  openmyheic.com, heicsave.com, heicvault.com, convertheictojpg.online, heicjpgconverter.com
+  all lead with "no upload". "Nothing leaves your device" is table stakes on this term,
+  not a differentiator. The page still states it (it is true and users look for it) but
+  does not lean on it as the whole pitch.
+- Where the page competes instead: **the questions around the conversion**, which the
+  big converters skip. Why Windows/Android choke on HEIC, whether EXIF date and GPS
+  survive, what happens to a Live Photo, how to get the files off the iPhone, and how to
+  turn HEIC off at source (Settings → Camera → Formats → Most Compatible).
+- Accuracy check against `runSimpleTool` in `src/main.js`: `heic2any({toType:'image/jpeg',
+  quality:0.9})`. The 90 percent quality figure in the copy comes from that line — a real
+  number, not a marketing one. `accept: '.heic,.heif'` so both extensions are claimed.
+  **One photo at a time** — not multiFile in `toolMeta` — so the page says so plainly and
+  concedes that a desktop batch tool is better for hundreds of photos, rather than
+  matching heictojpg.com's "up to 200 photos" claim it cannot back.
+- EXIF is deliberately hedged ("do not count on it") rather than asserted either way:
+  heic2any re-encodes from the decoded image and metadata carry-over is not guaranteed,
+  so a hard claim in either direction would have been invention.
+
+`SITE_LASTMOD` was **already** `2026-09-13` (set by this morning's slot-0 run), so it was
+left alone and `public/sitemap.xml` is byte-identical to before. Nothing to bump twice in a day.
+
+### Verification performed (all passed)
+- Baseline regeneration from the pre-edit `.mjs` reproduces the three on-device `.html`
+  files **byte-for-byte** — the build is deterministic and this container matches his.
+- After the edit, exactly **three** of the 64 generated pages differ from baseline:
+  `image-to-ppt.html`, `excel-to-csv.html`, `heic-to-jpg.html`. No shared page touched.
+- FAQPage JSON-LD parses as valid JSON on all three (12 / 13 / 12 questions);
+  WebApplication and BreadcrumbList also valid.
+- Tag balance clean on all three (`<p>`, `<h2>`, `<h3>`, `<ul>`, `<ol>`, `<li>` all matched).
+- No backticks, no `${`, no `undefined`, no placeholder text in output.
+- **Every internal `href` checked against `src/toolSlugs.js`** — 17 distinct link targets
+  across the three pages, all resolve to real slugs. No dead links.
+- Titles 51 / 51 / 50 ch; descriptions 143 / 146 / 145 ch — all within limits.
+- `scripts/generate-seo-pages.mjs` mtime on the device re-checked immediately before
+  committing and unchanged from staging (1789292547990) — no concurrent session this run.
+
+### Ranking observed (2026-09-13)
+**onlinetoolsweb.com does not appear for any of the three keyword clusters.** Checked:
+`heic to jpg converter free online`, `convert iphone heic photos to jpg on windows free no upload`,
+`"heic to jpg" converter browser no upload private`, `excel to csv converter online free xlsx to csv`,
+`image to ppt converter online free jpg to powerpoint`, and the site-scoped
+`onlinetoolsweb.com image to ppt excel to csv heic to jpg`. Absent, not low-ranked —
+the same finding as 2026-09-12 and the 09:35 run today. **Three runs in a row now agree:
+indexing, not copy, is the binding constraint.** Search Console coverage status remains
+the single highest-value thing to check, and none of this copy work can pay off until it is.
+
+### Competitive picture (research done this run)
+**image to ppt** — the term splits. AI editable-PPTX services: copyslides.com (~1,800 words,
+9 FAQs, 20 MB image cap, paid tiers from 200 slides/month), canva.com (~1,800 words, 3 FAQs),
+aippt.com, dokie.ai. Simple picture-placers: generateppt.com (~2,000 words, 3 FAQs —
+"will images be stretched", "what slide size", "can i edit text inside the pptx" — states
+16:9 and offers drag-to-reorder), jpgtoppt.com, theonlineconverter.com. Smallpdf's entry is
+a blog post, not a tool page. No FAQPage JSON-LD detected on any of them.
+
+**excel to csv** — zamzar.com (~2,500 words, 5 FAQs, 50 MB cap, does not mention sheets),
+freeconvert.com (~2,000 words, no labelled FAQ, 1 GB cap, does note CSV has "no multiple
+sheets"), tableconvert.com (~4,500 words, 10 FAQs, **client-side like his** and explicitly
+says so, covers formulas and the Excel-opens-CSV-wrong problem), coolutils.com, xlsx-to-csv.com,
+ocr.ac. TableConvert is the real competitor here — same architecture, deeper page.
+No FAQPage JSON-LD detected.
+
+**heic to jpg** — the most crowded and most client-side of the three. iloveimg.com
+(~450 words, no FAQ), freeconvert.com (~3,500 words, 5 FAQs, 1 GB cap, uploads and deletes
+after 8 hours), heictojpg.com (~250 words, claims up to 200 photos), canva.com, watermarkly.com,
+picflow.com, plus a long tail of no-upload single-purpose sites: openmyheic.com (~2,100 words,
+6 FAQs, WebAssembly/libheif, "photos are never uploaded", limit is device memory),
+heicsave.com, heicvault.com, heicconvertor.com, convertheictojpg.online, heicjpgconverter.com.
+No FAQPage JSON-LD detected on any of them.
+
+*Caveat on the schema findings, same as prior runs: they come from fetched-and-converted
+page content, which strips `<script>` blocks, so "no FAQPage schema" is strong but not certain.*
+
+### Sources consulted
+- https://www.canva.com/features/jpg-to-ppt-converter/
+- https://www.generateppt.com/free-tools/images-to-pptx
+- https://copyslides.com/image-to-pptx
+- https://jpgtoppt.com/
+- https://smallpdf.com/blog/jpg-to-ppt-converter
+- https://www.zamzar.com/convert/xlsx-to-csv/
+- https://www.freeconvert.com/xlsx-to-csv
+- https://tableconvert.com/excel-to-csv
+- https://www.coolutils.com/online/XLSX-to-CSV
+- https://www.iloveimg.com/convert-to-jpg/heic-to-jpg
+- https://www.freeconvert.com/heic-to-jpg
+- https://heictojpg.com/
+- https://openmyheic.com/
+- https://watermarkly.com/convert-heic-to-jpg/
+- https://picflow.com/convert/heic-to-jpg
+
+### Notes for the next run
+1. `PAGE_SEO` now covers **11 slugs**: `wordtoexcel`, `ppttotext`, `compress`, `pdfcompress`,
+   `texttoppt`, `imagetoexcel`, `wordtotext`, `pdftomarkdown`, **`imagetoppt`, `exceltocsv`,
+   `heictojpg`**. Everything else is still thin auto-derived copy (~280–500 words, no custom FAQs).
+2. **Still no HowTo schema anywhere on the site.** Three runs have now flagged it. The
+   generator already holds the ordered `body.blocks` data — every custom entry written so far
+   has an `ol` of numbered steps under a "How to …" h3, which is exactly the HowTo shape.
+   Eleven pages would pick it up the moment it is added. This is the biggest single
+   site-wide win still on the table.
+3. **Unpushed work in the folder now covers:** word-to-excel, ppt-to-text, compress-image,
+   compress-pdf, text-to-ppt, image-to-excel (09-11/12), word-to-text, pdf-to-markdown,
+   ppt-to-text (09-13 morning) **and** image-to-ppt, excel-to-csv, heic-to-jpg (this run).
+   Twelve pages, one push.
+4. Trigger fired ~4h45m late this run — see the schedule note at the top.

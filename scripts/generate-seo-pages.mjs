@@ -99,6 +99,317 @@ function relatedKeysFor(key, meta) {
 // To add another tool: copy the wordtoexcel entry, change the key to the
 // toolMeta key, and rerun `node scripts/generate-seo-pages.mjs`.
 const PAGE_SEO = {
+  imagetoppt: {
+    title: `Image to PPT Converter Online Free | OnlineToolsWeb`,
+    description: `Free image to PPT converter. Turn JPG or PNG pictures into PowerPoint slides, one image per slide — no signup, and nothing leaves your browser.`,
+    appName: `Image to PPT Converter | OnlineToolsWeb`,
+    h1: `Image to PPT Converter — Online and Free`,
+    intro: `Turn a folder of pictures into a PowerPoint deck. Drop in your JPG or PNG files and this free image to PPT converter puts each one on its own 16:9 slide and hands you a .pptx — no signup, nothing to install, and your photos never leave your device.`,
+    relatedKeys: ['pdf', 'texttoppt', 'ppttotext', 'pdftoppt', 'crop', 'collagemaker'],
+    faq: [
+      {
+        q: `Is the image to PPT converter free?`,
+        a: `Yes, completely. There is no signup, no trial, no credit card and no slide quota. Many image-to-PowerPoint tools are priced per slide or per month; this one is not, because the conversion runs on your own computer and costs nothing to serve.`,
+      },
+      {
+        q: `How do I turn images into PowerPoint slides?`,
+        a: `Drop your pictures onto the box on this page, or tap Browse files and pick several at once. You will see them listed with a running file count and total size. Press Create Slides and a .pptx downloads with one image on each slide.`,
+      },
+      {
+        q: `Can I convert several images at once?`,
+        a: `Yes. Select as many pictures as you like and each one becomes its own slide in a single presentation. You can also use the Add files button to bring in more after the first batch.`,
+      },
+      {
+        q: `What slide size does it use?`,
+        a: `Standard 16:9 widescreen — 10 by 5.63 inches, which is what PowerPoint, Google Slides and Keynote have used by default for years. Your deck will fill a modern laptop screen or projector without black bars down the sides.`,
+      },
+      {
+        q: `Will my images be stretched?`,
+        a: `Each picture is placed edge to edge across the whole slide, so anything that is not already 16:9 is stretched to fit. For photos that matters: a tall phone photo will look wide. If the shape is important, <a href="/crop-image">crop the picture to 16:9</a> first, then bring it here.`,
+      },
+      {
+        q: `Can I edit the text inside the slides afterwards?`,
+        a: `No. Your picture is placed on the slide as a picture, so any words in it stay part of the image. This is a converter, not an AI slide rebuilder — it does not read the text off your image and turn it into editable text boxes. If that is what you need, look for a tool that advertises OCR or "editable PPTX" specifically.`,
+      },
+      {
+        q: `Which image formats can I use?`,
+        a: `Anything your browser can display: JPG, PNG, WebP, GIF and BMP all work. If you have iPhone photos, run them through the <a href="/heic-to-jpg">HEIC to JPG converter</a> first, since .heic is not a web image format.`,
+      },
+      {
+        q: `Will the file open in Google Slides or Keynote?`,
+        a: `Yes. The output is an ordinary .pptx, the same format PowerPoint saves. Google Slides and Keynote both import it, and so do LibreOffice Impress and WPS Office.`,
+      },
+      {
+        q: `What order do the slides come out in?`,
+        a: `The same order the files are listed on screen, which is the order they were added. If you want a different sequence, the quickest fix is to reorder the slides in PowerPoint or Google Slides after downloading — dragging one slide is faster than re-picking the files.`,
+      },
+      {
+        q: `Are my images uploaded anywhere?`,
+        a: `No. The pictures are read and the .pptx is built by your own browser, and nothing is sent to a server. Screenshots of internal dashboards, product photos before launch, scans of paperwork — none of it travels, so there is no retention policy to take on trust.`,
+      },
+      {
+        q: `Is there a limit on how many images I can add?`,
+        a: `The tool does not impose one. Because the deck is built on your device, the ceiling is your own browser's memory — past about twenty files you will see a note that a large batch can use a lot of it. If a very big batch struggles, split it into two decks and merge them in PowerPoint.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on Android and iPhone the same way it does on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `Image to PPT converter — put your pictures on PowerPoint slides`,
+      blocks: [
+        { p: `Building a deck out of photos is tedious work: new slide, insert picture, drag to the corners, stretch to the edges, repeat forty times. An <strong>image to PPT converter</strong> does the repetitive part in one pass — every picture you hand it comes back as its own full-bleed slide in a normal .pptx file you can then edit like any other presentation.` },
+
+        { h3: `How to convert images to PPT online free` },
+        { ol: [
+          `<strong>Add your pictures.</strong> Drag them onto the box above, or tap <em>Browse files</em> and multi-select. They are read in your browser — nothing is uploaded.`,
+          `<strong>Check the list.</strong> Every file appears as a card with the total count and size, so you can see at a glance that nothing is missing. Use <em>Add files</em> to include more.`,
+          `<strong>Press Create Slides.</strong> A .pptx downloads with one image per slide, ready to open in PowerPoint, Google Slides or Keynote.`,
+        ] },
+
+        { h3: `Two different things get called "image to PPT"` },
+        { p: `It is worth knowing which one you are looking for, because the SERP mixes them up and the price tag differs by a lot:` },
+        { ul: [
+          `<strong>Placing pictures on slides</strong> — what this tool does. The image stays an image. Fast, free, unlimited, and exactly right for photo decks, screenshot walkthroughs, scanned handouts and portfolio reviews.`,
+          `<strong>Rebuilding a slide from a screenshot</strong> — what the AI "editable PPTX" services sell. They try to read the text, guess the fonts and hand back editable text boxes. Useful when you have lost the original deck and only have a picture of it, but the output is a reconstruction, and those tools are generally paid and priced per slide.`,
+        ] },
+
+        { h3: `What people use it for` },
+        { ul: [
+          `<strong>Photo decks.</strong> A site visit, an event, a property tour — dozens of pictures, one per slide, in minutes.`,
+          `<strong>Screenshot walkthroughs.</strong> Step-by-step software guides and training material, where each screen is a slide and you add your notes afterwards.`,
+          `<strong>Scanned handouts.</strong> Turn photographed pages into a deck you can present or share.`,
+          `<strong>Design and portfolio review.</strong> Get mockups in front of a room without rebuilding them in PowerPoint.`,
+          `<strong>A starting frame.</strong> Some people just want the pictures placed so they can drop captions and arrows on top in PowerPoint.`,
+        ] },
+
+        { h3: `Getting the crop right first` },
+        { p: `Because every image is stretched across the full 16:9 slide, pictures that are already roughly widescreen look best. Phone photos taken upright are the common problem — they will be pulled sideways. Two ways round it: <a href="/crop-image">crop to 16:9</a> before converting, or accept the stretch for rough-and-ready decks where the picture is a reference rather than the point. If you want several photos on one slide instead, <a href="/collage-maker">build a collage</a> first and convert that single image.` },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> No account wall between you and your own pictures.`,
+          `<strong>Nothing is uploaded.</strong> The .pptx is assembled on your device, which matters when the images are unreleased work, client material or anything from an internal system.`,
+          `<strong>No watermarks, no slide caps.</strong> Build as many decks as you like.`,
+          `<strong>Works everywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser.`,
+        ] },
+
+        { h3: `Related presentation and image tools` },
+        { p: `You can also <a href="/image-to-pdf">turn the same pictures into a PDF</a>, <a href="/text-to-ppt">build slides from plain text</a>, <a href="/pdf-to-ppt">convert a PDF into slides</a>, <a href="/ppt-to-text">pull the text out of a PowerPoint</a>, <a href="/crop-image">crop an image</a> or <a href="/collage-maker">make a collage</a> — all free, all in your browser.` },
+      ],
+    },
+  },
+
+  exceltocsv: {
+    title: `Excel to CSV Converter Online Free | OnlineToolsWeb`,
+    description: `Free Excel to CSV converter. Turn an .xlsx or .xls sheet into a plain .csv in your browser — no upload, no signup, your data stays on your device.`,
+    appName: `Excel to CSV Converter | OnlineToolsWeb`,
+    h1: `Excel to CSV Converter — Online and Free`,
+    intro: `Get a spreadsheet out of Excel and into plain CSV. Drop in an .xlsx or .xls file, check the preview of the first rows, and download a .csv — no signup, nothing to install, and the file never leaves your device.`,
+    relatedKeys: ['exceltopdf', 'wordtoexcel', 'imagetoexcel', 'pdftoexcel', 'htmltoexcel', 'jsonformatter'],
+    faq: [
+      {
+        q: `Is the Excel to CSV converter free?`,
+        a: `Yes. Converting a spreadsheet to CSV here is free with no signup, no trial and no daily limit. Nothing is held back behind an upgrade, because the conversion runs on your own machine.`,
+      },
+      {
+        q: `How do I convert Excel to CSV online?`,
+        a: `Drop your .xlsx or .xls file onto the box on this page. The tool shows you the sheet name, how many rows it found and the first five rows, so you can check you have the right file. Press Convert and the .csv downloads.`,
+      },
+      {
+        q: `My workbook has several sheets — what happens to them?`,
+        a: `A CSV file holds exactly one table, so it cannot carry a whole workbook. This tool converts the first sheet in the workbook. If you need another sheet, open the workbook in Excel, move that sheet to the front or copy it into a new file, and convert that.`,
+      },
+      {
+        q: `Do formulas come across?`,
+        a: `You get the results, not the formulas. A cell containing =SUM(A1:A10) arrives in the CSV as the number it worked out to. That is how CSV works everywhere — the format has no concept of a formula — and it is usually what you want, since the file is normally headed for an import somewhere.`,
+      },
+      {
+        q: `Does it accept old .xls files as well as .xlsx?`,
+        a: `Yes, both. The modern .xlsx format and the older binary .xls from pre-2007 Excel are each read directly, with no need to open and re-save first.`,
+      },
+      {
+        q: `What happens to formatting, colours and charts?`,
+        a: `They are dropped. CSV is plain text — just values separated by commas — so cell colours, fonts, borders, merged cells, conditional formatting, charts and images do not survive. If you need the look preserved, <a href="/excel-to-pdf">export the sheet to PDF</a> instead.`,
+      },
+      {
+        q: `Why do accented characters look wrong when I open the CSV in Excel?`,
+        a: `That is Excel guessing the encoding, not a fault in the file. The .csv is written as UTF-8, and Excel on Windows often assumes something else when you double-click a CSV. Open Excel first, then use Data, then From Text/CSV, pick the file, and set File Origin to UTF-8. Google Sheets, Numbers and most databases read it correctly without any of this.`,
+      },
+      {
+        q: `What about cells that contain commas or line breaks?`,
+        a: `They are quoted properly. A cell holding "Smith, John" is written surrounded by quotation marks so it stays one field, and quotation marks inside a cell are escaped. Anything reading standard CSV will put the columns back exactly as they were.`,
+      },
+      {
+        q: `Is my spreadsheet uploaded anywhere?`,
+        a: `No. The workbook is opened and read by your own browser and nothing is sent to a server. That is the difference that matters for payroll, customer lists, patient data or anything under an NDA — there is no copy sitting on someone else's machine waiting for a deletion timer.`,
+      },
+      {
+        q: `Is there a file size limit?`,
+        a: `The tool does not impose one. Because the work happens on your device rather than on a server, the practical ceiling is your own browser's memory. Ordinary business spreadsheets, including ones with tens of thousands of rows, are no trouble.`,
+      },
+      {
+        q: `Can I convert several workbooks at once?`,
+        a: `Files are converted one at a time. Each conversion is quick, though, because there is no upload wait and no queue — you pick the next file and go.`,
+      },
+      {
+        q: `What can open a CSV file?`,
+        a: `Almost everything. Excel, Google Sheets, Numbers, LibreOffice Calc, any text editor, and effectively every database, CRM, accounting package and analytics tool that has an import button. That universality is the whole reason CSV is still the default handover format.`,
+      },
+      {
+        q: `Does it work on mobile?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on phones and tablets exactly as it does on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `Excel to CSV converter — turn a sheet into plain comma-separated values`,
+      blocks: [
+        { p: `Sooner or later something asks you for a CSV. An import screen, a database load, a mail-merge, a client's system that will not touch .xlsx. An <strong>Excel to CSV converter</strong> strips the workbook down to the thing those systems actually want: rows of values, separated by commas, in a file any tool written in the last forty years can read.` },
+
+        { h3: `How to convert Excel to CSV online free` },
+        { ol: [
+          `<strong>Add your spreadsheet.</strong> Drag an .xlsx or .xls onto the box above, or tap <em>Browse files</em>. It is read in your browser — never uploaded.`,
+          `<strong>Check the preview.</strong> You get the sheet name, the total row count and the first five rows laid out as a table. Thirty seconds here saves converting the wrong file.`,
+          `<strong>Press Convert.</strong> The .csv downloads, named after your original file and ready to import anywhere.`,
+        ] },
+
+        { h3: `What CSV keeps, and what it cannot` },
+        { p: `CSV is deliberately minimal. Knowing the trade before you convert avoids surprises at the other end:` },
+        { ul: [
+          `<strong>All the values.</strong> Text, numbers and dates come through as they appear in the sheet.`,
+          `<strong>Formula results, not formulas.</strong> The computed value lands in the cell; the formula itself does not exist in CSV.`,
+          `<strong>Proper quoting.</strong> Commas, quotation marks and line breaks inside a cell are escaped so columns do not shift.`,
+          `<strong>One sheet only.</strong> CSV is a single table by definition — the first sheet in the workbook is the one converted.`,
+          `<strong>No formatting.</strong> Colours, fonts, borders, column widths, merged cells and conditional formatting are all dropped.`,
+          `<strong>No charts, images or pivot tables.</strong> Those are workbook objects, not data, and have nowhere to go in a text file.`,
+        ] },
+
+        { h3: `What people convert Excel to CSV for` },
+        { ul: [
+          `<strong>Importing into another system.</strong> CRMs, e-commerce platforms, email tools, accounting software and payroll systems almost all take CSV and many take nothing else.`,
+          `<strong>Loading into a database.</strong> Every database has a bulk CSV loader; almost none read .xlsx directly.`,
+          `<strong>Feeding a script.</strong> Python, R and shell tools read CSV in one line. Parsing a workbook needs a library.`,
+          `<strong>Handing data to someone without Excel.</strong> A CSV opens on any machine, with no licence involved.`,
+          `<strong>Version control and diffs.</strong> Two CSVs can be compared line by line; two .xlsx files are zip archives and cannot.`,
+          `<strong>Archiving.</strong> Plain text will still be readable long after the current spreadsheet formats have moved on.`,
+        ] },
+
+        { h3: `The encoding trap, and how to avoid it` },
+        { p: `The single most common complaint about any CSV export is names and accents arriving as garbled characters in Excel. The file is almost always fine — UTF-8 is the right encoding and it is what this tool writes — and the problem is that Excel on Windows guesses a legacy encoding when you double-click a .csv. The reliable route is to open Excel first, go to <em>Data</em> then <em>From Text/CSV</em>, choose the file, and set <em>File Origin</em> to UTF-8 in the preview dialog. Google Sheets, Numbers, LibreOffice and virtually every database read UTF-8 correctly with no extra steps.` },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> No account needed to convert your own spreadsheet.`,
+          `<strong>Nothing is uploaded.</strong> Financial models, customer lists and HR data stay on your machine — there is no server copy at all, so nothing to delete later.`,
+          `<strong>No row caps or watermarks.</strong> Convert as many workbooks as you need.`,
+          `<strong>Works anywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser, nothing to install.`,
+        ] },
+
+        { h3: `Related spreadsheet tools` },
+        { p: `You can also <a href="/excel-to-pdf">save a sheet as a PDF</a>, <a href="/word-to-excel">pull tables out of a Word document</a>, <a href="/image-to-excel">turn a picture of a table into a spreadsheet</a>, <a href="/pdf-to-excel">get tables out of a PDF</a>, <a href="/html-to-excel">convert an HTML table</a> or <a href="/json-formatter">tidy up JSON</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+
+  heictojpg: {
+    title: `HEIC to JPG Converter Online Free | OnlineToolsWeb`,
+    description: `Free HEIC to JPG converter. Turn an iPhone .heic photo into a JPG that opens anywhere — no signup, no upload, and the photo stays on your device.`,
+    appName: `HEIC to JPG Converter | OnlineToolsWeb`,
+    h1: `HEIC to JPG Converter — Online and Free`,
+    intro: `Your iPhone saves photos as .heic and half the world cannot open them. Drop one here and this free HEIC to JPG converter gives you back an ordinary JPG that works everywhere — no signup, nothing to install, and the photo never leaves your device.`,
+    relatedKeys: ['convertformat', 'compress', 'resize', 'pdf', 'crop', 'grayscale'],
+    faq: [
+      {
+        q: `Is the HEIC to JPG converter free?`,
+        a: `Yes, with no signup, no trial and no daily photo count. There are no watermarks on the JPG either. Converting runs on your own device, so there is no server bill to pass on to you.`,
+      },
+      {
+        q: `How do I convert a HEIC photo to JPG?`,
+        a: `Drop the .heic file onto the box on this page, or tap Browse files and pick it. It converts immediately and the JPG downloads with the same name. There is nothing to configure.`,
+      },
+      {
+        q: `Why won't Windows or Android open my iPhone photos?`,
+        a: `HEIC is Apple's default photo format since iOS 11. It stores the same picture in about half the space of a JPG, which is why Apple uses it, but support elsewhere is patchy — Windows needs an extra codec from the Microsoft Store, and plenty of websites, email clients and older Android phones simply reject the file. Converting to JPG sidesteps all of that.`,
+      },
+      {
+        q: `Does converting lose image quality?`,
+        a: `A little, in the way any JPG does. The photo is saved at 90 percent JPEG quality, which is the usual high-quality setting and is visually hard to tell from the original on screen or in print. The file will usually be larger than the .heic, because JPG is a less efficient format.`,
+      },
+      {
+        q: `Can I convert a whole batch of photos at once?`,
+        a: `Photos are converted one at a time here. For a handful that is fine, since each one takes a moment and there is no upload or queue. For hundreds of holiday photos a desktop batch tool will be less clicking.`,
+      },
+      {
+        q: `Does it accept .heif files too?`,
+        a: `Yes. Both .heic and .heif are accepted — they are the same underlying format with different extensions, and the tool reads either.`,
+      },
+      {
+        q: `Are my photos uploaded anywhere?`,
+        a: `No. The file is decoded and re-saved by your own browser, and nothing is sent to a server. Phone photos are personal by default — family, documents, whiteboards, things photographed at work — and none of it travels here.`,
+      },
+      {
+        q: `Is the date and location information kept?`,
+        a: `Do not count on it. The JPG is written fresh from the decoded picture, so EXIF details such as capture date, camera settings and GPS location may not carry across. Keep the original .heic if that information matters to you — and be aware that stripping location is often exactly what people want before sharing a photo.`,
+      },
+      {
+        q: `What happens to a Live Photo?`,
+        a: `You get the still frame as a JPG. The short video that makes a Live Photo move is stored by the iPhone as a separate file alongside the .heic, so it is not part of what gets converted here.`,
+      },
+      {
+        q: `How do I get the HEIC files off my iPhone in the first place?`,
+        a: `AirDrop to a Mac keeps them as .heic. To a Windows PC, connect by cable and copy from the DCIM folder, or email the photo to yourself and save the attachment. Note that iOS sometimes converts to JPG automatically when transferring — if what lands on your PC is already a .jpg, you are done.`,
+      },
+      {
+        q: `Can I stop my iPhone saving HEIC altogether?`,
+        a: `Yes. Go to Settings, then Camera, then Formats, and choose Most Compatible instead of High Efficiency. New photos will be saved as JPG from then on. Photos already in your library stay as .heic, which is what this converter is for.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on Android and iPhone the same as on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `HEIC to JPG converter — open iPhone photos anywhere`,
+      blocks: [
+        { p: `You email a photo from your iPhone and the person at the other end says they cannot open it. You upload one to a form and it is rejected. The culprit is <strong>HEIC</strong>, the format Apple has used by default since iOS 11 — technically better than JPG, supported by far less software. A <strong>HEIC to JPG converter</strong> hands you back the universal version of the same picture.` },
+
+        { h3: `How to convert HEIC to JPG online free` },
+        { ol: [
+          `<strong>Add your photo.</strong> Drag the .heic or .heif file onto the box above, or tap <em>Browse files</em>. It is read in your browser — never uploaded.`,
+          `<strong>Wait a second.</strong> The picture is decoded and re-saved as a JPG on your own device.`,
+          `<strong>Download the JPG.</strong> Same filename, .jpg extension, ready for email, uploads, printing or anywhere else.`,
+        ] },
+
+        { h3: `Why iPhone photos cause trouble` },
+        { ul: [
+          `<strong>Windows needs a codec.</strong> Photo viewers on Windows often cannot show a .heic until the HEIF extension is installed from the Microsoft Store.`,
+          `<strong>Android support is inconsistent.</strong> Newer phones manage; older ones and many gallery apps do not.`,
+          `<strong>Web forms reject it.</strong> Job applications, insurance claims and government portals typically accept JPG and PNG only.`,
+          `<strong>Older software has never heard of it.</strong> Print shops, photo kiosks, CMSs and design tools that predate 2017 expect a JPG.`,
+          `<strong>Email recipients get stuck.</strong> The photo arrives, but nothing on their machine will open it.`,
+        ] },
+
+        { h3: `What you gain and what you give up` },
+        { p: `HEIC stores a photo in roughly half the space of an equivalent JPG, so the converted file will usually be bigger. That is the price of universal compatibility, and for a single photo it is nothing. The picture itself is saved at 90 percent JPEG quality — the standard high-quality setting, and not something you will spot by eye. If the resulting file is larger than you want for email or a website, <a href="/compress-image">compress the JPG</a> or <a href="/resize-image">resize it</a> afterwards.` },
+
+        { h3: `Privacy is the part worth thinking about` },
+        { p: `Phone photos are personal in a way that other files often are not. A camera roll holds family pictures, documents photographed instead of scanned, whiteboards from work, screenshots of private messages. Most HEIC converters upload your photo to a server and promise to delete it in some number of hours. This one does not upload anything at all — the decode and the JPG encode both happen inside your browser, so there is nothing to delete, nothing logged, and no retention policy to take on faith.` },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> No account wall in front of your own photos.`,
+          `<strong>Nothing is uploaded.</strong> The conversion is local, start to finish.`,
+          `<strong>No watermarks or photo caps.</strong> Convert as many as you need, one after another.`,
+          `<strong>Works anywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser, nothing to install.`,
+        ] },
+
+        { h3: `Related image tools` },
+        { p: `Once you have a JPG you can <a href="/compress-image">shrink it for email</a>, <a href="/resize-image">resize it to fit</a>, <a href="/crop-image">crop it</a>, <a href="/convert-image-format">convert it to PNG or WebP</a>, <a href="/image-to-pdf">turn a set of photos into a PDF</a> or <a href="/grayscale-image-converter">make it black and white</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+
   wordtotext: {
     title: `Word to Text Converter Online Free | OnlineToolsWeb`,
     description: `Free Word to Text converter. Turn a .docx into a plain .txt file in your browser — no upload, no signup, and your document never leaves your device.`,
