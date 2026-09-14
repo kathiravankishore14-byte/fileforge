@@ -39,7 +39,7 @@ const OG_IMAGE_URL = `${SITE_ORIGIN}/images/social-preview.jpg`;
 // together tells Google nothing, so Google learns to ignore the field —
 // which is exactly backwards when three pages have just been rewritten
 // and you want those three to stand out.
-const SITE_LASTMOD = '2026-09-13';
+const SITE_LASTMOD = '2026-09-14';
 
 const { toolMeta, categoryNavConfig, pageUrlMap, categoryLabels, categoryIcons, toolIconOverrides } =
   extractMainData(resolve(ROOT, 'src/main.js'));
@@ -107,6 +107,542 @@ function relatedKeysFor(key, meta) {
 // To add another tool: copy the wordtoexcel entry, change the key to the
 // toolMeta key, and rerun `node scripts/generate-seo-pages.mjs`.
 const PAGE_SEO = {
+  pdftoword: {
+    title: `PDF to Word Converter Online Free | OnlineToolsWeb`,
+    description: `Free PDF to Word converter. Pull the text out of a PDF into an editable .docx file — runs in your browser, so the PDF never leaves your device.`,
+    appName: `PDF to Word Converter | OnlineToolsWeb`,
+    h1: `PDF to Word Converter — Online and Free`,
+    intro: `Drop a PDF here and get back an editable Word document in seconds. This free PDF to Word converter reads the text out of every page and writes it into a .docx you can open and edit — no signup, no watermark, and the PDF never leaves your device, because the whole conversion happens inside your browser.`,
+    relatedKeys: ['pdftomarkdown', 'pdftoexcel', 'pdftojpg', 'pdftoppt', 'wordtopdf', 'pdfcompress'],
+    faq: [
+      {
+        q: `How do I convert a PDF to Word?`,
+        a: `Drop your PDF onto the box at the top of this page, or tap Browse files and pick it. The text is pulled out page by page and a .docx file downloads straight away. There is nothing to set up and nothing to sign in to.`,
+      },
+      {
+        q: `Is the PDF to Word converter free?`,
+        a: `Yes — free with no signup, no email, no daily limit and no watermark on the Word file. The conversion runs on your own computer rather than on a server, so there is no hosting cost to recover from you.`,
+      },
+      {
+        q: `Is my PDF uploaded to a server?`,
+        a: `No. Your file is read and converted entirely inside your browser, on your own device. Nothing is uploaded, nothing is stored and nothing is deleted an hour later, because nothing was ever sent anywhere. Most converters upload your file and promise to delete it afterwards — here there is nothing to promise.`,
+      },
+      {
+        q: `Does it keep the original formatting and layout?`,
+        a: `No, and it is better to say so plainly. This tool extracts the <strong>text</strong> and writes it into a clean Word document with a heading for each page. Fonts, colours, columns, images, tables as tables, headers and footers are not rebuilt. If you need the Word file to look like the PDF, open the PDF directly in Microsoft Word, which attempts a full layout rebuild. If you want the words so you can edit, quote or reuse them, this is faster and gives you a document without the broken text boxes a layout rebuild usually leaves behind.`,
+      },
+      {
+        q: `Can it convert a scanned PDF?`,
+        a: `No. A scanned PDF is a photograph of a page — there is no text inside it to extract, only pixels, so you will get an empty or near-empty Word file. Reading text out of a picture needs OCR, which this tool does not do. If your PDF was scanned or photographed, you need an OCR tool instead. A quick way to check: open the PDF and try to select a sentence with your mouse. If nothing highlights, it is a scan.`,
+      },
+      {
+        q: `Will tables come across as tables?`,
+        a: `No. Table text is extracted, but it arrives as ordinary text rather than a Word table with rows and cells. If the table is what you actually need, use <a href="/pdf-to-excel">PDF to Excel</a> instead — that tool works out the row and column positions and gives you a real spreadsheet grid.`,
+      },
+      {
+        q: `What about images in the PDF?`,
+        a: `Images are not carried into the Word file. Only text is extracted. If you need the pictures, <a href="/pdf-to-jpg">PDF to JPG</a> renders every page as an image you can crop.`,
+      },
+      {
+        q: `Is there a file size limit?`,
+        a: `No fixed limit is set. The practical ceiling is your own device's memory, since the whole PDF is held in the browser while it is read. Ordinary documents of a few dozen pages are no trouble. A very large PDF — several hundred pages, or one packed with high-resolution scans — may be slow or may run out of memory, in which case use <a href="/split-pdf">Split PDF</a> to break it up first.`,
+      },
+      {
+        q: `Does the Word file open in Microsoft Word?`,
+        a: `Yes. The output is a standard .docx, the same format Word has used since 2007. It opens in Microsoft Word, and also in Google Docs, LibreOffice Writer, Apple Pages and WPS Office.`,
+      },
+      {
+        q: `Can I convert several PDFs at once?`,
+        a: `One file at a time. Each conversion is quick and there is no queue or upload to wait through, so a handful is not much work — but there is no batch mode here.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on Android and iPhone exactly as it does on a laptop, with nothing to install. Very large PDFs are more likely to strain a phone's memory than a computer's.`,
+      },
+      {
+        q: `Can I convert a password-protected PDF?`,
+        a: `Not directly — the text cannot be read while the file is locked. If you know the password, remove it first with <a href="/unlock-pdf">Unlock PDF</a>, then convert the unlocked copy.`,
+      },
+    ],
+    body: {
+      h2: `Convert PDF to Word, free and without uploading`,
+      blocks: [
+        { p: `Most PDF to Word converters send your file to a server, run it through a layout engine and hand back a Word document that <em>looks</em> like the PDF — until you click into it and find the text trapped in dozens of floating boxes. This tool does something narrower and more honest: it takes the text out and gives you a clean, editable Word document. <strong>Nothing is uploaded, because the conversion runs inside your own browser.</strong>` },
+
+        { h3: `How to convert a PDF to Word` },
+        { ol: [
+          `<strong>Add your PDF.</strong> Drag it onto the box above, or tap <em>Browse files</em> and choose it.`,
+          `<strong>Wait a moment.</strong> The page is read one page at a time — you will see the progress as it goes.`,
+          `<strong>Download the .docx.</strong> It saves with the same name as your PDF and opens in Word, Google Docs, LibreOffice or Pages.`,
+        ] },
+
+        { h3: `What you get, exactly` },
+        { p: `Being specific here saves you a wasted download. The Word file contains a <strong>Page 1</strong>, <strong>Page 2</strong> and so on heading for each page of the PDF, with that page's text underneath it. The page headings make it easy to find your way around a long document and easy to delete once you have moved the text where you want it.` },
+        { ul: [
+          `<strong>What comes across:</strong> all the readable text, in reading order, page by page.`,
+          `<strong>What does not:</strong> fonts, type sizes, colours, columns, images, tables as tables, headers, footers and page numbering.`,
+        ] },
+        { p: `That is a deliberate trade. A layout rebuild that gets 80 percent right often costs more time to clean up than retyping the formatting yourself, and it is where most complaints about PDF to Word conversion come from. Plain text in a plain document is predictable.` },
+
+        { h3: `When this tool is the right one` },
+        { ul: [
+          `<strong>You need to reuse the words</strong> — quoting a report, moving a policy into a new template, lifting a contract clause.`,
+          `<strong>You want to edit content, not appearance</strong> — rewriting a CV, updating last year's document, correcting a typo in something you no longer have the source file for.`,
+          `<strong>You are feeding the text somewhere else</strong> — a proposal, an email, a translation tool, a summary.`,
+          `<strong>The document is confidential</strong> — a contract, a payslip, a medical letter, an ID document. Nothing leaves your device, so there is no server copy to worry about.`,
+        ] },
+
+        { h3: `When to use something else` },
+        { ul: [
+          `<strong>You need the Word file to look like the PDF.</strong> Open the PDF in Microsoft Word itself — Word will attempt a full layout reconstruction. Expect to tidy up afterwards.`,
+          `<strong>Your PDF is a scan or a photo.</strong> There is no text layer to extract. You need OCR, which this tool does not do.`,
+          `<strong>You want the tables.</strong> <a href="/pdf-to-excel">PDF to Excel</a> detects the row and column structure and gives you a real grid.`,
+          `<strong>You want the pages as pictures.</strong> <a href="/pdf-to-jpg">PDF to JPG</a> renders each page as an image.`,
+          `<strong>You want plain text or Markdown.</strong> <a href="/pdf-to-markdown">PDF to Markdown</a> gives you the same text without the Word wrapper.`,
+        ] },
+
+        { h3: `How to tell if your PDF will convert` },
+        { p: `Open the PDF and try to select a line of text with your mouse or finger. If the text highlights, it has a text layer and this tool will extract it. If nothing highlights and you can only draw a box over the page, the page is an image and you will need OCR. This one check predicts the result better than anything else.` },
+
+        { h3: `Why "no upload" matters here` },
+        { p: `PDFs are the format people use for the documents they would least like to hand over: contracts, bank statements, medical letters, tenancy agreements, scanned passports. The usual online converter uploads that file to a company's servers, converts it there, and deletes it after an hour or a day. That is a reasonable arrangement and most of these companies are careful — but it is still a copy of your document on someone else's computer.` },
+        { p: `Here the conversion is done by your browser, using your own device's processor. The file is opened locally and the Word document is built locally. There is no upload step, no account, and no retention policy to read, because there is nothing held anywhere to retain.` },
+
+        { h3: `Does it work offline?` },
+        { p: `The page has to load first, which needs a connection. Once it has loaded, the conversion itself uses no network at all — you could disconnect and it would still work. That is a useful way to prove to yourself that nothing is being sent.` },
+
+        { h3: `Related PDF tools` },
+        { p: `Working with the same file? You can also <a href="/pdf-to-excel">pull tables into Excel</a>, <a href="/pdf-to-markdown">convert a PDF to Markdown</a>, <a href="/pdf-to-jpg">save every page as a JPG</a>, <a href="/pdf-to-ppt">turn pages into slides</a>, <a href="/compress-pdf">compress a PDF</a> or <a href="/merge-pdf">merge several PDFs</a> — all free, all in your browser.` },
+      ],
+    },
+  },
+
+  pdf: {
+    title: `Image to PDF Converter — JPG to PDF Free | OnlineToolsWeb`,
+    description: `Free image to PDF converter. Combine JPG, PNG or WebP photos into one PDF at full quality, in the order you choose — in your browser, nothing uploaded.`,
+    appName: `Image to PDF Converter | OnlineToolsWeb`,
+    h1: `Image to PDF Converter — JPG, PNG and WebP`,
+    intro: `Turn photos into a PDF without uploading them anywhere. Drop one image or a whole set, drag them into the order you want, and this free image to PDF converter builds a single PDF at the pictures' full original resolution — no signup, no watermark, and nothing ever leaves your device.`,
+    relatedKeys: ['compress', 'resize', 'crop', 'imagetoppt', 'convertformat', 'pdfmerge'],
+    faq: [
+      {
+        q: `How do I convert an image to PDF?`,
+        a: `Drop your picture onto the box at the top of this page, or tap Browse files. If you add several images you can drag them into the order you want first. Press Convert to PDF and the file downloads immediately.`,
+      },
+      {
+        q: `Can I put several images into one PDF?`,
+        a: `Yes. Add as many as you like and they become one PDF with one image per page, in the order shown in the list. Drag a row up or down to change the order before you convert. A single image gives you a one-page PDF named after the file; several give you a multi-page PDF.`,
+      },
+      {
+        q: `Which image formats can I convert?`,
+        a: `JPG and JPEG, PNG and WebP all work, along with any other image format your browser can open. If you have an iPhone .heic photo, run it through <a href="/heic-to-jpg">HEIC to JPG</a> first, since most browsers cannot decode HEIC directly.`,
+      },
+      {
+        q: `Will my images lose quality in the PDF?`,
+        a: `No resolution is thrown away. Each PDF page is built at the image's own pixel dimensions, so a 4000 x 3000 photo stays a 4000 x 3000 photo — nothing is shrunk down to fit a page size. This is the usual cause of blurry results elsewhere: many converters scale every picture to fit A4, and a large photo squeezed onto A4 and then printed back up looks soft.`,
+      },
+      {
+        q: `Can I choose A4 or Letter page size?`,
+        a: `Not here. Every page is sized to match its image exactly, which is why there are no white borders and no cropping. The trade-off is that you cannot force A4, Letter or a fixed margin. If you need standard paper sizes, size the picture first with <a href="/resize-image">Resize Image</a>, or use a tool built around page layout.`,
+      },
+      {
+        q: `Are my photos uploaded to a server?`,
+        a: `No. The PDF is assembled inside your browser on your own device, and nothing is sent anywhere. That matters more than it sounds for this particular tool — the images people turn into PDFs are usually ID cards, certificates, bank letters, prescriptions and signed forms.`,
+      },
+      {
+        q: `Is it free, and is there a watermark?`,
+        a: `Free, with no signup, no email and no daily limit, and there is no watermark on the PDF. Nothing is added to your pages at all.`,
+      },
+      {
+        q: `What happens to a PNG with a transparent background?`,
+        a: `The transparency is not carried into the PDF — images are embedded in the page as JPEG data, which has no transparent background. The picture itself converts fine; just expect the see-through areas to be filled in rather than transparent. If you need transparency preserved, a PDF built from images is the wrong container for it.`,
+      },
+      {
+        q: `Do portrait and landscape photos mix properly?`,
+        a: `Yes. Each page takes its own orientation from its own image — a landscape photo produces a landscape page and a portrait one a portrait page, in the same PDF. Nothing is rotated or letterboxed to make them match.`,
+      },
+      {
+        q: `How many images can I add at once?`,
+        a: `There is no fixed limit, but every image is held in your device's memory while the PDF is built, so very large batches can get heavy. Past about 22 files the page warns you. If you are combining a hundred photos, do it in a few smaller PDFs and join them with <a href="/merge-pdf">Merge PDF</a>.`,
+      },
+      {
+        q: `My PDF came out very large. How do I shrink it?`,
+        a: `That is the cost of keeping full resolution — phone photos are several megabytes each, and a ten-page PDF of them will be tens of megabytes. Run the finished file through <a href="/compress-pdf">Compress PDF</a>, or compress the pictures first with <a href="/compress-image">Compress Image</a> and then convert.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes, in Chrome, Safari, Firefox and Edge on Android and iPhone, with nothing to install. Converting photos straight from your camera roll on the phone itself is one of the most common ways this tool gets used.`,
+      },
+      {
+        q: `Can I scan a document with my camera instead?`,
+        a: `Yes — <a href="/scan-to-pdf">Scan to PDF</a> uses your device camera to capture pages one at a time and builds the PDF from those. Use it when the document is on paper in front of you rather than already in your photo library.`,
+      },
+    ],
+    body: {
+      h2: `Convert images to PDF, free and without uploading`,
+      blocks: [
+        { p: `A form wants one PDF and you have five photos. A college portal will not take a JPG. You need to email a certificate and a picture looks careless. Turning images into a PDF is a small job that comes up constantly — and it should not require handing your documents to a website. <strong>This converter runs entirely in your browser, so your pictures never leave your device.</strong>` },
+
+        { h3: `How to convert images to PDF` },
+        { ol: [
+          `<strong>Add your images.</strong> Drag them onto the box above, or tap <em>Browse files</em> and select several at once.`,
+          `<strong>Put them in order.</strong> Drag any row in the list up or down. The order in the list is the page order in the PDF.`,
+          `<strong>Convert.</strong> Press the button and the PDF downloads — one image per page, full resolution, no watermark.`,
+        ] },
+
+        { h3: `Full resolution, no shrinking to fit` },
+        { p: `The most common complaint about image to PDF converters is that the result looks blurry or soft. The usual cause is the page size: the converter defaults to A4, and every picture is scaled down to fit inside it. Do that to a photo and then print or zoom, and the softness shows.` },
+        { p: `This tool sizes each page to its image instead. A 4000 x 3000 photo produces a page that <em>is</em> 4000 x 3000 at one-to-one scale. Nothing is resampled, nothing is downscaled, and there are no white margins around the edge because the picture fills the page exactly.` },
+        { p: `The honest cost of that choice: you do not get to pick A4, Letter or a margin, and a PDF made from mixed photos will have pages of different sizes. If a form insists on a specific paper size, resize the images to matching dimensions first with <a href="/resize-image">Resize Image</a>, then convert.` },
+
+        { h3: `What people use this for` },
+        { ul: [
+          `<strong>Application and portal uploads</strong> that accept a PDF but reject a JPG — degree certificates, mark sheets, ID cards, address proof.`,
+          `<strong>Turning a set of photographed pages into one document</strong> so it arrives as a single attachment instead of eight.`,
+          `<strong>Receipts and expense claims</strong> — a month of photographed receipts as one PDF is far easier to file than a folder of images.`,
+          `<strong>Signed forms</strong> photographed after printing and signing, sent back as a proper document.`,
+          `<strong>Screenshots</strong> collected into a single readable file for a report or a bug write-up.`,
+        ] },
+
+        { h3: `Page order, and why it is worth checking` },
+        { p: `Images are converted in the order they appear in the list, and phones do not always hand files over in the order you took them — names like IMG_0451 and IMG_451 sort in ways you would not expect. Drag the rows into the right order before converting. It takes a second and saves rebuilding the PDF.` },
+
+        { h3: `File size: what to expect` },
+        { p: `Keeping every pixel means the PDF is as big as the pictures inside it. Modern phone photos are commonly 3 to 8 MB each, so a ten-page PDF can land somewhere between 30 and 80 MB. That is correct behaviour, not a fault — but it is too big for most email limits and many upload forms.` },
+        { p: `Two ways to fix it, depending on what you need. Run the finished PDF through <a href="/compress-pdf">Compress PDF</a> and pick a target size, which is the quickest route. Or compress the images first with <a href="/compress-image">Compress Image</a> — useful when a form specifies a maximum size per page, and the route to take when the form is strict about it.` },
+
+        { h3: `Nothing is uploaded` },
+        { p: `Look at what actually goes through an image to PDF converter: identity documents, certificates, bank letters, prescriptions, signed contracts, photos of children's school forms. Those are the files least suited to being uploaded to a service you found through a search result.` },
+        { p: `This tool never uploads them. Your browser reads the images from your device, builds the PDF using your device's own processor, and hands you the file. There is no server involved in the conversion, no account, and no copy held anywhere afterwards. Once the page has loaded you can even disconnect from the internet and it will still work — which is the simplest proof that nothing is being sent.` },
+
+        { h3: `Related image and PDF tools` },
+        { p: `You can also <a href="/compress-image">compress an image to a target size</a>, <a href="/resize-image">resize to exact dimensions</a>, <a href="/crop-image">crop a photo</a>, <a href="/heic-to-jpg">convert iPhone HEIC photos to JPG</a>, <a href="/image-to-ppt">put images onto slides</a>, <a href="/merge-pdf">merge PDFs</a> or <a href="/scan-to-pdf">scan pages with your camera</a> — all free, all in your browser.` },
+      ],
+    },
+  },
+
+  pdftoppt: {
+    title: `PDF to PPT Converter Online Free | OnlineToolsWeb`,
+    description: `Free PDF to PPT converter. Turn every page of a PDF into a PowerPoint slide in your browser — no upload, no signup, the file stays on your device.`,
+    appName: `PDF to PPT Converter | OnlineToolsWeb`,
+    h1: `PDF to PPT Converter — Online and Free`,
+    intro: `Turn a PDF back into a slide deck. Drop in a PDF and every page becomes a slide in a .pptx you can open in PowerPoint, Google Slides or Keynote — no signup, nothing to install, and the file never leaves your device.`,
+    relatedKeys: ['pdftojpg', 'pdftoword', 'ppttotext', 'imagetoppt', 'texttoppt', 'pdfextract'],
+    faq: [
+      {
+        q: `Is the PDF to PPT converter free?`,
+        a: `Yes. Converting a PDF to PowerPoint here is free with no signup, no trial and no daily cap. Nothing is held back for a paid tier, because the conversion runs on your own machine rather than on a server someone has to pay for.`,
+      },
+      {
+        q: `How do I convert a PDF to PowerPoint online?`,
+        a: `Drop your PDF onto the box on this page, or tap Browse files. Each page is rendered and added as a slide, and the .pptx downloads when it is done. There is no upload wait and no queue.`,
+      },
+      {
+        q: `Will the text on the slides be editable?`,
+        a: `No, and this is the one thing worth knowing before you start. Each slide holds a picture of the PDF page, so you cannot click into a heading and retype it. In exchange, nothing moves: the layout, fonts and spacing arrive exactly as they look in the PDF, which is the part that usually breaks in converters that try to rebuild editable text. If you need the words back, <a href="/pdf-to-word">convert the PDF to Word</a> and paste them in.`,
+      },
+      {
+        q: `Is my PDF uploaded to a server?`,
+        a: `No. Your browser opens the PDF, draws each page and builds the .pptx on your own device. Nothing is sent anywhere, so there is no server copy sitting behind a one-hour deletion timer. For a board pack, a client proposal or anything under an NDA, that is the difference that matters.`,
+      },
+      {
+        q: `What slide size do I get?`,
+        a: `Standard 16:9 widescreen, the default in PowerPoint and Google Slides since 2013. Each page image is placed to fill the whole slide edge to edge, with no border.`,
+      },
+      {
+        q: `My PDF is portrait A4 — how will that look?`,
+        a: `Every slide is 16:9 widescreen, so a tall portrait page is fitted to that wider shape and will look horizontally stretched. The tool is at its best on PDFs that started life as a deck. If you have a portrait document and want the pages to keep their proportions, <a href="/pdf-to-jpg">export the pages as JPGs</a> and place them on slides yourself.`,
+      },
+      {
+        q: `Can I choose which pages become slides?`,
+        a: `Every page in the PDF becomes a slide. To convert only part of a document, <a href="/extract-pdf-pages">pull out the pages you want</a> or <a href="/split-pdf">split the PDF</a> first, then convert the shorter file.`,
+      },
+      {
+        q: `Is there a file size or page limit?`,
+        a: `The tool does not impose one. Because the work happens on your device, the real ceiling is your browser's memory, and a long PDF takes longer because every page has to be drawn. A twenty or thirty page deck is no trouble; a few hundred pages is worth splitting up first.`,
+      },
+      {
+        q: `Will the .pptx open in Google Slides and Keynote?`,
+        a: `Yes. It is an ordinary PowerPoint file, so PowerPoint, Google Slides, Keynote, LibreOffice Impress and WPS all open it. You can upload it straight to Google Drive without converting anything again.`,
+      },
+      {
+        q: `Can I convert several PDFs at once?`,
+        a: `One PDF at a time. Each conversion starts immediately, though, so there is no queue to wait through — pick the next file and go again.`,
+      },
+      {
+        q: `What about a password-protected PDF?`,
+        a: `A PDF that asks for a password before it will open cannot be read, so the conversion will fail. Remove the password first — in your PDF reader, or with the <a href="/unlock-pdf">unlock PDF tool</a> if you already know it — and then convert.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on phones and tablets just as it does on a laptop, with nothing to install. A very long PDF will be slower on a phone, because the same page-drawing work has to happen on a smaller processor.`,
+      },
+    ],
+    body: {
+      h2: `PDF to PPT converter — every page becomes a slide`,
+      blocks: [
+        { p: `Someone sends you the PDF of a deck and asks you to present it. Or you need three pages of a report in front of a room. A <strong>PDF to PPT converter</strong> gets you there: each page of the PDF comes across as a slide in a real .pptx file that PowerPoint, Google Slides and Keynote all open.` },
+
+        { h3: `How to convert PDF to PPT online free` },
+        { ol: [
+          `<strong>Add your PDF.</strong> Drag it onto the box above or tap <em>Browse files</em>. It is read by your own browser and never uploaded.`,
+          `<strong>Wait while the slides are built.</strong> Each page is drawn and added in turn, and the counter tells you which page it is on.`,
+          `<strong>Download the .pptx.</strong> It is named after your PDF and ready to open or drop into Google Drive.`,
+        ] },
+
+        { h3: `What you get, stated plainly` },
+        { p: `Most converters on this search promise fully editable slides and then deliver text boxes in the wrong places. This tool does something simpler and says so up front:` },
+        { ul: [
+          `<strong>One slide per page.</strong> A twelve-page PDF gives you a twelve-slide deck, in order.`,
+          `<strong>The layout is exact.</strong> Each slide carries a picture of the page, so fonts, charts, logos and spacing look the way they look in the PDF. Nothing reflows.`,
+          `<strong>The text is not editable.</strong> You cannot click into a heading and retype it. That is the trade for the point above.`,
+          `<strong>16:9 widescreen slides.</strong> The standard size, filled edge to edge.`,
+          `<strong>A genuine .pptx.</strong> Not a renamed PDF — a real PowerPoint file that opens anywhere.`,
+        ] },
+
+        { h3: `When picture slides are the right answer` },
+        { ul: [
+          `<strong>Presenting a deck you only have as a PDF.</strong> The usual case, and the one this handles best — the deck was widescreen to begin with, so it comes back looking right.`,
+          `<strong>Dropping pages into a bigger deck.</strong> Convert, then copy the slides you need into your own presentation.`,
+          `<strong>Showing a document on a projector.</strong> Slide view and a clicker beat scrolling a PDF in front of a room.`,
+          `<strong>Annotating over the top.</strong> Draw arrows, boxes and notes on the slide without touching the original document.`,
+          `<strong>Keeping a layout that must not move.</strong> Approved artwork, a signed page, a designed report — a picture cannot reflow.`,
+        ] },
+
+        { h3: `When you want something else instead` },
+        { p: `If the goal is to rewrite the words rather than show them, <a href="/pdf-to-word">PDF to Word</a> gets you editable text to paste into your slides. If you need the pages as plain images to place by hand, use <a href="/pdf-to-jpg">PDF to JPG</a>. If you only want a few pages, <a href="/extract-pdf-pages">extract those pages</a> first. And to go the other way — a deck you want to read as text — try <a href="/ppt-to-text">PPT to text</a>.` },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> No account needed to convert your own file.`,
+          `<strong>Nothing is uploaded.</strong> The PDF is opened and the slides are built on your machine. There is no server copy at all, so there is nothing to delete later.`,
+          `<strong>No watermarks or page caps.</strong> Convert as many PDFs as you need.`,
+          `<strong>Works anywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser, nothing to install.`,
+        ] },
+      ],
+    },
+  },
+
+  exceltopdf: {
+    title: `Excel to PDF Converter Online Free | OnlineToolsWeb`,
+    description: `Free Excel to PDF converter. Turn an .xlsx, .xls or .csv sheet into a clean PDF table in your browser — no upload, no signup, no Excel needed.`,
+    appName: `Excel to PDF Converter | OnlineToolsWeb`,
+    h1: `Excel to PDF Converter — Online and Free`,
+    intro: `Turn a spreadsheet into a PDF anyone can open. Drop in an .xlsx, .xls or .csv, check the preview of the first rows, and download a tidy PDF table — no signup, no copy of Excel needed, and the file never leaves your device.`,
+    relatedKeys: ['exceltocsv', 'wordtopdf', 'pdftoexcel', 'imagetoexcel', 'wordtoexcel', 'htmltopdf'],
+    faq: [
+      {
+        q: `Is the Excel to PDF converter free?`,
+        a: `Yes. Converting a spreadsheet to PDF here is free with no signup, no trial and no daily limit. The conversion runs on your own machine, so there is no server cost to recover behind a paywall.`,
+      },
+      {
+        q: `How do I convert Excel to PDF online?`,
+        a: `Drop your .xlsx, .xls or .csv onto the box on this page. The tool shows you the sheet name, how many rows it found and the first five rows, so you can check you have the right file. Press Convert and the PDF downloads.`,
+      },
+      {
+        q: `Will my columns get cut off at the edge of the page?`,
+        a: `No. This is the usual complaint about saving a spreadsheet as a PDF from Excel itself, where anything past the print area slides onto a second page or disappears. Here the table is laid out to fit the width of the page, so every column is on the page. Wide text wraps inside its column instead of pushing the table off the edge.`,
+      },
+      {
+        q: `Do I get portrait or landscape?`,
+        a: `It is chosen for you from the shape of your data. A sheet with more than eight columns comes out landscape so the columns have room; anything narrower comes out portrait. There is nothing to set.`,
+      },
+      {
+        q: `Does it keep my colours, fonts and cell formatting?`,
+        a: `No. What you get is a clean, readable table — your headings in a header row, your values in the rows beneath — not a picture of your worksheet. Cell fills, custom fonts, borders, conditional formatting and merged cells are not carried over. If you need the sheet to look exactly as it does on screen, use Excel's own Save as PDF.`,
+      },
+      {
+        q: `My workbook has several sheets — what happens to them?`,
+        a: `The first sheet in the workbook is the one converted. If you need a different sheet, open the workbook in Excel, move that sheet to the front or copy it into a new file, and convert that.`,
+      },
+      {
+        q: `Do formulas come across?`,
+        a: `You get the results, not the formulas. A cell holding =SUM(A1:A10) appears in the PDF as the number it works out to, which is what you want in a document meant to be read rather than recalculated.`,
+      },
+      {
+        q: `Does it work without Microsoft Excel installed?`,
+        a: `Yes, and that is one of the main reasons to use it. The spreadsheet is read directly in your browser, so you can turn an .xlsx into a PDF on a machine with no Office licence, on a Chromebook, or on a phone.`,
+      },
+      {
+        q: `Can it convert a CSV to PDF as well?`,
+        a: `Yes. CSV files are accepted alongside .xlsx and the older .xls, and they are laid out the same way — the first row becomes the header, the rest become the table.`,
+      },
+      {
+        q: `What happens to charts, images and pivot tables?`,
+        a: `They are not included. The conversion works from the cell values, so a chart, a floating image or a pivot table has nowhere to go in the output. To put a chart in a PDF, copy it as a picture and use <a href="/image-to-pdf">image to PDF</a>.`,
+      },
+      {
+        q: `What if the table runs over more than one page?`,
+        a: `It carries on across as many pages as it needs, and the header row is repeated at the top of each one — so you can still tell what column you are looking at on page four.`,
+      },
+      {
+        q: `Is my spreadsheet uploaded anywhere?`,
+        a: `No. The workbook is opened, read and turned into a PDF by your own browser, and nothing is sent to a server. That matters for payroll, customer lists, pricing and anything covered by an NDA — there is no copy on someone else's machine at all.`,
+      },
+      {
+        q: `Is there a file size or row limit?`,
+        a: `The tool does not impose one. Because the work happens on your device, the practical ceiling is your browser's memory. Ordinary business sheets, including ones running to thousands of rows, convert without trouble — the PDF simply gets longer.`,
+      },
+      {
+        q: `Does it work on mobile?`,
+        a: `Yes. It runs in Chrome, Safari, Firefox and Edge on phones and tablets exactly as it does on a laptop, with nothing to install.`,
+      },
+    ],
+    body: {
+      h2: `Excel to PDF converter — turn a sheet into a document anyone can open`,
+      blocks: [
+        { p: `A spreadsheet is for working in. A PDF is for sending. The moment numbers have to go to a client, a landlord, a committee or a customer, the .xlsx is the wrong object to hand over — it can be edited by accident, it needs the right software, and it looks different on every screen. An <strong>Excel to PDF converter</strong> turns the sheet into one fixed document that opens the same way everywhere.` },
+
+        { h3: `How to convert Excel to PDF online free` },
+        { ol: [
+          `<strong>Add your spreadsheet.</strong> Drag an .xlsx, .xls or .csv onto the box above, or tap <em>Browse files</em>. It is read in your browser — never uploaded.`,
+          `<strong>Check the preview.</strong> You get the sheet name, the total row count and the first five rows as a table. A few seconds here saves converting last month's file by mistake.`,
+          `<strong>Press Convert.</strong> The PDF downloads, named after your spreadsheet.`,
+        ] },
+
+        { h3: `The cut-off column problem` },
+        { p: `Ask around and the single most common complaint about turning a spreadsheet into a PDF is columns that vanish off the right-hand edge, or a table that breaks across two pages with three columns stranded on the second. That happens because Excel prints to a fixed page and lets whatever does not fit spill over. This tool lays the table out to the width of the page instead: the columns are sized to fit, long text wraps inside its cell, and a sheet with more than eight columns is turned landscape automatically. Nothing falls off the edge.` },
+
+        { h3: `What the PDF contains` },
+        { ul: [
+          `<strong>Your first row as a header.</strong> Set apart at the top of the table and repeated on every page.`,
+          `<strong>Every value from the sheet.</strong> Text, numbers and dates as they appear in the cells.`,
+          `<strong>Formula results.</strong> The computed number, not the formula behind it.`,
+          `<strong>Automatic orientation.</strong> Portrait for narrow sheets, landscape for wide ones.`,
+          `<strong>No cell formatting.</strong> Fills, custom fonts, borders, conditional formatting and merged cells are not carried over.`,
+          `<strong>No charts, images or pivot tables.</strong> The conversion works from cell values, so worksheet objects are left out.`,
+        ] },
+
+        { h3: `What people convert Excel to PDF for` },
+        { ul: [
+          `<strong>Sending figures to someone outside the company.</strong> A PDF cannot be edited by accident on the way.`,
+          `<strong>Attaching a schedule or price list to an email.</strong> It opens on any phone, with no spreadsheet app involved.`,
+          `<strong>Printing.</strong> One predictable layout instead of fighting print settings.`,
+          `<strong>Filing a record.</strong> A fixed snapshot of what the numbers said on the day.`,
+          `<strong>Handing data to someone with no Office licence.</strong> Every device can open a PDF.`,
+          `<strong>Putting a table into a larger report.</strong> Convert the sheet, then <a href="/merge-pdf">merge it with the other pages</a>.`,
+        ] },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup or email.</strong> No account needed to convert your own spreadsheet.`,
+          `<strong>Nothing is uploaded.</strong> Financial models, salary schedules and customer lists stay on your machine — no server copy, nothing to delete later.`,
+          `<strong>No Excel required.</strong> Works on a Chromebook, a borrowed laptop or a phone.`,
+          `<strong>No watermarks or daily caps.</strong> Convert as many sheets as you need.`,
+        ] },
+
+        { h3: `Related spreadsheet and PDF tools` },
+        { p: `You can also <a href="/excel-to-csv">save a sheet as plain CSV</a>, <a href="/pdf-to-excel">pull tables back out of a PDF</a>, <a href="/word-to-excel">get a table out of a Word document</a>, <a href="/image-to-excel">turn a picture of a table into a spreadsheet</a>, <a href="/word-to-pdf">convert a Word file to PDF</a> or <a href="/compress-pdf">shrink a PDF before emailing it</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+
+  socialresize: {
+    title: `Social Media Image Resizer Online Free | OnlineToolsWeb`,
+    description: `Free social media image resizer. Crop a photo to Instagram post, Instagram story, YouTube thumbnail or Facebook cover size — in your browser, no upload.`,
+    appName: `Social Media Image Resizer | OnlineToolsWeb`,
+    h1: `Social Media Image Resizer — Online and Free`,
+    intro: `Get a picture to the exact size a platform wants. Drop in a photo, pick Instagram post, Instagram story, YouTube thumbnail or Facebook cover, and download it cropped to those pixels — no signup, no upload, and the photo never leaves your device.`,
+    relatedKeys: ['resize', 'crop', 'compress', 'convertformat', 'memecreator', 'collagemaker'],
+    faq: [
+      {
+        q: `Is the social media image resizer free?`,
+        a: `Yes. Resizing here is free with no signup, no watermark and no daily limit. The work happens on your own machine, so there is nothing to charge for.`,
+      },
+      {
+        q: `What sizes can I resize to?`,
+        a: `Four presets, each the size the platform actually asks for: Instagram post at 1080 x 1080 pixels, Instagram story at 1080 x 1920, YouTube thumbnail at 1280 x 720 and Facebook cover at 820 x 312. Pick one from the dropdown and press Resize.`,
+      },
+      {
+        q: `Does it stretch or squash my photo?`,
+        a: `No. The picture is scaled until it covers the target size and then trimmed to fit, so the proportions never change — a face stays a face rather than turning oval. The trade is that some of the edges are cropped away.`,
+      },
+      {
+        q: `Part of my picture got cut off — why?`,
+        a: `Because the shape you started with and the shape you asked for are different, and something has to give. The crop is taken from the centre. If the part you care about sits off to one side, <a href="/crop-image">crop the image yourself first</a>, roughly to the right shape, then run it through here.`,
+      },
+      {
+        q: `What if I need a size that is not on the list?`,
+        a: `Use <a href="/resize-image">resize image</a> and type any width and height you like — that covers LinkedIn banners, X headers, Pinterest pins, TikTok covers and anything else a platform changes its mind about next month.`,
+      },
+      {
+        q: `Does it change my file format?`,
+        a: `No. A PNG comes back as a PNG and a JPG as a JPG. If you want to switch formats, <a href="/convert-image-format">convert the image</a> before or after resizing.`,
+      },
+      {
+        q: `Is my photo uploaded anywhere?`,
+        a: `No. The image is loaded, cropped and re-saved by your own browser, and nothing is sent to a server. Nobody else ever holds a copy of the picture — which is worth having for client work, product shots before launch, or photographs of people.`,
+      },
+      {
+        q: `My image is smaller than the size I picked — what happens?`,
+        a: `It is scaled up to fill the frame, and it will look softer for it, because the extra pixels have to be invented. Start from the largest version you have. For a YouTube thumbnail at 1280 x 720, anything under about 1280 pixels wide will look noticeably soft on a big screen.`,
+      },
+      {
+        q: `Can I resize several photos at once?`,
+        a: `One image at a time. Each resize is instant, though — there is no upload and no queue — so a set of posts goes quickly.`,
+      },
+      {
+        q: `Will Instagram crop my picture again after I upload it?`,
+        a: `Not at these sizes. A 1080 x 1080 square and a 1080 x 1920 story are both shapes Instagram accepts as they are, so it has no reason to trim anything. Most re-cropping happens when people upload an odd shape and let the app decide.`,
+      },
+      {
+        q: `Is there a file size limit?`,
+        a: `The tool does not impose one. Because the work happens on your device, the practical ceiling is your browser's memory, and ordinary camera and phone photos are nowhere near it.`,
+      },
+      {
+        q: `The file came out larger than the original — can I shrink it?`,
+        a: `Yes. Resizing changes the pixel dimensions, not how hard the file is compressed, so a re-saved image can end up bigger. Run it through <a href="/compress-image">compress image</a> afterwards to bring the file size down.`,
+      },
+      {
+        q: `Does it work on a phone?`,
+        a: `Yes, and that is often where it makes most sense. It runs in Chrome, Safari, Firefox and Edge on phones and tablets with nothing to install, so you can size a photo for a story on the device that took it.`,
+      },
+    ],
+    body: {
+      h2: `Social media image resizer — the right pixels for each platform`,
+      blocks: [
+        { p: `Every platform wants a different shape, and the one thing they agree on is that they will crop your picture for you if you do not. Usually badly. A <strong>social media image resizer</strong> settles it before you upload: you pick the size the platform asks for, and the picture comes back at exactly those pixels.` },
+
+        { h3: `The four sizes, and what they are for` },
+        { ul: [
+          `<strong>Instagram post — 1080 x 1080.</strong> The square feed post. Still the safest shape for anything that needs to read well as a thumbnail.`,
+          `<strong>Instagram story — 1080 x 1920.</strong> Full-screen vertical, also the right shape for a Reels cover or a WhatsApp status.`,
+          `<strong>YouTube thumbnail — 1280 x 720.</strong> The 16:9 frame YouTube shows beside every video title.`,
+          `<strong>Facebook cover — 820 x 312.</strong> The wide banner across the top of a page or profile.`,
+        ] },
+
+        { h3: `How to resize an image for social media` },
+        { ol: [
+          `<strong>Add your picture.</strong> Drag a JPG, PNG or WebP onto the box above, or tap <em>Browse files</em>. It is read in your browser — never uploaded.`,
+          `<strong>Pick a preset.</strong> Instagram post, Instagram story, YouTube thumbnail or Facebook cover.`,
+          `<strong>Press Resize.</strong> The image is scaled to cover the frame, trimmed from the centre, and downloaded at the exact pixel size.`,
+        ] },
+
+        { h3: `Crop to fill, not stretch to fit` },
+        { p: `There are three ways to force a picture into a different shape, and only one of them looks right. Stretching distorts everything — faces go wide, circles go oval. Adding bars keeps the whole picture but wastes the frame and looks like a mistake on a feed. This tool does the third: it scales the image up until it covers the frame completely, then trims the overhang from the edges, keeping the middle. Proportions stay true and the frame is filled. The cost is the edges, so if your subject is not near the centre, <a href="/crop-image">crop it roughly yourself first</a> and then resize.` },
+
+        { h3: `Getting a sharp result` },
+        { ul: [
+          `<strong>Start big.</strong> Upscaling invents pixels and softens the picture. Use the original, not a version already shrunk for a chat app.`,
+          `<strong>Mind the subject's position.</strong> The crop is centred, so a face or logo at the far edge may be trimmed.`,
+          `<strong>Check text.</strong> Small lettering that survives at full size can blur once the picture is scaled down to 820 pixels wide.`,
+          `<strong>Compress last.</strong> Resize first, then <a href="/compress-image">compress</a> if the file needs to be smaller — doing it the other way round wastes quality.`,
+        ] },
+
+        { h3: `Free, private and browser-based` },
+        { ul: [
+          `<strong>No signup, no watermark.</strong> Nothing is stamped on your picture and no account is needed.`,
+          `<strong>Nothing is uploaded.</strong> Photographs of people, unreleased product shots and client work stay on your device. There is no server copy at all.`,
+          `<strong>No daily limit.</strong> Resize as many pictures as you want.`,
+          `<strong>Works anywhere.</strong> Windows, Mac, Linux, Android and iPhone — any modern browser, nothing to install.`,
+        ] },
+
+        { h3: `Related image tools` },
+        { p: `You can also <a href="/resize-image">resize to any custom width and height</a>, <a href="/crop-image">crop by hand</a>, <a href="/compress-image">make a file smaller</a>, <a href="/convert-image-format">switch between JPG, PNG and WebP</a>, <a href="/watermark-image">add a watermark</a> or <a href="/collage-maker">build a collage</a> — all free and all running in your browser.` },
+      ],
+    },
+  },
+
   imagetoppt: {
     title: `Image to PPT Converter Online Free | OnlineToolsWeb`,
     description: `Free image to PPT converter. Turn JPG or PNG pictures into PowerPoint slides, one image per slide — no signup, and nothing leaves your browser.`,

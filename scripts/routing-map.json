@@ -35,9 +35,9 @@
     "category": "image",
     "slug": "image-to-pdf",
     "oldUrl": "/image?tool=pdf",
-    "title": "Convert to PDF Online Free | OnlineToolsWeb",
-    "h1": "Convert to PDF Online",
-    "description": "Turn one or more images into a PDF. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Image to PDF Converter — JPG to PDF Free | OnlineToolsWeb",
+    "h1": "Image to PDF Converter — JPG, PNG and WebP",
+    "description": "Free image to PDF converter. Combine JPG, PNG or WebP photos into one PDF at full quality, in the order you choose — in your browser, nothing uploaded."
   },
   {
     "key": "imagetoexcel",
@@ -115,9 +115,9 @@
     "category": "image",
     "slug": "social-media-image-resize",
     "oldUrl": "/image?tool=socialresize",
-    "title": "Social Media Resize Online Free | OnlineToolsWeb",
-    "h1": "Social Media Resize Online",
-    "description": "Preset sizes for Instagram, YouTube, and more. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Social Media Image Resizer Online Free | OnlineToolsWeb",
+    "h1": "Social Media Image Resizer — Online and Free",
+    "description": "Free social media image resizer. Crop a photo to Instagram post, Instagram story, YouTube thumbnail or Facebook cover size — in your browser, no upload."
   },
   {
     "key": "grayscale",
@@ -215,9 +215,9 @@
     "category": "excel",
     "slug": "excel-to-pdf",
     "oldUrl": "/excel?tool=exceltopdf",
-    "title": "Excel to PDF Online Free | OnlineToolsWeb",
-    "h1": "Excel to PDF Online",
-    "description": "Convert a spreadsheet into a PDF table. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "Excel to PDF Converter Online Free | OnlineToolsWeb",
+    "h1": "Excel to PDF Converter — Online and Free",
+    "description": "Free Excel to PDF converter. Turn an .xlsx, .xls or .csv sheet into a clean PDF table in your browser — no upload, no signup, no Excel needed."
   },
   {
     "key": "exceltocsv",
@@ -315,9 +315,9 @@
     "category": "pdf",
     "slug": "pdf-to-word",
     "oldUrl": "/pdf?tool=pdftoword",
-    "title": "PDF to Word Online Free | OnlineToolsWeb",
-    "h1": "PDF to Word Online",
-    "description": "Extract text into an editable Word document. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "PDF to Word Converter Online Free | OnlineToolsWeb",
+    "h1": "PDF to Word Converter — Online and Free",
+    "description": "Free PDF to Word converter. Pull the text out of a PDF into an editable .docx file — runs in your browser, so the PDF never leaves your device."
   },
   {
     "key": "pdftoexcel",
@@ -345,9 +345,9 @@
     "category": "pdf",
     "slug": "pdf-to-ppt",
     "oldUrl": "/pdf?tool=pdftoppt",
-    "title": "PDF to PowerPoint Online Free | OnlineToolsWeb",
-    "h1": "PDF to PowerPoint Online",
-    "description": "Turn each page into a slide. Free, private, and runs right in your browser: no upload, no signup."
+    "title": "PDF to PPT Converter Online Free | OnlineToolsWeb",
+    "h1": "PDF to PPT Converter — Online and Free",
+    "description": "Free PDF to PPT converter. Turn every page of a PDF into a PowerPoint slide in your browser — no upload, no signup, the file stays on your device."
   },
   {
     "key": "pdfprotect",
